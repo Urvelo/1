@@ -30,7 +30,7 @@ class AdminPanel {
     }
     
     if (!isAdmin) {
-      alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla: admin@loytokauppa.fi');
+      alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla.');
       window.location.href = 'login.html';
       return;
     }
@@ -328,8 +328,14 @@ function logout() {
 }
 
 // Tarkista kirjautuminen
-if (!localStorage.getItem('admin_logged_in')) {
+const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
+const isLoggedIn = localStorage.getItem('user_logged_in') === 'true';
+
+if (!isLoggedIn || !currentUser) {
   alert('❌ Sinun täytyy kirjautua sisään!');
+  window.location.href = 'login.html';
+} else if (!currentUser.isAdmin) {
+  alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla.');
   window.location.href = 'login.html';
 }
 

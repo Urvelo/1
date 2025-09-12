@@ -58,47 +58,81 @@ class LoginSystem {
   }
 
   // KIRJAUTUMINEN
-  async handleLogin(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    
-    console.log('🔍 Debug info:');
-    console.log('- Email kenttä löytyi:', !!document.getElementById('loginEmail'));
-    console.log('- Password kenttä löytyi:', !!document.getElementById('loginPassword'));
-    console.log('- Email arvo:', JSON.stringify(email));
-    console.log('- Password pituus:', password.length);
-    console.log('- Admin email vertailu:', email === 'admin@loytokauppa.fi');
-    
-    if (!email || !password) {
-      this.showError('Täytä kaikki kentät');
-      return;
-    }
-    
-    console.log('🔐 Yritetään kirjautua sähköpostilla:', email);
-    
-    // Tarkista admin-tunnukset
-    if (email === 'admin@loytokauppa.fi' && password === 'admin123') {
-      console.log('✅ Admin-tunnukset tunnistettu!');
-      this.loginUser({
-        id: 'admin',
-        name: 'Admin',
-        email: email,
-        isAdmin: true
-      });
-      return;
-    }
-    
-    // Hae tallennetut käyttäjät
-    const users = JSON.parse(localStorage.getItem('registered_users')) || [];
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      this.loginUser(user);
-    } else {
+  async handleLogin(email, password) {
+    try {
+      // Yritä ensin tavallista kirjautumista
+      if (window.firebaseAuth) {
+        const result = await window.firebaseAuth.login(email, password);
+        if (result && result.user) {
+          this.handleSuccessfulLogin(result.user);
+          return;
+        }
+      }
+
+      // Jos tavallinen kirjautuminen epäonnistui, tarkista admin-tunnukset
+      const adminUser = await this.checkAdminLogin(email, password);
+      if (adminUser) {
+        this.handleSuccessfulLogin(adminUser);
+        return;
+      }
+
+      // Jos kumpikaan ei toimi, näytä virhe
       this.showError('Virheelliset kirjautumistiedot! Tarkista sähköposti ja salasana.');
+      
+    } catch (error) {
+      console.error('Kirjautumisvirhe:', error);
+      this.showError('Kirjautumisessa tapahtui virhe. Yritä uudelleen.');
     }
+  }
+
+  // Admin-tunnusten tarkistus Firestore:sta
+  async checkAdminLogin(email, password) {
+    console.log('🔐 Tarkistetaan admin-tunnukset Firestore:sta...');
+    
+    try {
+      // Tarkista Firestore:sta
+      if (window.firebaseDB && window.firebaseDB.db) {
+        const adminRef = window.firebaseDB.db.collection('admin_users').doc('admin');
+        const adminDoc = await adminRef.get();
+        
+        if (adminDoc.exists) {
+          const adminData = adminDoc.data();
+          console.log('- Admin-tiedot löydetty Firestore:sta');
+          
+          if (adminData.email === email && adminData.password === password) {
+            console.log('✅ Admin-tunnukset oikein!');
+            return {
+              id: 'admin',
+              name: adminData.name || 'Ylläpitäjä',
+              email: adminData.email,
+              phone: adminData.phone || '',
+              address: adminData.address || '',
+              isAdmin: true,
+              loginTime: new Date().toISOString()
+            };
+          }
+        }
+      }
+      
+      console.log('❌ Admin-tunnukset väärin tai Firestore ei käytettävissä');
+      return null;
+      
+    } catch (error) {
+      console.error('Virhe admin-tarkistuksessa:', error);
+      return null;
+    }
+  }
+
+  // KÄSITTELE ONNISTUNUT KIRJAUTUMINEN
+  handleSuccessfulLogin(user) {
+    console.log('🎉 Kirjautuminen onnistui:', user);
+    
+    // Admin-käyttäjälle asetetaan admin-flagi jos ei ole jo asetettu
+    if (user.email && user.email.includes('admin@loytokauppa.fi') && !user.isAdmin) {
+      user.isAdmin = true;
+    }
+    
+    this.loginUser(user);
   }
 
   // REKISTERÖITYMINEN
@@ -234,6 +268,7 @@ class LoginSystem {
   // KIRJAUDU KÄYTTÄJÄ SISÄÄN
   loginUser(user) {
     localStorage.setItem('current_user', JSON.stringify(user));
+    localStorage.setItem('user_logged_in', 'true');
     this.currentUser = user;
     
     console.log('✅ Käyttäjä kirjautunut sisään:', user.name);
