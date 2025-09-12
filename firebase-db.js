@@ -33,19 +33,7 @@ class FirebaseDB {
         this.db = firebase.firestore();
         this.auth = firebase.auth();
         
-        // Ota offline-persistenssi käyttöön (auttaa yhteyshäiriöissä)
-        try {
-          await this.db.enablePersistence({
-            synchronizeTabs: true
-          });
-          console.log('✅ Firebase offline-persistenssi käytössä');
-        } catch (persistenceError) {
-          if (persistenceError.code === 'failed-precondition') {
-            console.warn('⚠️ Useita välilehtiä auki - offline-persistenssi ohitettu');
-          } else if (persistenceError.code === 'unimplemented') {
-            console.warn('⚠️ Selain ei tue offline-persistenssiä');
-          }
-        }
+        console.log('✅ Firebase Firestore alustettu (ilman persistenssiä)');
         
         // Testaa yhteyttä ennen kuin merkitään valmiiksi
         try {
