@@ -1,0 +1,217 @@
+// Firebase Authentication - Moderni v11 versio
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile
+} from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection,
+  query,
+  where,
+  getDocs
+} from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+class ModernFirebaseAuth {
+  constructor() {
+    this.auth = null;
+    this.db = null;
+    this.currentUser = null;
+    this.init();
+  }
+
+  async init() {
+    try {
+      // Odota että Firebase-config on ladattu
+      if (window.firebaseAuth && window.firebaseDB) {
+        this.auth = window.firebaseAuth;
+        this.db = window.firebaseDB.db;
+        
+        // Kuuntele kirjautumistilan muutoksia
+        onAuthStateChanged(this.auth, (user) => {
+          this.handleAuthStateChange(user);
+        });
+        
+        console.log('✅ ModernFirebaseAuth alustettu');
+      } else {
+        setTimeout(() => this.init(), 1000);
+      }
+    } catch (error) {
+      console.error('❌ Virhe Firebase Auth alustuksessa:', error);
+    }
+  }
+
+  // REKISTERÖINTI
+  async register(email, password, userInfo) {
+    try {
+      console.log('🔐 Rekisteröidään käyttäjä:', email);
+      
+      // Luo käyttäjä Firebase Auth:iin
+      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      const user = userCredential.user;
+      
+      // Päivitä käyttäjäprofiili
+      await updateProfile(user, {
+        displayName: userInfo.name
+      });
+      
+      // Tallenna lisätiedot Firestore:en
+      const userData = {
+        uid: user.uid,
+        name: userInfo.name,
+        email: user.email,
+        phone: userInfo.phone || '',
+        address: userInfo.address || '',
+        createdAt: new Date().toISOString(),
+        isAdmin: false
+      };
+      
+      await setDoc(doc(this.db, 'users', user.uid), userData);
+      
+      console.log('✅ Käyttäjä rekisteröity onnistuneesti:', user.uid);
+      return { success: true, user: userData };
+      
+    } catch (error) {
+      console.error('❌ Rekisteröinti epäonnistui:', error);
+      return { success: false, error: this.getErrorMessage(error.code) };
+    }
+  }
+
+  // KIRJAUTUMINEN
+  async login(email, password) {
+    try {
+      console.log('🔐 Kirjaudutaan sisään:', email);
+      
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      const user = userCredential.user;
+      
+      // Hae käyttäjätiedot Firestore:sta
+      const userDoc = await getDoc(doc(this.db, 'users', user.uid));
+      let userData;
+      
+      if (userDoc.exists()) {
+        userData = userDoc.data();
+      } else {
+        // Jos ei löydy Firestore:sta, luo perustiedot
+        userData = {
+          uid: user.uid,
+          name: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          phone: '',
+          address: '',
+          createdAt: new Date().toISOString(),
+          isAdmin: false
+        };
+        await setDoc(doc(this.db, 'users', user.uid), userData);
+      }
+      
+      // Tarkista admin-oikeudet
+      userData.isAdmin = await this.checkAdminStatus(user.email);
+      
+      console.log('✅ Kirjautuminen onnistui:', user.uid);
+      return { success: true, user: userData };
+      
+    } catch (error) {
+      console.error('❌ Kirjautuminen epäonnistui:', error);
+      return { success: false, error: this.getErrorMessage(error.code) };
+    }
+  }
+
+  // ULOSKIRJAUTUMINEN
+  async logout() {
+    try {
+      await signOut(this.auth);
+      localStorage.removeItem('current_user');
+      localStorage.removeItem('user_logged_in');
+      console.log('✅ Uloskirjautuminen onnistui');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Uloskirjautuminen epäonnistui:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // ADMIN-OIKEUKSIEN TARKISTUS
+  async checkAdminStatus(email) {
+    try {
+      const adminDoc = await getDoc(doc(this.db, 'admin_users', 'admin'));
+      if (adminDoc.exists()) {
+        const adminData = adminDoc.data();
+        return adminData.email === email;
+      }
+      return false;
+    } catch (error) {
+      console.error('Virhe admin-tarkistuksessa:', error);
+      return false;
+    }
+  }
+
+  // KIRJAUTUMISTILAN MUUTOS
+  async handleAuthStateChange(user) {
+    if (user) {
+      console.log('🔄 Käyttäjä kirjautunut:', user.email);
+      
+      // Hae tai luo käyttäjätiedot
+      const userDoc = await getDoc(doc(this.db, 'users', user.uid));
+      let userData;
+      
+      if (userDoc.exists()) {
+        userData = userDoc.data();
+      } else {
+        userData = {
+          uid: user.uid,
+          name: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          phone: '',
+          address: '',
+          createdAt: new Date().toISOString(),
+          isAdmin: await this.checkAdminStatus(user.email)
+        };
+      }
+      
+      // Tallenna localStorage:iin yhteensopivuutta varten
+      localStorage.setItem('current_user', JSON.stringify(userData));
+      localStorage.setItem('user_logged_in', 'true');
+      
+      this.currentUser = userData;
+      
+      // Päivitä UI
+      if (typeof window.shopApp !== 'undefined') {
+        window.shopApp.currentUser = userData;
+        window.shopApp.loadUserInfo();
+      }
+      
+    } else {
+      console.log('🔄 Käyttäjä kirjautunut ulos');
+      this.currentUser = null;
+      localStorage.removeItem('current_user');
+      localStorage.removeItem('user_logged_in');
+    }
+  }
+
+  // VIRHEVIESTIEN KÄÄNNÖS
+  getErrorMessage(errorCode) {
+    const messages = {
+      'auth/email-already-in-use': 'Sähköpostiosoite on jo käytössä',
+      'auth/weak-password': 'Salasana on liian heikko',
+      'auth/user-not-found': 'Käyttäjää ei löytynyt',
+      'auth/wrong-password': 'Väärä salasana',
+      'auth/invalid-email': 'Virheellinen sähköpostiosoite',
+      'auth/too-many-requests': 'Liian monta yritystä. Yritä hetken päästä uudelleen.',
+      'auth/network-request-failed': 'Verkkovirhe. Tarkista internetyhteytesi.'
+    };
+    
+    return messages[errorCode] || 'Tuntematon virhe tapahtui';
+  }
+}
+
+// Globaali instanssi
+window.modernFirebaseAuth = new ModernFirebaseAuth();
+
+export { ModernFirebaseAuth };

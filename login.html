@@ -400,17 +400,19 @@
     </div>
   </div>
 
-  <!-- Firebase CDN -->
+  <!-- Firebase v11 - Moderni ES modules -->
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="firebase-auth-modern.js"></script>
+  <script type="module" src="firebase-db-modern.js"></script>
+  
+  <!-- Fallback: Vanhat compat-versiot -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  
-  <!-- Firebase config -->
-  <script src="firebase-config.js"></script>
-  
-  <!-- Authentication scripts -->
   <script src="firebase-db.js"></script>
   <script src="firebase-auth.js"></script>
+  
+  <!-- Login logic -->
   <script src="login.js"></script>
 </body>
 </html>

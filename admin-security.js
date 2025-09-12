@@ -80,8 +80,9 @@ class AdminSecurity {
       // Tarkista Firebase Auth:n kautta
       if (window.firebaseAuth && window.firebaseAuth.auth) {
         const user = window.firebaseAuth.auth.currentUser;
-        if (user && user.email === 'admin@loytokauppa.fi') {
-          return true;
+        if (user) {
+          // Tarkista admin-oikeudet Firestore:sta
+          return await this.checkAdminFromFirestore(user.email);
         }
       }
 
@@ -100,6 +101,24 @@ class AdminSecurity {
       return false;
     } catch (error) {
       console.error('Virhe admin-statuksen tarkistuksessa:', error);
+      return false;
+    }
+  }
+
+  async checkAdminFromFirestore(email) {
+    try {
+      if (window.firebaseDB && window.firebaseDB.db) {
+        const adminRef = window.firebaseDB.db.collection('admin_users').doc('admin');
+        const adminDoc = await adminRef.get();
+        
+        if (adminDoc.exists) {
+          const adminData = adminDoc.data();
+          return adminData.email === email;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Virhe Firestore admin-tarkistuksessa:', error);
       return false;
     }
   }

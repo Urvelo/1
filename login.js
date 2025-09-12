@@ -58,8 +58,33 @@ class LoginSystem {
   }
 
   // KIRJAUTUMINEN
-  async handleLogin(email, password) {
+  // KIRJAUTUMINEN
+  async handleLogin(event) {
+    event.preventDefault();
+    console.log('🔐 Kirjautuminen aloitettu...');
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
     try {
+      // Käytä modernia Firebase Auth:ia jos saatavilla
+      if (window.modernFirebaseAuth && window.modernFirebaseAuth.auth) {
+        console.log('🔧 Käytetään modernia Firebase Auth:ia');
+        const result = await window.modernFirebaseAuth.login(email, password);
+        
+        if (result.success) {
+          this.showSuccess('Kirjautuminen onnistui!');
+          this.handleSuccessfulLogin(result.user);
+          return;
+        } else {
+          this.showError(result.error);
+          return;
+        }
+      }
+      
+      // Fallback: vanha järjestelmä + admin-tarkistus
+      console.log('🔧 Käytetään fallback-järjestelmää');
+      
       // Yritä ensin tavallista kirjautumista
       if (window.firebaseAuth) {
         const result = await window.firebaseAuth.login(email, password);
@@ -142,44 +167,64 @@ class LoginSystem {
     
     const name = document.getElementById('registerName').value;
     const email = document.getElementById('registerEmail').value;
-    const phone = document.getElementById('registerPhone').value;
-    const address = document.getElementById('registerAddress').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    console.log('✅ Tarkistukset läpäisty, rekisteröidään käyttäjä...');
     
-    console.log('📝 Rekisteröintitiedot:', { name, email, phone, address });
-    
-    // Tarkistukset
-    if (password !== confirmPassword) {
-      this.showError('Salasanat eivät täsmää!');
-      return;
+    try {
+      // Käytä modernia Firebase Auth:ia jos saatavilla
+      if (window.modernFirebaseAuth && window.modernFirebaseAuth.auth) {
+        console.log('🔧 Käytetään modernia Firebase Auth:ia rekisteröintiin');
+        
+        const result = await window.modernFirebaseAuth.register(email, password, {
+          name,
+          phone,
+          address
+        });
+        
+        if (result.success) {
+          console.log('✅ Käyttäjä rekisteröity Firebase Auth:iin:', result.user);
+          this.showSuccess('Rekisteröinti onnistui! Voit nyt kirjautua sisään.');
+          
+          // Vaihda kirjautumislomakkeeseen
+          setTimeout(() => {
+            this.showLogin();
+          }, 2000);
+          return;
+        } else {
+          this.showError(result.error);
+          return;
+        }
+      }
+      
+      // Fallback: vanha localStorage-systeemi
+      console.log('🔧 Käytetään fallback localStorage-rekisteröintiä');
+      
+      const userData = {
+        name,
+        email,
+        phone,
+        address,
+        password,
+        id: Date.now().toString(),
+        registeredAt: new Date().toISOString()
+      };
+      
+      // Tallenna käyttäjä
+      const allUsers = JSON.parse(localStorage.getItem('registered_users')) || [];
+      allUsers.push(userData);
+      localStorage.setItem('registered_users', JSON.stringify(allUsers));
+      
+      console.log('✅ Käyttäjä rekisteröity localStorage:iin:', userData);
+      this.showSuccess('Rekisteröinti onnistui! Voit nyt kirjautua sisään.');
+      
+      // Vaihda kirjautumislomakkeeseen
+      setTimeout(() => {
+        this.showLogin();
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ Rekisteröinti epäonnistui:', error);
+      this.showError('Rekisteröinti epäonnistui. Yritä uudelleen.');
     }
-    
-    if (password.length < 6) {
-      this.showError('Salasanan on oltava vähintään 6 merkkiä pitkä!');
-      return;
-    }
-    
-    // Tarkista onko sähköposti jo käytössä
-    const existingUsers = JSON.parse(localStorage.getItem('registered_users')) || [];
-    if (existingUsers.find(u => u.email === email)) {
-      this.showError('Sähköposti on jo rekisteröity!');
-      return;
-    }
-    
-    console.log('✅ Tarkistukset läpäisty, lähetetään vahvistuskoodi...');
-    
-    // VÄLIAIKAINEN: Rekisteröi suoraan ilman vahvistuskoodia
-    const userData = {
-      name,
-      email,
-      phone,
-      address,
-      password,
-      id: Date.now().toString(),
-      registeredAt: new Date().toISOString()
-    };
-    
     // Tallenna käyttäjä
     const allUsers = JSON.parse(localStorage.getItem('registered_users')) || [];
     allUsers.push(userData);

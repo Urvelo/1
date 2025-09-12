@@ -680,46 +680,188 @@ function closeCheckoutModal() {
   }
 }
 
-function processPayment() {
+// TILAUSTEN HALLINTA - APUFUNKTIOT
+function createLocalOrder(orderData) {
+  try {
+    const order = {
+      id: Date.now().toString(),
+      ...orderData,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    
+    const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
+    orders.push(order);
+    localStorage.setItem('customer_orders', JSON.stringify(orders));
+    
+    console.log('✅ Tilaus tallennettu localStorage:iin:', order.id);
+    return { success: true, orderId: order.id };
+  } catch (error) {
+    console.error('❌ localStorage tilauksen luonti epäonnistui:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function processTestPayment(orderId) {
+  try {
+    console.log('🧪 Käsitellään testimaksu tilaukelle:', orderId);
+    
+    // Simuloi maksu
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Päivitä tilauksen tila
+    if (window.modernFirebaseDB && window.modernFirebaseDB.db) {
+      await window.modernFirebaseDB.updateOrderStatus(orderId, 'paid', 'test_payment_' + Date.now());
+    } else {
+      updateLocalOrderStatus(orderId, 'paid');
+    }
+    
+    alert('✅ Testmaksu onnistui! Tilaukesi on vahvistettu.');
+    
+    // Tyhjennä ostoskori
+    shopApp.cart = [];
+    localStorage.removeItem('shopping_cart');
+    shopApp.updateCartUI();
+    
+    // Ohjaa tilausten näkymään
+    window.location.href = 'profile.html';
+    
+  } catch (error) {
+    console.error('❌ Testmaksun käsittely epäonnistui:', error);
+    alert('❌ Testmaksun käsittelyssä tapahtui virhe.');
+  }
+}
+
+function updateLocalOrderStatus(orderId, status) {
+  try {
+    const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    
+    if (orderIndex !== -1) {
+      orders[orderIndex].status = status;
+      orders[orderIndex].updatedAt = new Date().toISOString();
+      localStorage.setItem('customer_orders', JSON.stringify(orders));
+      console.log('✅ Tilauksen tila päivitetty localStorage:issa:', orderId, status);
+    }
+  } catch (error) {
+    console.error('❌ localStorage tilauksen päivitys epäonnistui:', error);
+  }
+}
+
+async function processPayPalPayment(total, orderId) {
+  try {
+    console.log('💰 Käsitellään PayPal-maksu:', total, 'EUR, tilaus:', orderId);
+    
+    if (window.paypal && window.initPayPalPayment) {
+      // Käytä olemassa olevaa PayPal-integraatiota
+      await window.initPayPalPayment(total, orderId);
+    } else {
+      throw new Error('PayPal-integraatio ei ole käytettävissä');
+    }
+    
+  } catch (error) {
+    console.error('❌ PayPal-maksun käsittely epäonnistui:', error);
+    alert('❌ PayPal-maksun käsittelyssä tapahtui virhe: ' + error.message);
+  }
+}
+
+async function processPayment() {
   const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
-  const paymentMethods = {
-    paypal: 'PayPal',
-    sandbox: 'Sandbox Maksu (Testi)',
-    bank: 'Verkkopankki',
-    cash: 'Postiennakko'
-  };
   
-  // Luo tilaus
-  const order = {
-    id: Date.now(),
-    customer_name: shopApp.currentUser?.name || 'Vieras',
-    customer_email: shopApp.currentUser?.email || '',
-    customer_phone: shopApp.currentUser?.phone || '',
-    customer_address: shopApp.currentUser?.address || '',
-    order_products: shopApp.cart.map(item => `${item.name} (${item.quantity}kpl)`).join(', '),
-    order_total: shopApp.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2) + ' €',
-    payment_method: paymentMethods[selectedPayment],
-    order_date: new Date().toLocaleDateString('fi-FI'),
-    status: selectedPayment === 'sandbox' ? 'paid' : 'pending'
-  };
+  if (!shopApp.currentUser) {
+    alert('🔒 Kirjaudu sisään ennen ostamista!');
+    return;
+  }
+
+  if (shopApp.cart.length === 0) {
+    alert('🛒 Ostoskori on tyhjä!');
+    return;
+  }
+
+  // Laske kokonaishinta
+  const total = shopApp.cart.reduce((sum, item) => {
+    const product = shopApp.products.find(p => p.id == item.productId);
+    return sum + (product ? product.price * item.quantity : 0);
+  }, 0);
+
+  try {
+    // Luo tilaus Firebase Firestore:en
+    const orderData = {
+      userId: shopApp.currentUser.uid || shopApp.currentUser.id, // Firebase UID tai localStorage ID
+      customerInfo: {
+        name: shopApp.currentUser.name,
+        email: shopApp.currentUser.email,
+        phone: shopApp.currentUser.phone,
+        address: shopApp.currentUser.address
+      },
+      products: shopApp.cart.map(item => {
+        const product = shopApp.products.find(p => p.id == item.productId);
+        return {
+          id: item.productId,
+          name: product ? product.name : 'Tuntematon tuote',
+          price: product ? product.price : 0,
+          quantity: item.quantity,
+          total: product ? product.price * item.quantity : 0
+        };
+      }),
+      total: total,
+      currency: 'EUR',
+      paymentMethod: selectedPayment
+    };
+
+    console.log('📦 Luodaan tilaus:', orderData);
+
+    let orderResult;
+    
+    // Käytä modernia Firebase:a jos saatavilla
+    if (window.modernFirebaseDB && window.modernFirebaseDB.db) {
+      orderResult = await window.modernFirebaseDB.createOrder(orderData);
+    } else {
+      // Fallback: tallenna localStorage:iin
+      orderResult = createLocalOrder(orderData);
+    }
+
+    if (!orderResult.success) {
+      throw new Error(orderResult.error);
+    }
+
+    const orderId = orderResult.orderId;
+
+    if (selectedPayment === 'paypal') {
+      // PayPal-maksu
+      await processPayPalPayment(total, orderId);
+    } else if (selectedPayment === 'sandbox') {
+      // Sandbox-maksu (testi)
+      await processTestPayment(orderId);
+    } else {
+      alert('💳 Maksuvaihtoehto "' + selectedPayment + '" ei ole vielä käytössä. Käytä PayPal:ia.');
+    }
+
+  } catch (error) {
+    console.error('❌ Maksun käsittely epäonnistui:', error);
+    alert('❌ Maksun käsittelyssä tapahtui virhe: ' + error.message);
+  }
+}
   
-  // Tallenna tilaus
-  const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
-  orders.push(order);
-  localStorage.setItem('customer_orders', JSON.stringify(orders));
-  
-  // Lähetä Formspree-lomakkeella
-  shopApp.sendOrderToFormspree(order);
-  
-  // PayPal-maksu
+  console.log('📦 Tilaus luotu:', order);
+
+  // Sulkee checkout-modalin
+  closeCheckoutModal();
+
+  // Käsittele maksut PayPal-integraation kautta
   if (selectedPayment === 'paypal') {
-    processPayPalPayment(order);
+    // PayPal-maksu käsitellään uudessa järjestelmässä
+    await processPayPalPayment(total, orderId);
   } else if (selectedPayment === 'sandbox') {
     // Sandbox-maksu simulaatio
-    simulateSandboxPayment(order);
+    await processTestPayment(orderId);
   } else {
-    // Muut maksutavat
-    processOtherPayment(order, selectedPayment);
+    alert('💳 Maksuvaihtoehto "' + selectedPayment + '" ei ole vielä käytössä. Käytä PayPal:ia.');
+  }
+
+  } catch (error) {
+    console.error('❌ Maksun käsittely epäonnistui:', error);
+    alert('❌ Maksun käsittelyssä tapahtui virhe: ' + error.message);
   }
 }
 

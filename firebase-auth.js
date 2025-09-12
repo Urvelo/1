@@ -34,10 +34,13 @@ class FirebaseAuth {
     }
   }
 
-  handleAuthStateChange(user) {
+  async handleAuthStateChange(user) {
     if (user) {
       // Käyttäjä kirjautunut Firebase:en
       console.log('Käyttäjä kirjautunut Firebase:en:', user.email);
+      
+      // Tarkista admin-oikeudet
+      const isAdmin = await this.checkIfAdmin(user.email);
       
       // Päivitä käyttäjätiedot LocalStorageen yhteensopivuutta varten
       const userData = {
@@ -46,7 +49,7 @@ class FirebaseAuth {
         email: user.email,
         phone: '',
         address: '',
-        isAdmin: user.email === 'admin@loytokauppa.fi',
+        isAdmin: isAdmin,
         loginTime: new Date().toISOString()
       };
       
@@ -165,46 +168,65 @@ class FirebaseAuth {
   fallbackLogin(email, password) {
     console.log('Käytetään vanhaa kirjautumisjärjestelmää');
     
-    // Tarkista admin-tunnukset
-    if (email === 'admin@loytokauppa.fi' && password === 'admin123') {
-      const adminUser = {
-        id: 'admin',
-        name: 'Ylläpitäjä',
-        email: email,
-        phone: '',
-        address: '',
-        isAdmin: true,
-        loginTime: new Date().toISOString()
-      };
+    // Tarkista admin-tunnukset Firestore:sta
+    return this.checkAdminCredentials(email, password);
+  }
+  
+  async checkAdminCredentials(email, password) {
+    try {
+      // Tarkista Firestore:sta admin-tunnukset
+      if (window.firebaseDB && window.firebaseDB.db) {
+        const adminRef = window.firebaseDB.db.collection('admin_users').doc('admin');
+        const adminDoc = await adminRef.get();
+        
+        if (adminDoc.exists) {
+          const adminData = adminDoc.data();
+          if (adminData.email === email && adminData.password === password) {
+            const adminUser = {
+              id: 'admin',
+              name: adminData.name || 'Ylläpitäjä',
+              email: adminData.email,
+              phone: adminData.phone || '',
+              address: adminData.address || '',
+              isAdmin: true,
+              loginTime: new Date().toISOString()
+            };
+            
+            localStorage.setItem('current_user', JSON.stringify(adminUser));
+            localStorage.setItem('user_logged_in', 'true');
+            
+            return { success: true, user: adminUser };
+          }
+        }
+      }
       
-      localStorage.setItem('current_user', JSON.stringify(adminUser));
-      localStorage.setItem('user_logged_in', 'true');
+      // Fallback: tarkista tavalliset käyttäjät
+      const users = JSON.parse(localStorage.getItem('registered_users')) || [];
+      const user = users.find(u => u.email === email);
       
-      return { success: true, user: adminUser };
+      if (user && user.password === password) {
+        const userData = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          address: user.address || '',
+          isAdmin: false,
+          loginTime: new Date().toISOString()
+        };
+        
+        localStorage.setItem('current_user', JSON.stringify(userData));
+        localStorage.setItem('user_logged_in', 'true');
+        
+        return { success: true, user: userData };
+      }
+      
+      return { success: false, error: 'Väärä sähköposti tai salasana' };
+      
+    } catch (error) {
+      console.error('Kirjautumisvirhe:', error);
+      return { success: false, error: 'Kirjautuminen epäonnistui' };
     }
-    
-    // Tarkista tallennetut käyttäjät
-    const users = JSON.parse(localStorage.getItem('registered_users')) || [];
-    const user = users.find(u => u.email === email);
-    
-    if (user && user.password === password) {
-      const userData = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        address: user.address || '',
-        isAdmin: false,
-        loginTime: new Date().toISOString()
-      };
-      
-      localStorage.setItem('current_user', JSON.stringify(userData));
-      localStorage.setItem('user_logged_in', 'true');
-      
-      return { success: true, user: userData };
-    }
-    
-    return { success: false, error: 'Väärä sähköposti tai salasana' };
   }
 
   fallbackRegister(email, password, userData) {
@@ -414,6 +436,25 @@ class AuthFormHandler {
       registerBtn?.removeAttribute('disabled');
       loginBtn && (loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Kirjaudu sisään');
       registerBtn && (registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Rekisteröidy');
+    }
+  }
+
+  // Tarkista onko käyttäjä admin Firestore:sta
+  async checkIfAdmin(email) {
+    try {
+      if (this.db) {
+        const adminRef = this.db.collection('admin_users').doc('admin');
+        const adminDoc = await adminRef.get();
+        
+        if (adminDoc.exists) {
+          const adminData = adminDoc.data();
+          return adminData.email === email;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Virhe admin-tarkistuksessa:', error);
+      return false;
     }
   }
 }

@@ -1,4 +1,8 @@
-// Firebase-konfiguraatio Löytökauppa - compat versio
+// Firebase-konfiguraatio Löytökauppa - Moderni v9+ versio
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
 // Firebase-konfiguraatio
 const firebaseConfig = {
   apiKey: "AIzaSyANtt5pVn0rgHqttQ3KfjNkjOMncV26trI",
@@ -10,33 +14,17 @@ const firebaseConfig = {
   measurementId: "G-T5F642C6L8"
 };
 
-// Alusta Firebase (compat versio)
-let firebaseApp;
+// Alusta Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Odota että Firebase CDN on ladattu
-function initializeFirebaseApp() {
-  if (typeof firebase !== 'undefined') {
-    try {
-      firebaseApp = firebase.initializeApp(firebaseConfig);
-      console.log('✅ Firebase App alustettu:', firebaseApp.name);
-      
-      // Tee saataville globaalisti
-      window.firebaseApp = firebaseApp;
-      window.firebaseConfig = firebaseConfig;
-    } catch (error) {
-      console.warn('⚠️ Firebase App alustus virhe:', error);
-      // Jos jo alustettu, käytä olemassa olevaa
-      if (firebase.apps.length > 0) {
-        firebaseApp = firebase.apps[0];
-        window.firebaseApp = firebaseApp;
-        console.log('✅ Käytetään olemassa olevaa Firebase App:ia');
-      }
-    }
-  } else {
-    console.error('❌ Firebase compat kirjasto ei ole ladattu');
-  }
-}
+// Tee saataville globaalisti yhteensopivuutta varten
+window.firebaseApp = app;
+window.firebaseAuth = auth;
+window.firebaseDB = { db };
+window.firebaseConfig = firebaseConfig;
 
-// Yritä alustaa heti ja myös DOMContentLoaded:issa
-initializeFirebaseApp();
-document.addEventListener('DOMContentLoaded', initializeFirebaseApp);
+console.log('✅ Firebase v11 alustettu onnistuneesti');
+
+export { app, auth, db, firebaseConfig };

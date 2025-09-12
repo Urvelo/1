@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Alustus - Löytökauppa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; text-align: center; }
+        .status {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover { background: #45a049; }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 5px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Admin-tunnusten Alustus</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Huomio!</strong> Tämä sivu luo admin-tunnukset Firebase Firestore:en. 
+            Aja tämä vain kerran ja poista sitten tämä tiedosto turvaallisuussyistä!
+        </div>
+        
+        <button onclick="setupAdmin()">🔐 Luo Admin-tunnukset Firestore:en</button>
+        <button onclick="testAdminLogin()">🧪 Testaa Admin-kirjautuminen</button>
+        <button onclick="clearLog()">🗑️ Tyhjennä Loki</button>
+        
+        <div class="status" id="log">
+            <div>📋 Alustus valmis. Klikkaa "Luo Admin-tunnukset" aloittaaksesi...</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-database.js"></script>
+    
+    <script>
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString('fi-FI');
+            logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '<div>📋 Loki tyhjennetty.</div>';
+        }
+        
+        async function setupAdmin() {
+            log('🔧 Aloitetaan admin-tunnusten luominen...');
+            
+            try {
+                // Tarkista Firebase yhteys
+                if (!window.firebaseDB || !window.firebaseDB.db) {
+                    log('❌ Firebase ei ole käytettävissä!');
+                    return;
+                }
+                
+                const db = window.firebaseDB.db;
+                log('✅ Firebase yhteys toimii');
+                
+                // Luo admin-käyttäjä
+                const adminData = {
+                    email: 'admin@loytokauppa.fi',
+                    password: 'admin123',
+                    name: 'Ylläpitäjä',
+                    phone: '+358 40 123 4567',
+                    address: 'Löytökauppa Oy, Esimerkkikatu 1, 00100 Helsinki',
+                    role: 'admin',
+                    created: new Date().toISOString(),
+                    lastLogin: null
+                };
+                
+                log('📝 Tallennetaan admin-tiedot Firestore:en...');
+                await db.collection('admin_users').doc('admin').set(adminData);
+                log('✅ Admin-käyttäjä luotu onnistuneesti!');
+                
+                // Testaa haku
+                log('🔍 Testataan admin-tietojen hakua...');
+                const adminRef = db.collection('admin_users').doc('admin');
+                const adminDoc = await adminRef.get();
+                
+                if (adminDoc.exists) {
+                    const data = adminDoc.data();
+                    log('✅ Admin-tiedot haettu onnistuneesti:');
+                    log(`📧 Email: ${data.email}`);
+                    log(`👤 Nimi: ${data.name}`);
+                    log(`📱 Puhelin: ${data.phone}`);
+                    log(`🏢 Osoite: ${data.address}`);
+                    log('🔐 Salasana: [piilotettu]');
+                } else {
+                    log('❌ Admin-tietoja ei löytynyt!');
+                }
+                
+                log('🎉 Admin-tunnukset alustettu onnistuneesti!');
+                log('⚠️ Poista tämä tiedosto (setup-admin.html) turvaallisuussyistä!');
+                
+            } catch (error) {
+                log(`❌ Virhe: ${error.message}`);
+                console.error('Admin setup error:', error);
+            }
+        }
+        
+        async function testAdminLogin() {
+            log('🧪 Testataan admin-kirjautumista...');
+            
+            try {
+                if (!window.firebaseDB || !window.firebaseDB.db) {
+                    log('❌ Firebase ei ole käytettävissä!');
+                    return;
+                }
+                
+                const db = window.firebaseDB.db;
+                const email = 'admin@loytokauppa.fi';
+                const password = 'admin123';
+                
+                log(`🔍 Haetaan admin-tietoja sähköpostilla: ${email}`);
+                
+                const adminRef = db.collection('admin_users').doc('admin');
+                const adminDoc = await adminRef.get();
+                
+                if (adminDoc.exists) {
+                    const adminData = adminDoc.data();
+                    log('✅ Admin-tiedot löydetty');
+                    
+                    if (adminData.email === email && adminData.password === password) {
+                        log('🎉 Kirjautuminen onnistui!');
+                        log(`👤 Tervetuloa, ${adminData.name}!`);
+                        
+                        // Päivitä kirjautumisaika
+                        await adminRef.update({ lastLogin: new Date().toISOString() });
+                        log('✅ Kirjautumisaika päivitetty');
+                        
+                    } else {
+                        log('❌ Väärät kirjautumistiedot!');
+                    }
+                } else {
+                    log('❌ Admin-käyttäjää ei löytynyt! Aja ensin "Luo Admin-tunnukset"');
+                }
+                
+            } catch (error) {
+                log(`❌ Virhe testauksessa: ${error.message}`);
+                console.error('Test error:', error);
+            }
+        }
+        
+        // Alustus sivun latautuessa
+        window.addEventListener('load', () => {
+            log('🚀 Sivu ladattu. Firebase alustetaan...');
+            
+            setTimeout(() => {
+                if (window.firebaseDB && window.firebaseDB.db) {
+                    log('✅ Firebase yhteys valmis!');
+                } else {
+                    log('❌ Firebase yhteyttä ei saatu muodostettua.');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
