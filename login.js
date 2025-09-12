@@ -7,12 +7,28 @@ class LoginSystem {
   }
 
   init() {
+    console.log('Alustetaan login-järjestelmä');
+    
     // Tarkista onko käyttäjä jo kirjautunut
     this.checkExistingLogin();
     
     // Event listenerit
-    document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
-    document.getElementById('registerForm').addEventListener('submit', (e) => this.handleRegister(e));
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    
+    if (loginForm) {
+      console.log('Lisätään login-formin event listener');
+      loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+    } else {
+      console.error('loginForm elementtiä ei löydy!');
+    }
+    
+    if (registerForm) {
+      console.log('Lisätään register-formin event listener');
+      registerForm.addEventListener('submit', (e) => this.handleRegister(e));
+    } else {
+      console.error('registerForm elementtiä ei löydy!');
+    }
   }
 
   checkExistingLogin() {
@@ -41,14 +57,28 @@ class LoginSystem {
   async handleLogin(event) {
     event.preventDefault();
     
-    const email = document.getElementById('loginEmail').value;
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+    if (!email || !password) {
+      this.showError('Täytä kaikki kentät');
+      return;
+    }
+    
+    console.log('Yritetään kirjautua sähköpostilla:', email);
     
     // Tarkista admin-tunnukset
     if (email === 'admin@löytökauppa.fi' && password === 'admin123') {
+      console.log('Admin-tunnukset tunnistettu!');
       this.loginUser({
         id: 'admin',
         name: 'Admin',
+        email: email,
+        isAdmin: true
+      });
+      return;
+    }   name: 'Admin',
         email: email,
         isAdmin: true
       });
@@ -60,6 +90,11 @@ class LoginSystem {
     const user = users.find(u => u.email === email && u.password === password);
     
     if (user) {
+      this.loginUser(user);
+    } else {
+      this.showError('Virheelliset kirjautumistiedot! Tarkista sähköposti ja salasana.');
+    }
+  } if (user) {
       this.loginUser(user);
     } else {
       this.showError('Virheelliset kirjautumistiedot!');
@@ -218,21 +253,41 @@ class LoginSystem {
     
     setTimeout(() => {
       errorDiv.style.display = 'none';
-    }, 5000);
+// GLOBAALIT FUNKTIOT
+window.switchTab = function(tab) {
+  if (window.loginSystem) {
+    window.loginSystem.switchTab(tab);
   }
+};
 
-  showSuccess(message) {
-    const successDiv = document.getElementById('successMessage');
-    successDiv.textContent = message;
-    successDiv.style.display = 'block';
-    
-    setTimeout(() => {
-      successDiv.style.display = 'none';
-    }, 5000);
+window.verifyCode = function() {
+  if (window.loginSystem) {
+    window.loginSystem.verifyCode();
   }
+};
 
-  hideMessages() {
-    document.getElementById('errorMessage').style.display = 'none';
+window.resendCode = function() {
+  if (window.loginSystem) {
+    window.loginSystem.resendCode();
+  }
+};
+
+// Käynnistä sovellus kun sivu latautuu
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM latautunut, alustetaan login-järjestelmä');
+  window.loginSystem = new LoginSystem();
+});
+
+// Fallback jos DOMContentLoaded on jo tapahtunut
+if (document.readyState === 'loading') {
+  // DOM ei ole vielä latautunut
+  document.addEventListener('DOMContentLoaded', function() {
+    window.loginSystem = new LoginSystem();
+  });
+} else {
+  // DOM on jo latautunut
+  window.loginSystem = new LoginSystem();
+}age').style.display = 'none';
     document.getElementById('successMessage').style.display = 'none';
   }
 }
