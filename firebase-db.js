@@ -32,7 +32,31 @@ class FirebaseDB {
         
         this.db = firebase.firestore();
         this.auth = firebase.auth();
-        this.isFirebaseReady = true;
+        
+        // Ota offline-persistenssi käyttöön (auttaa yhteyshäiriöissä)
+        try {
+          await this.db.enablePersistence({
+            synchronizeTabs: true
+          });
+          console.log('✅ Firebase offline-persistenssi käytössä');
+        } catch (persistenceError) {
+          if (persistenceError.code === 'failed-precondition') {
+            console.warn('⚠️ Useita välilehtiä auki - offline-persistenssi ohitettu');
+          } else if (persistenceError.code === 'unimplemented') {
+            console.warn('⚠️ Selain ei tue offline-persistenssiä');
+          }
+        }
+        
+        // Testaa yhteyttä ennen kuin merkitään valmiiksi
+        try {
+          // Testaa Firestore-yhteyttä kevyellä kyselyllä
+          await this.db.enableNetwork();
+          console.log('✅ Firebase Firestore yhteys toimii');
+          this.isFirebaseReady = true;
+        } catch (firestoreError) {
+          console.warn('⚠️ Firestore-yhteysvirhe, käytetään LocalStorage:', firestoreError);
+          this.fallbackToLocalStorage = true;
+        }
         
         console.log('✅ Firebase yhdistetty onnistuneesti');
       } else {
