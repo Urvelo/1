@@ -94,9 +94,25 @@
             
             if (window.loginSystem) {
                 try {
+                    // Luo väliaikaiset input kentät joita login.js odottaa
+                    const tempEmailInput = document.createElement('input');
+                    tempEmailInput.id = 'loginEmail';
+                    tempEmailInput.value = email;
+                    document.body.appendChild(tempEmailInput);
+                    
+                    const tempPasswordInput = document.createElement('input');
+                    tempPasswordInput.id = 'loginPassword';
+                    tempPasswordInput.value = password;
+                    document.body.appendChild(tempPasswordInput);
+                    
                     // Simuloi login event
                     const fakeEvent = { preventDefault: () => {} };
                     window.loginSystem.handleLogin(fakeEvent);
+                    
+                    // Poista väliaikaiset kentät
+                    document.body.removeChild(tempEmailInput);
+                    document.body.removeChild(tempPasswordInput);
+                    
                     result.innerHTML = '<span class="success">✅ Kirjautumistesti käynnistetty</span>';
                 } catch (error) {
                     result.innerHTML = '<span class="error">❌ Virhe: ' + error.message + '</span>';
