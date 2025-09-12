@@ -16,14 +16,22 @@ class LoginSystem {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     
+    console.log('🔍 Form debug:');
+    console.log('- loginForm löytyi:', !!loginForm);
+    console.log('- registerForm löytyi:', !!registerForm);
+    
     if (loginForm) {
       console.log('✅ Lisätään login-formin event listener');
       loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+    } else {
+      console.error('❌ loginForm elementtiä ei löydy!');
     }
     
     if (registerForm) {
       console.log('✅ Lisätään register-formin event listener');
       registerForm.addEventListener('submit', (e) => this.handleRegister(e));
+    } else {
+      console.error('❌ registerForm elementtiä ei löydy!');
     }
   }
 
@@ -56,6 +64,13 @@ class LoginSystem {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
     
+    console.log('🔍 Debug info:');
+    console.log('- Email kenttä löytyi:', !!document.getElementById('loginEmail'));
+    console.log('- Password kenttä löytyi:', !!document.getElementById('loginPassword'));
+    console.log('- Email arvo:', JSON.stringify(email));
+    console.log('- Password pituus:', password.length);
+    console.log('- Admin email vertailu:', email === 'admin@loytokauppa.fi');
+    
     if (!email || !password) {
       this.showError('Täytä kaikki kentät');
       return;
@@ -64,7 +79,7 @@ class LoginSystem {
     console.log('🔐 Yritetään kirjautua sähköpostilla:', email);
     
     // Tarkista admin-tunnukset
-    if (email === 'admin@löytökauppa.fi' && password === 'admin123') {
+    if (email === 'admin@loytokauppa.fi' && password === 'admin123') {
       console.log('✅ Admin-tunnukset tunnistettu!');
       this.loginUser({
         id: 'admin',
