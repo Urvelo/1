@@ -119,9 +119,19 @@ class ShopApp {
         <a href="profile.html" class="user-menu-item">
           <i class="fas fa-user"></i> Profiili
         </a>
-  checkAuth() {
-    // Ei tehdä mitään - annetaan käyttäjän selata vapaasti
-  }     <a href="login.html" class="user-menu-item">
+        <a href="#" class="user-menu-item" onclick="showOrders()">
+          <i class="fas fa-box"></i> Tilaukset
+        </a>
+        ${this.currentUser.isAdmin ? '<a href="admin.html" class="user-menu-item"><i class="fas fa-cog"></i> Hallinta</a>' : ''}
+        <a href="#" class="user-menu-item" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Kirjaudu ulos
+        </a>
+      `;
+    } else {
+      // Ei kirjautunut
+      userNameElement.textContent = 'Kirjaudu';
+      userMenuElement.innerHTML = `
+        <a href="login.html" class="user-menu-item">
           <i class="fas fa-sign-in-alt"></i> Kirjaudu sisään
         </a>
         <a href="login.html" class="user-menu-item">
@@ -130,22 +140,10 @@ class ShopApp {
       `;
     }
   }
-  
+
   checkAuth() {
-    if (!localStorage.getItem('user_logged_in') && !localStorage.getItem('guest_mode')) {
-      // Ei kirjautunut sisään
-      setTimeout(() => {
-        if (confirm('Haluatko kirjautua sisään saadaksesi paremman kokemuksen?')) {
-          window.location.href = 'login.html';
-        } else {
-          localStorage.setItem('guest_mode', 'true');
-          this.loadUserInfo();
-        }
-      }, 3000);
-    }
-  }
-  
-  // KATEGORIOIDEN NÄYTTÄMINEN
+    // Ei tehdä mitään - annetaan käyttäjän selata vapaasti
+  }  // KATEGORIOIDEN NÄYTTÄMINEN
   renderCategories() {
     const container = document.getElementById('categoriesGrid');
     container.innerHTML = '';
@@ -665,10 +663,20 @@ function toggleCart() {
 
 function toggleUserMenu() {
   const menu = document.getElementById('userMenu');
-  menu.classList.toggle('active');
+function handleUserClick() {
+  if (!shopApp.currentUser) {
+    // Jos ei ole kirjautunut, vie login-sivulle
+    window.location.href = 'login.html';
+  } else {
+    // Jos on kirjautunut, näytä valikko
+    toggleUserMenu();
+  }
 }
 
-function closeAll() {
+function toggleUserMenu() {
+  const menu = document.getElementById('userMenu');
+  menu.classList.toggle('active');
+}unction closeAll() {
   document.getElementById('cartSidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('active');
   document.getElementById('userMenu').classList.remove('active');
