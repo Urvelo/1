@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirjautuminen - Dropshipping</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .auth-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .auth-header {
+      margin-bottom: 30px;
+    }
+    
+    .auth-header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+    
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    
+    .auth-tab {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .auth-tab.active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .auth-form {
+      display: none;
+    }
+    
+    .auth-form.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 16px;
+    }
+    
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 15px;
+    }
+    
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    
+    .btn-admin {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      border: none;
+    }
+    
+    .btn-admin:hover {
+      background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
+    }
+    
+    .auth-links {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    
+    .auth-links a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+    }
+    
+    .auth-links a:hover {
+      color: white;
+    }
+    
+    .guest-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    @media (max-width: 480px) {
+      .auth-container {
+        margin: 20px;
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1>🛍️</h1>
+      <h2>Tervetuloa</h2>
+      <p>Kirjaudu sisään tai luo tili</p>
+    </div>
+    
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="showTab('login')">Kirjaudu</button>
+      <button class="auth-tab" onclick="showTab('register')">Rekisteröidy</button>
+    </div>
+    
+    <!-- KIRJAUTUMINEN -->
+    <form id="loginForm" class="auth-form active">
+      <div class="form-group">
+        <label>Sähköposti</label>
+        <input type="email" id="loginEmail" placeholder="sinun@email.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Salasana</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
+      </div>
+      
+      <button type="submit" class="btn">🔐 Kirjaudu sisään</button>
+    </form>
+    
+    <!-- REKISTERÖITYMINEN -->
+    <form id="registerForm" class="auth-form">
+      <div class="form-group">
+        <label>Nimi</label>
+        <input type="text" id="registerName" placeholder="Etunimi Sukunimi" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Sähköposti</label>
+        <input type="email" id="registerEmail" placeholder="sinun@email.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Puhelinnumero</label>
+        <input type="tel" id="registerPhone" placeholder="+358 40 123 4567">
+      </div>
+      
+      <div class="form-group">
+        <label>Osoite</label>
+        <input type="text" id="registerAddress" placeholder="Katu 1, 00100 Helsinki" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Salasana</label>
+        <input type="password" id="registerPassword" placeholder="••••••••" required>
+      </div>
+      
+      <button type="submit" class="btn">📝 Luo tili</button>
+    </form>
+    
+    <!-- ADMIN SISÄÄNKIRJAUTUMINEN -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.2);">
+      <button class="btn btn-admin" onclick="adminLogin()">🛡️ Admin kirjautuminen</button>
+    </div>
+    
+    <!-- VIERAILIJAN SISÄÄNPÄÄSY -->
+    <div class="guest-section">
+      <p style="margin-bottom: 15px; color: rgba(255, 255, 255, 0.8);">Tai jatka vieraana:</p>
+      <button class="btn" onclick="guestLogin()">👤 Jatka vieraana</button>
+    </div>
+    
+    <div class="auth-links">
+      <p><a href="#" onclick="resetPassword()">Unohtuiko salasana?</a></p>
+    </div>
+  </div>
+  
+  <script>
+    // Välilehtien vaihto
+    function showTab(tabName) {
+      // Piilota kaikki lomakkeet
+      document.querySelectorAll('.auth-form').forEach(form => {
+        form.classList.remove('active');
+      });
+      
+      // Näytä valittu lomake
+      if (tabName === 'login') {
+        document.getElementById('loginForm').classList.add('active');
+      } else {
+        document.getElementById('registerForm').classList.add('active');
+      }
+      
+      // Päivitä välilehdet
+      document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+    
+    // Kirjautuminen
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      // Hae käyttäjät LocalStoragesta
+      const users = JSON.parse(localStorage.getItem('registered_users')) || [];
+      const user = users.find(u => u.email === email && u.password === password);
+      
+      if (user) {
+        // Kirjautuminen onnistui
+        localStorage.setItem('current_user', JSON.stringify(user));
+        localStorage.setItem('user_logged_in', 'true');
+        alert('✅ Kirjautuminen onnistui!');
+        window.location.href = 'k.html';
+      } else {
+        alert('❌ Väärä sähköposti tai salasana!');
+      }
+    });
+    
+    // Rekisteröityminen
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('registerName').value;
+      const email = document.getElementById('registerEmail').value;
+      const phone = document.getElementById('registerPhone').value;
+      const address = document.getElementById('registerAddress').value;
+      const password = document.getElementById('registerPassword').value;
+      
+      // Tarkista onko sähköposti jo käytössä
+      const users = JSON.parse(localStorage.getItem('registered_users')) || [];
+      if (users.find(u => u.email === email)) {
+        alert('❌ Tämä sähköposti on jo käytössä!');
+        return;
+      }
+      
+      // Luo uusi käyttäjä
+      const newUser = {
+        id: Date.now(),
+        name,
+        email,
+        phone,
+        address,
+        password,
+        created: new Date().toISOString()
+      };
+      
+      users.push(newUser);
+      localStorage.setItem('registered_users', JSON.stringify(users));
+      
+      alert('✅ Tili luotu onnistuneesti! Voit nyt kirjautua sisään.');
+      
+      // Vaihda kirjautumis-välilehteen
+      showTab('login');
+      document.getElementById('loginEmail').value = email;
+    });
+    
+    // Admin kirjautuminen
+    function adminLogin() {
+      const password = prompt('🛡️ Anna admin-salasana:');
+      if (password === 'admin123') {
+        localStorage.setItem('admin_logged_in', 'true');
+        alert('✅ Admin kirjautuminen onnistui!');
+        window.location.href = 'admin.html';
+      } else if (password !== null) {
+        alert('❌ Väärä admin-salasana!');
+      }
+    }
+    
+    // Vieraskirjautuminen
+    function guestLogin() {
+      localStorage.setItem('guest_mode', 'true');
+      window.location.href = 'k.html';
+    }
+    
+    // Salasanan palautus
+    function resetPassword() {
+      const email = prompt('📧 Anna sähköpostiosoitteesi:');
+      if (email) {
+        alert('📧 Salasanan palautuslinkki lähetetty osoitteeseen: ' + email);
+      }
+    }
+    
+    // Tarkista onko jo kirjautunut
+    if (localStorage.getItem('user_logged_in') || localStorage.getItem('guest_mode')) {
+      window.location.href = 'k.html';
+    }
+    
+    if (localStorage.getItem('admin_logged_in')) {
+      window.location.href = 'admin.html';
+    }
+  </script>
+</body>
+</html>

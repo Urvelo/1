@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropshippingPro - Automaattinen verkkokauppa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.paypal.com/sdk/js?client-id=test&currency=EUR"></script>
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --success: #06d6a0;
+            --danger: #ef476f;
+            --warning: #ffd166;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #f8f9fa;
+            --gray: #2d2d2d;
+            --gray-light: #3d3d3d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header styles */
+        header {
+            background-color: var(--darker);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+        }
+        
+        nav ul li a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+        
+        .cart-icon {
+            position: relative;
+            font-size: 20px;
+            color: var(--light);
+            cursor: pointer;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Hero section */
+        .hero {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--gray) 100%);
+            padding: 80px 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            color: #ccc;
+        }
+        
+        .search-bar {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+        }
+        
+        .search-bar input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            background-color: var(--gray-light);
+            color: var(--light);
+        }
+        
+        .search-bar button {
+            padding: 15px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        
+        /* Products section */
+        .products {
+            padding: 60px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.2rem;
+            color: var(--light);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .product-card {
+            background-color: var(--gray);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .product-info {
+            padding: 20px;
+        }
+        
+        .product-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--light);
+        }
+        
+        .product-price {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .product-description {
+            color: #bbb;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .add-to-cart {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .add-to-cart:hover {
+            background-color: var(--secondary);
+        }
+        
+        /* Cart modal */
+        .cart-modal {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 350px;
+            height: 100vh;
+            background-color: var(--gray);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+            transition: right 0.3s ease-in-out;
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .cart-modal.open {
+            right: 0;
+        }
+        
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .close-cart {
+            background: none;
+            border: none;
+            color: var(--light);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .cart-items {
+            margin-bottom: 20px;
+        }
+        
+        .cart-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .cart-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+        
+        .cart-item-details {
+            flex: 1;
+        }
+        
+        .cart-item-title {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .cart-item-price {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .cart-item-remove {
+            color: var(--danger);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cart-total {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .checkout-btn:hover {
+            background-color: #05b387;
+        }
+        
+        /* Features section */
+        .features {
+            background-color: var(--darker);
+            padding: 60px 0;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature {
+            text-align: center;
+            padding: 30px;
+            background-color: var(--gray);
+            border-radius: 10px;
+        }
+        
+        .feature i {
+            font-size: 40px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .feature h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--darker);
+            padding: 40px 0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .footer-links a {
+            color: var(--light);
+            margin: 0 15px;
+            text-decoration: none;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+        
+        .copyright {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 15px;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 0 10px;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .cart-modal {
+                width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <i class="fas fa-rocket"></i>
+                    DropshippingPro
+                </a>
+                <nav>
+                    <ul>
+                        <li><a href="#">Etusivu</a></li>
+                        <li><a href="#">Tuotteet</a></li>
+                        <li><a href="#">Tietoa meistä</a></li>
+                        <li><a href="#">Ota yhteyttä</a></li>
+                    </ul>
+                </nav>
+                <div class="cart-icon" id="cartIcon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Automaattinen Dropshipping-palvelu</h1>
+            <p>Laadukkaita tuotteita suoraan Aliexpressiltä automaattijärjestelmällä. Tilaa helposti ja nopeasti.</p>
+            <div class="search-bar">
+                <input type="text" placeholder="Etsi tuotteita...">
+                <button><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products">
+        <div class="container">
+            <h2 class="section-title">Suosituimmat tuotteet</h2>
+            <div class="products-grid" id="productsGrid">
+                <!-- Tuotteet lisätään JavaScriptillä -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Miksi valitsisit meidät?</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <i class="fas fa-sync-alt"></i>
+                    <h3>Automaattijärjestelmä</h3>
+                    <p>Tilaukset menevät automaattisesti eteenpäin, ei manuaalista työtä.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-euro-sign"></i>
+                    <h3>Voitonlaskuri</h3>
+                    <p>Näe helposti voitot ja verotukselliset seurantaan tarvittavat tiedot.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-truck"></i>
+                    <h3>Nopea toimitus</h3>
+                    <p>Tuotteet toimitetaan suoraan valmistajilta asiakkaillesi.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-headset"></i>
+                    <h3>Tuki</h3>
+                    <p>Autamme ongelmatilanteissa ja selvitämme sotkut.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Modal -->
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-header">
+            <h3>Ostoskori</h3>
+            <button class="close-cart" id="closeCart">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <!-- Ostoskorin tuotteet lisätään JavaScriptillä -->
+        </div>
+        <div class="cart-total">
+            Yhteensä: <span id="cartTotal">0 €</span>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn">Siirry kassalle</button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">DropshippingPro</div>
+                <div class="footer-links">
+                    <a href="#">Tietosuojaseloste</a>
+                    <a href="#">Käyttöehdot</a>
+                    <a href="#">Ota yhteyttä</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2023 DropshippingPro. Kaikki oikeudet pidätetään.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tuotedata (esimerkki)
+        const products = [
+            {
+                id: 1,
+                name: "Älykello Fitness Tracker",
+                price: 29.99,
+                image: "https://via.placeholder.com/300x200/3a86ff/ffffff?text=Älykello",
+                description: "Laadukas fitness-seuranta-älykello, jossa on sykemittari ja unenseuranta."
+            },
+            {
+                id: 2,
+                name: "Langaton latausasema",
+                price: 19.99,
+                image: "https://via.placeholder.com/300x200/8338ec/ffffff?text=Latausasema",
+                description: "Nopea langaton latausasema useimmille älypuhelimille."
+            },
+            {
+                id: 3,
+                name: "Bluetooth-kuulokkeet",
+                price: 39.99,
+                image: "https://via.placeholder.com/300x200/06d6a0/ffffff?text=Kuulokkeet",
+                description: "Laadukkaat langattomat kuulokkeet, joissa on melunvaimennus."
+            },
+            {
+                id: 4,
+                name: "Puhelimen etutason suojalasit",
+                price: 12.99,
+                image: "https://via.placeholder.com/300x200/ffd166/000000?text=Suojalasit",
+                description: "Kestävä lasisuojus puhelimen näytölle, naarmuntuntuinen."
+            },
+            {
+                id: 5,
+                name: "Kantava power bank",
+                price: 24.99,
+                image: "https://via.placeholder.com/300x200/ef476f/ffffff?text=Power+Bank",
+                description: "10000mAh kannettava akku, jossa on nopealatausominaisuus."
+            },
+            {
+                id: 6,
+                name: "USB-C kaapeli",
+                price: 9.99,
+                image: "https://via.placeholder.com/300x200/118ab2/ffffff?text=USB-Kaapeli",
+                description: "Kestävä 2m USB-C -latauskaapeli nopeaa latausta varten."
+            }
+        ];
+
+        // Ostoskori-toiminnallisuus
+        let cart = [];
+        const cartModal = document.getElementById('cartModal');
+        const cartIcon = document.getElementById('cartIcon');
+        const closeCart = document.getElementById('closeCart');
+        const cartCount = document.getElementById('cartCount');
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const productsGrid = document.getElementById('productsGrid');
+
+        // Näytä tuotteet
+        function displayProducts() {
+            productsGrid.innerHTML = '';
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="product-image">
+                    <div class="product-info">
+                        <h3 class="product-title">${product.name}</h3>
+                        <div class="product-price">${product.price.toFixed(2)} €</div>
+                        <p class="product-description">${product.description}</p>
+                        <button class="add-to-cart" data-id="${product.id}">Lisää ostoskoriin</button>
+                    </div>
+                `;
+                productsGrid.appendChild(productCard);
+            });
+
+            // Lisää tapahtumakuuntelijat "Lisää ostoskoriin" -painikkeille
+            const addToCartButtons = document.querySelectorAll('.add-to-cart');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.target.getAttribute('data-id'));
+                    addToCart(productId);
+                });
+            });
+        }
+
+        // Lisää tuote ostoskoriin
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                const existingItem = cart.find(item => item.id === productId);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({...product, quantity: 1});
+                }
+                updateCart();
+                alert(`${product.name} lisätty ostoskoriin!`);
+            }
+        }
+
+        // Päivitä ostoskori
+        function updateCart() {
+            cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
+            
+            cartItems.innerHTML = '';
+            let total = 0;
+            
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+                    <div class="cart-item-details">
+                        <h4 class="cart-item-title">${item.name}</h4>
+                        <div class="cart-item-price">${item.price.toFixed(2)} € x ${item.quantity}</div>
+                    </div>
+                    <button class="cart-item-remove" data-id="${item.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                cartItems.appendChild(cartItem);
+            });
+            
+            cartTotal.textContent = `${total.toFixed(2)} €`;
+            
+            // Lisää tapahtumakuuntelijat poista-painikkeille
+            const removeButtons = document.querySelectorAll('.cart-item-remove');
+            removeButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = parseInt(e.target.closest('.cart-item-remove').getAttribute('data-id'));
+                    removeFromCart(productId);
+                });
+            });
+        }
+
+        // Poista tuote ostoskorista
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        // Avaa ostoskorin modaali-ikkuna
+        cartIcon.addEventListener('click', () => {
+            cartModal.classList.add('open');
+        });
+
+        // Sulje ostoskorin modaali-ikkuna
+        closeCart.addEventListener('click', () => {
+            cartModal.classList.remove('open');
+        });
+
+        // Maksunappulan toiminta
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                alert('Ostoskori on tyhjä!');
+                return;
+            }
+            
+            // Tallenna tilaus Google Sheetsiin (tämä on esimerkki, oikea integraatio vaatisi oikean API-avaimen)
+            saveOrderToGoogleSheets();
+            
+            // Näytä maksuvaihtoehdot (PayPal)
+            alert('Siirrytään maksamaan PayPalin kautta... Tilaus tallennettu järjestelmään!');
+            
+            // Tyhjennä ostoskori
+            cart = [];
+            updateCart();
+            cartModal.classList.remove('open');
+        });
+
+        // Simuloi tilauksen tallennusta Google Sheetsiin
+        function saveOrderToGoogleSheets() {
+            // Tässä olisi oikea integraatio Google Sheetsiin
+            console.log('Tallennetaan tilaus Google Sheetsiin:', cart);
+            // Käytä tätä: https://developers.google.com/sheets/api/guides/concepts
+        }
+
+        // Alusta sivu
+        displayProducts();
+        updateCart();
+
+        // Tallenna tilaus Google Sheetsiin - esimerkkifunktio
+        function saveOrderToGoogleSheets() {
+            // Tämä on vain esimerkki, eikä toimi ilman oikeaa API-avainta
+            const scriptURL = 'https://script.google.com/macros/s/API_KEY/exec';
+            const orderData = {
+                date: new Date().toLocaleString('fi-FI'),
+                items: cart.map(item => `${item.name} (${item.quantity}kpl)`).join(', '),
+                total: cart.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)
+            };
+            
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(orderData)
+            })
+            .then(response => console.log('Tilaus tallennettu!', response))
+            .catch(error => console.error('Virhe tallennuksessa:', error));
+        }
+    </script>
+</body>
+</html>
