@@ -280,8 +280,7 @@ class ShopApp {
       
       productCard.innerHTML = `
         <div class="product-image-container">
-          <img src="${product.image}" alt="${product.name}" class="product-image" 
-               onerror="this.src='https://via.placeholder.com/400x250?text=Kuva+ladataan'">
+          <img src="${product.image}" alt="${product.name}" class="product-image">
           ${isNew ? '<div class="product-badge">Uusi!</div>' : ''}
         </div>
         <div class="product-content">
