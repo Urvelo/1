@@ -238,6 +238,11 @@ class LoginSystem {
     
     console.log('✅ Käyttäjä kirjautunut sisään:', user.name);
     
+    // Päivitä käyttäjä-UI jos ollaan jo etusivulla
+    if (typeof window.updateUserUI === 'function') {
+      window.updateUserUI();
+    }
+    
     // Ohjaa etusivulle
     window.location.href = 'index.html';
   }

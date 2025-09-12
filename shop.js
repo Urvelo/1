@@ -17,11 +17,23 @@ class ShopApp {
       await window.firebaseDB.init();
     }
     
+    // Päivitä käyttäjätiedot localStorage:sta (voi olla muuttunut)
+    this.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
+    
     this.loadUserInfo();
     await this.loadData();
     this.renderProducts();
     this.updateCartUI();
     this.checkAuth();
+    
+    // Kuuntele localStorage muutoksia (kun käyttäjä kirjautuu toisessa välilehdessä)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'current_user') {
+        console.log('🔄 Käyttäjätiedot muuttuivat, päivitetään UI');
+        this.currentUser = JSON.parse(e.newValue) || null;
+        this.loadUserInfo();
+      }
+    });
   }
   
   // DATAN LATAUS
@@ -182,11 +194,19 @@ class ShopApp {
   
   // KÄYTTÄJÄTIETOJEN HALLINTA
   loadUserInfo() {
+    console.log('🔍 Ladataan käyttäjätiedot...');
+    console.log('- currentUser:', this.currentUser);
+    console.log('- localStorage current_user:', localStorage.getItem('current_user'));
+    
     const userNameElement = document.getElementById('userName');
     const userMenuElement = document.getElementById('userMenu');
     
+    console.log('- userName elementti löytyi:', !!userNameElement);
+    console.log('- userMenu elementti löytyi:', !!userMenuElement);
+    
     if (this.currentUser) {
       // Kirjautunut käyttäjä
+      console.log('✅ Näytetään kirjautuneen käyttäjän tiedot:', this.currentUser.name);
       userNameElement.textContent = this.currentUser.name.split(' ')[0];
       userMenuElement.innerHTML = `
         <a href="profile.html" class="user-menu-item">
@@ -202,6 +222,7 @@ class ShopApp {
       `;
     } else {
       // Ei kirjautunut
+      console.log('ℹ️ Näytetään kirjautumattoman käyttäjän valikko');
       userNameElement.textContent = 'Kirjaudu';
       userMenuElement.innerHTML = `
         <a href="login.html" class="user-menu-item">
@@ -758,5 +779,15 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// Globaali funktio käyttäjätietojen päivittämiseen (login.js voi kutsua)
+window.updateUserUI = function() {
+  if (window.shopApp) {
+    console.log('🔄 Päivitetään käyttäjä-UI manuaalisesti');
+    window.shopApp.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
+    window.shopApp.loadUserInfo();
+  }
+};
+
 // Käynnistä sovellus
 const shopApp = new ShopApp();
+window.shopApp = shopApp;
