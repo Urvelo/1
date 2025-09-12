@@ -80,7 +80,7 @@ class AdminSecurity {
       // Tarkista Firebase Auth:n kautta
       if (window.firebaseAuth && window.firebaseAuth.auth) {
         const user = window.firebaseAuth.auth.currentUser;
-        if (user && user.email === 'admin@löytökauppa.fi') {
+        if (user && user.email === 'admin@loytokauppa.fi') {
           return true;
         }
       }

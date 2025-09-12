@@ -1,6 +1,9 @@
 // Admin-paneelin JavaScript
 class AdminPanel {
   constructor() {
+    // Tarkista admin-oikeudet heti alussa
+    this.checkAdminAccess();
+    
     this.products = JSON.parse(localStorage.getItem('admin_products')) || [];
     this.categories = JSON.parse(localStorage.getItem('admin_categories')) || [
       { id: 1, name: 'Elektroniikka', description: 'Sähkölaitteet ja tarvikkeet' },
@@ -11,6 +14,28 @@ class AdminPanel {
     this.orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
     
     this.init();
+  }
+  
+  checkAdminAccess() {
+    const userData = localStorage.getItem('current_user');
+    let isAdmin = false;
+    
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        isAdmin = user && user.isAdmin === true;
+      } catch (error) {
+        console.error('Virhe käyttäjätietojen lukemisessa:', error);
+      }
+    }
+    
+    if (!isAdmin) {
+      alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla: admin@loytokauppa.fi');
+      window.location.href = 'login.html';
+      return;
+    }
+    
+    console.log('✅ Admin-oikeudet vahvistettu');
   }
   
   init() {
