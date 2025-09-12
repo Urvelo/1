@@ -47,7 +47,7 @@ class ShopApp {
       
       // Jos ei saatu tuotteita Firebasesta, käytä oletustuotteita
       if (this.products.length === 0) {
-      this.categories = adminCategories;
+      this.categories = [];
     } else {
       this.products = [
         {
