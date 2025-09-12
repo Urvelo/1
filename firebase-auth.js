@@ -10,7 +10,12 @@ class FirebaseAuth {
 
   async init() {
     try {
-      if (typeof firebase !== 'undefined' && firebase.auth) {
+      // Odota että firebase-db.js on alustanut Firebasen
+      if (window.firebaseDB) {
+        await window.firebaseDB.init();
+      }
+      
+      if (typeof firebase !== 'undefined' && firebase.auth && firebase.apps && firebase.apps.length > 0) {
         this.auth = firebase.auth();
         this.isFirebaseReady = true;
         
@@ -21,7 +26,7 @@ class FirebaseAuth {
         
         console.log('✅ Firebase Auth yhdistetty');
       } else {
-        throw new Error('Firebase Auth ei ole saatavilla');
+        throw new Error('Firebase Auth ei ole saatavilla tai ei ole alustettu');
       }
     } catch (error) {
       console.warn('⚠️ Firebase Auth virhe, käytetään vanhaa systeemiä:', error);
