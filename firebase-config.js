@@ -1,9 +1,4 @@
-// Firebase-konfiguraatio Löytökauppa
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
-
+// Firebase-konfiguraatio Löytökauppa - compat versio
 // Firebase-konfiguraatio
 const firebaseConfig = {
   apiKey: "AIzaSyANtt5pVn0rgHqttQ3KfjNkjOMncV26trI",
@@ -15,12 +10,15 @@ const firebaseConfig = {
   measurementId: "G-T5F642C6L8"
 };
 
-// Alusta Firebase
-const app = initializeApp(firebaseConfig);
+// Alusta Firebase (compat versio)
+let firebaseApp;
+if (typeof firebase !== 'undefined') {
+  firebaseApp = firebase.initializeApp(firebaseConfig);
+  console.log('✅ Firebase App alustettu:', firebaseApp.name);
+} else {
+  console.error('❌ Firebase compat kirjasto ei ole ladattu');
+}
 
-// Alusta palvelut
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const analytics = getAnalytics(app);
-
-export default app;
+// Tee saataville globaalisti
+window.firebaseApp = firebaseApp;
+window.firebaseConfig = firebaseConfig;
