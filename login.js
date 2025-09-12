@@ -58,45 +58,40 @@ class LoginSystem {
   }
 
   // KIRJAUTUMINEN
-  // KIRJAUTUMINEN
-  async handleLogin(event) {
-    event.preventDefault();
-    console.log('🔐 Kirjautuminen aloitettu...');
+    // KIRJAUTUMINEN - Firebase v11 Auth
+  async handleLogin(e) {
+    e.preventDefault();
     
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    console.log('🔑 Kirjaudutaan sisään:', email);
+    
+    this.showLoading('Kirjaudutaan sisään...');
     
     try {
-      // Käytä modernia Firebase Auth:ia jos saatavilla
-      if (window.modernFirebaseAuth && window.modernFirebaseAuth.auth) {
-        console.log('🔧 Käytetään modernia Firebase Auth:ia');
+      // ✅ KÄYTÄ MODERNFIREBASEAUTH:IA
+      if (window.modernFirebaseAuth) {
+        console.log('� Käytetään Firebase v11 Authentication');
         const result = await window.modernFirebaseAuth.login(email, password);
         
         if (result.success) {
-          this.showSuccess('Kirjautuminen onnistui!');
+          console.log('✅ Firebase-kirjautuminen onnistui!');
           this.handleSuccessfulLogin(result.user);
           return;
         } else {
-          this.showError(result.error);
+          console.log('❌ Firebase-kirjautuminen epäonnistui:', result.error);
+          this.showError(result.error || 'Kirjautuminen epäonnistui');
           return;
         }
       }
       
-      // Fallback: vanha järjestelmä + admin-tarkistus
-      console.log('🔧 Käytetään fallback-järjestelmää');
-      
-      // Yritä ensin tavallista kirjautumista
-      if (window.firebaseAuth) {
-        const result = await window.firebaseAuth.login(email, password);
-        if (result && result.user) {
-          this.handleSuccessfulLogin(result.user);
-          return;
-        }
-      }
-
-      // Jos tavallinen kirjautuminen epäonnistui, tarkista admin-tunnukset
+      // Fallback: Tarkista admin-tunnukset Firestore:sta
+      console.log('⚠️ Fallback: Tarkistetaan admin-tunnukset...');
       const adminUser = await this.checkAdminLogin(email, password);
+      
       if (adminUser) {
+        console.log('✅ Admin-tunnukset oikein!');
         this.handleSuccessfulLogin(adminUser);
         return;
       }
@@ -161,18 +156,31 @@ class LoginSystem {
   }
 
   // REKISTERÖITYMINEN
+  // REKISTERÖITYMINEN - Firebase v11 Auth
   async handleRegister(event) {
     event.preventDefault();
     console.log('🔧 Rekisteröinti aloitettu...');
     
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    console.log('✅ Tarkistukset läpäisty, rekisteröidään käyttäjä...');
+    const name = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const phone = document.getElementById('registerPhone').value.trim();
+    const address = document.getElementById('registerAddress').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    
+    console.log('📝 Rekisteröintitiedot:', { name, email, phone, address });
+    
+    // Yksinkertainen validointi
+    if (!name || !email || !password) {
+      this.showError('Täytä vähintään nimi, sähköposti ja salasana');
+      return;
+    }
+    
+    this.showLoading('Rekisteröidään käyttäjä...');
     
     try {
-      // Käytä modernia Firebase Auth:ia jos saatavilla
-      if (window.modernFirebaseAuth && window.modernFirebaseAuth.auth) {
-        console.log('🔧 Käytetään modernia Firebase Auth:ia rekisteröintiin');
+      // ✅ KÄYTÄ MODERNFIREBASEAUTH:IA
+      if (window.modernFirebaseAuth) {
+        console.log('� Käytetään Firebase v11 Authentication');
         
         const result = await window.modernFirebaseAuth.register(email, password, {
           name,
@@ -186,17 +194,18 @@ class LoginSystem {
           
           // Vaihda kirjautumislomakkeeseen
           setTimeout(() => {
-            this.showLogin();
+            this.switchTab('login');
           }, 2000);
           return;
         } else {
-          this.showError(result.error);
+          console.log('❌ Firebase-rekisteröinti epäonnistui:', result.error);
+          this.showError(result.error || 'Rekisteröinti epäonnistui');
           return;
         }
       }
       
-      // Fallback: vanha localStorage-systeemi
-      console.log('🔧 Käytetään fallback localStorage-rekisteröintiä');
+      // Fallback: localStorage-systeemi
+      console.log('⚠️ Fallback: Käytetään localStorage-rekisteröintiä');
       
       const userData = {
         name,
@@ -218,38 +227,13 @@ class LoginSystem {
       
       // Vaihda kirjautumislomakkeeseen
       setTimeout(() => {
-        this.showLogin();
+        this.switchTab('login');
       }, 2000);
       
     } catch (error) {
       console.error('❌ Rekisteröinti epäonnistui:', error);
       this.showError('Rekisteröinti epäonnistui. Yritä uudelleen.');
     }
-    // Tallenna käyttäjä
-    const allUsers = JSON.parse(localStorage.getItem('registered_users')) || [];
-    allUsers.push(userData);
-    localStorage.setItem('registered_users', JSON.stringify(allUsers));
-    
-    console.log('✅ Käyttäjä rekisteröity onnistuneesti:', userData);
-    this.showSuccess('Rekisteröinti onnistui! Voit nyt kirjautua sisään.');
-    
-    // Vaihda kirjautumislomakkeeseen
-    setTimeout(() => {
-      this.showLogin();
-    }, 2000);
-    
-    // ALKUPERÄINEN VAHVISTUSKOODI-SYSTEEMI (kommentoitu pois)
-    /*
-    // Lähetä vahvistuskoodi
-    this.sendVerificationCode(email, {
-      name,
-      email,
-      phone,
-      address,
-      password,
-      id: Date.now().toString()
-    });
-    */
   }
 
   // LÄHETÄ VAHVISTUSKOODI
@@ -359,6 +343,17 @@ class LoginSystem {
     window.location.href = 'index.html';
   }
 
+  // NÄYTÄ LATAUSVIESTI
+  showLoading(message) {
+    this.hideMessages();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'loading-message';
+    loadingDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+    
+    const container = document.querySelector('.auth-container');
+    container.insertBefore(loadingDiv, container.firstChild);
+  }
+
   // NÄYTÄ VIRHEILMOITUS
   showError(message) {
     this.hideMessages();
@@ -391,7 +386,7 @@ class LoginSystem {
 
   // PIILOTA VIESTIT
   hideMessages() {
-    document.querySelectorAll('.error-message, .success-message').forEach(msg => {
+    document.querySelectorAll('.error-message, .success-message, .loading-message').forEach(msg => {
       msg.remove();
     });
   }

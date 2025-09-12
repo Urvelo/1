@@ -6,7 +6,22 @@
   <title>Kirjautuminen - Löytökauppa</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstat  <!-- Firebase v11 - Moderni ES modules -->
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="firebase-auth-modern.js"></script>
+  <script type="module" src="firebase-db-modern.js"></script>
+  
+  <!-- LEGACY SCRIPTS POISTETTU KÄYTÖSTÄ (aiheuttivat ristiriitoja) -->
+  <!-- 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="firebase-db.js"></script>
+  <script src="firebase-auth.js"></script>
+  -->
+  
+  <!-- Main login script -->
+  <script src="login.js"></script>rigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -286,6 +301,26 @@
       border-radius: 8px;
       margin-bottom: 1rem;
       display: none;
+    }
+    
+    .loading-message {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .loading-message i {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     
     /* Responsive */
