@@ -166,7 +166,7 @@ class FirebaseAuth {
     console.log('Käytetään vanhaa kirjautumisjärjestelmää');
     
     // Tarkista admin-tunnukset
-    if (email === 'admin@löytökauppa.fi' && password === 'admin123') {
+    if (email === 'admin@loytokauppa.fi' && password === 'admin123') {
       const adminUser = {
         id: 'admin',
         name: 'Ylläpitäjä',

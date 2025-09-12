@@ -451,7 +451,15 @@ class ShopApp {
           <h3>💳 Valitse maksutapa</h3>
           <div class="payment-options">
             <label class="payment-option">
-              <input type="radio" name="payment" value="sandbox" checked>
+              <input type="radio" name="payment" value="paypal" checked>
+              <div class="payment-card">
+                <i class="fab fa-paypal"></i>
+                <span>PayPal</span>
+                <small>Turvallinen PayPal-maksu</small>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="sandbox">
               <div class="payment-card">
                 <i class="fas fa-credit-card"></i>
                 <span>Sandbox Maksu (Testi)</span>
@@ -474,6 +482,7 @@ class ShopApp {
                 <small>Maksa paketintuonnin yhteydessä</small>
               </div>
             </label>
+            <div id="paypal-button-container" style="margin-top: 1rem; display: none;"></div>
           </div>
         </div>
 
@@ -674,6 +683,7 @@ function closeCheckoutModal() {
 function processPayment() {
   const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
   const paymentMethods = {
+    paypal: 'PayPal',
     sandbox: 'Sandbox Maksu (Testi)',
     bank: 'Verkkopankki',
     cash: 'Postiennakko'
@@ -701,13 +711,52 @@ function processPayment() {
   // Lähetä Formspree-lomakkeella
   shopApp.sendOrderToFormspree(order);
   
-  // Sandbox-maksu simulaatio
-  if (selectedPayment === 'sandbox') {
+  // PayPal-maksu
+  if (selectedPayment === 'paypal') {
+    processPayPalPayment(order);
+  } else if (selectedPayment === 'sandbox') {
+    // Sandbox-maksu simulaatio
     simulateSandboxPayment(order);
   } else {
     // Muut maksutavat
     processOtherPayment(order, selectedPayment);
   }
+}
+
+// PayPal-maksu käsittely
+function processPayPalPayment(order) {
+  if (!window.initPayPalPayment) {
+    alert('PayPal-maksu ei ole käytettävissä. Käytä toista maksutapaa.');
+    return;
+  }
+  
+  const total = shopApp.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const items = shopApp.cart.map(item => ({
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity
+  }));
+  
+  // Näytä PayPal-painikkeet
+  document.getElementById('paypal-button-container').style.display = 'block';
+  
+  window.initPayPalPayment(
+    total,
+    items,
+    (details) => {
+      // Maksu onnistui
+      shopApp.cart = [];
+      shopApp.saveCart();
+      shopApp.updateCartUI();
+      closeCheckoutModal();
+      alert(`✅ PayPal-maksu onnistui!\n\nTilausnumero: #${order.id.toString().slice(-6)}\nMaksutapa: PayPal\n\nSaat tilausvahvistuksen sähköpostiin.`);
+    },
+    (error) => {
+      // Maksu epäonnistui
+      console.error('PayPal-maksu epäonnistui:', error);
+      alert('❌ PayPal-maksu epäonnistui. Yritä uudelleen tai valitse toinen maksutapa.');
+    }
+  );
 }
 
 function simulateSandboxPayment(order) {
