@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Löytökauppa - Kirjautuminen (Debug)</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .debug { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        input, button { margin: 5px 0; padding: 10px; width: 200px; }
+        button { background: #007cba; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        #log { background: #000; color: #0f0; padding: 10px; height: 300px; overflow-y: scroll; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Löytökauppa - Debug Testaus</h1>
+    
+    <div class="debug">
+        <h3>1. JavaScript Lataus Testit</h3>
+        <div id="js-tests"></div>
+    </div>
+
+    <div class="debug">
+        <h3>2. Firebase Testit</h3>
+        <div id="firebase-tests"></div>
+    </div>
+
+    <div class="debug">
+        <h3>3. Kirjautumistesti</h3>
+        <input type="email" id="testEmail" placeholder="admin@loytokauppa.fi" value="admin@loytokauppa.fi">
+        <input type="password" id="testPassword" placeholder="admin123" value="admin123">
+        <button onclick="testLogin()">🔐 Testaa Kirjautuminen</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="debug">
+        <h3>4. Rekisteröintitesti</h3>
+        <button onclick="testRegister()">📝 Testaa Rekisteröinti</button>
+        <div id="register-result"></div>
+    </div>
+
+    <div class="debug">
+        <h3>5. Console Log</h3>
+        <div id="log"></div>
+    </div>
+
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
+    <!-- Authentication scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="firebase-db.js"></script>
+    <script src="firebase-auth.js"></script>
+    <script src="login.js"></script>
+
+    <script>
+        // Console.log intercept
+        const logDiv = document.getElementById('log');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logDiv.innerHTML += '<div style="color: #0f0;">' + args.join(' ') + '</div>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logDiv.innerHTML += '<div style="color: #f00;">ERROR: ' + args.join(' ') + '</div>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            logDiv.innerHTML += '<div style="color: #fa0;">WARN: ' + args.join(' ') + '</div>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        // Test functions
+        window.testLogin = function() {
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            const result = document.getElementById('login-result');
+            
+            console.log('🔐 TESTAA KIRJAUTUMINEN: ' + email);
+            
+            if (window.loginSystem) {
+                try {
+                    // Simuloi login event
+                    const fakeEvent = { preventDefault: () => {} };
+                    window.loginSystem.handleLogin(fakeEvent);
+                    result.innerHTML = '<span class="success">✅ Kirjautumistesti käynnistetty</span>';
+                } catch (error) {
+                    result.innerHTML = '<span class="error">❌ Virhe: ' + error.message + '</span>';
+                }
+            } else {
+                result.innerHTML = '<span class="error">❌ LoginSystem ei ole alustettu</span>';
+            }
+        };
+
+        window.testRegister = function() {
+            const result = document.getElementById('register-result');
+            console.log('📝 TESTAA REKISTERÖINTI');
+            
+            if (window.loginSystem) {
+                result.innerHTML = '<span class="success">✅ LoginSystem löytyi - rekisteröinti käytettävissä</span>';
+            } else {
+                result.innerHTML = '<span class="error">❌ LoginSystem ei ole alustettu</span>';
+            }
+        };
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DEBUG SIVU LADATTU');
+            
+            setTimeout(() => {
+                // JavaScript tests
+                const jsTests = document.getElementById('js-tests');
+                let jsResults = '';
+                
+                jsResults += window.firebase ? '✅ Firebase CDN ladattu<br>' : '❌ Firebase CDN puuttuu<br>';
+                jsResults += window.firebaseApp ? '✅ Firebase App alustettu<br>' : '❌ Firebase App puuttuu<br>';
+                jsResults += window.firebaseDB ? '✅ FirebaseDB saatavilla<br>' : '❌ FirebaseDB puuttuu<br>';
+                jsResults += window.firebaseAuth ? '✅ FirebaseAuth saatavilla<br>' : '❌ FirebaseAuth puuttuu<br>';
+                jsResults += window.loginSystem ? '✅ LoginSystem alustettu<br>' : '❌ LoginSystem puuttuu<br>';
+                jsResults += typeof switchTab === 'function' ? '✅ switchTab funktio saatavilla<br>' : '❌ switchTab puuttuu<br>';
+                
+                jsTests.innerHTML = jsResults;
+
+                // Firebase tests
+                const firebaseTests = document.getElementById('firebase-tests');
+                let fbResults = '';
+                
+                if (window.firebase) {
+                    fbResults += '✅ Firebase namespace löytyi<br>';
+                    fbResults += firebase.apps.length > 0 ? '✅ Firebase Apps: ' + firebase.apps.length + '<br>' : '❌ Ei Firebase Apps<br>';
+                    
+                    if (firebase.apps.length > 0) {
+                        const app = firebase.apps[0];
+                        fbResults += '✅ App nimi: ' + app.name + '<br>';
+                        fbResults += '✅ App options: ' + JSON.stringify(app.options.projectId) + '<br>';
+                    }
+                } else {
+                    fbResults += '❌ Firebase namespace puuttuu<br>';
+                }
+                
+                firebaseTests.innerHTML = fbResults;
+                
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
