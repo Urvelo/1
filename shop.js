@@ -47,9 +47,8 @@ class ShopApp {
       
       // Jos ei saatu tuotteita Firebasesta, käytä oletustuotteita
       if (this.products.length === 0) {
-      this.categories = [];
-    } else {
-      this.products = [
+        console.log('📦 Ladataan esimerkkituotteet Firebase:n puuttuessa');
+        this.products = [
         {
           id: 1,
           name: "🔌 Langaton Latausasema",

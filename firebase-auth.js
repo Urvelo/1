@@ -46,7 +46,7 @@ class FirebaseAuth {
         email: user.email,
         phone: '',
         address: '',
-        isAdmin: user.email === 'admin@löytökauppa.fi',
+        isAdmin: user.email === 'admin@loytokauppa.fi',
         loginTime: new Date().toISOString()
       };
       
@@ -54,20 +54,28 @@ class FirebaseAuth {
       localStorage.setItem('user_logged_in', 'true');
       
       // Päivitä UI
-      if (typeof shopApp !== 'undefined') {
-        shopApp.currentUser = userData;
-        shopApp.loadUserInfo();
+      if (typeof window.shopApp !== 'undefined') {
+        window.shopApp.currentUser = userData;
+        window.shopApp.loadUserInfo();
       }
       
     } else {
-      // Käyttäjä kirjautunut ulos
+      // Tarkista onko käyttäjä kirjautunut LocalStorage:en (esim. admin)
+      const localUser = localStorage.getItem('current_user');
+      if (localUser) {
+        console.log('ℹ️ Firebase Auth ei tunne käyttäjää, mutta LocalStorage:ssa on käyttäjä');
+        // Älä poista LocalStorage käyttäjää jos Firebase vain ei tunne sitä
+        return;
+      }
+      
+      // Käyttäjä todella kirjautunut ulos
       console.log('Käyttäjä kirjautunut ulos Firebase:sta');
       localStorage.removeItem('current_user');
       localStorage.removeItem('user_logged_in');
       
-      if (typeof shopApp !== 'undefined') {
-        shopApp.currentUser = null;
-        shopApp.loadUserInfo();
+      if (typeof window.shopApp !== 'undefined') {
+        window.shopApp.currentUser = null;
+        window.shopApp.loadUserInfo();
       }
     }
   }
