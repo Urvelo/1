@@ -439,4 +439,5 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Alusta lomakkeiden käsittelijä
   window.authHandler = new AuthFormHandler();
+  window.firebaseAuth = new FirebaseAuth(); // Lisätään debug-sivua varten
 });

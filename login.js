@@ -302,5 +302,11 @@ window.resendCode = function() {
 // Alusta järjestelmä kun sivu on ladattu
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 DOM ladattu, alustetaan Login System');
-  window.loginSystem = new LoginSystem();
+  try {
+    window.loginSystem = new LoginSystem();
+    console.log('✅ LoginSystem alustettu onnistuneesti');
+  } catch (error) {
+    console.error('❌ LoginSystem alustus epäonnistui:', error);
+    console.error('❌ Error stack:', error.stack);
+  }
 });
