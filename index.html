@@ -657,7 +657,6 @@
       
       <ul class="nav-menu">
         <li><a href="#" class="nav-link">Etusivu</a></li>
-        <li><a href="#categories" class="nav-link">Kategoriat</a></li>
         <li><a href="#products" class="nav-link">Tuotteet</a></li>
         <li><a href="#contact" class="nav-link">Yhteystiedot</a></li>
       </ul>
@@ -671,14 +670,14 @@
       
       <div class="user-actions">
         <div class="user-profile">
-          <button class="nav-link" onclick="toggleUserMenu()">
+          <button class="nav-link" onclick="toggleUserMenu()" id="userMenuButton">
             <i class="fas fa-user"></i>
-            <span id="userName">Vieras</span>
+            <span id="userName">Kirjaudu</span>
           </button>
           <div class="user-menu" id="userMenu">
-            <a href="#" class="user-menu-item" onclick="showProfile()"><i class="fas fa-user"></i> Profiili</a>
-            <a href="#" class="user-menu-item" onclick="showOrders()"><i class="fas fa-box"></i> Tilaukset</a>
-            <a href="#" class="user-menu-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Kirjaudu ulos</a>
+            <!-- Menuitems täytetään JavaScriptillä -->
+          </div>
+        </div>
           </div>
         </div>
         
@@ -693,27 +692,16 @@
   <!-- HERO SECTION -->
   <section class="hero">
     <div class="hero-content">
-      <h1>Löydä Ainutlaatuisia Tuotteitasi</h1>
-      <p>Kuratoidut tuotteet maailman johtavilta valmistajilta. Turvallinen ostaminen, nopea toimitus ja erinomainen asiakaspalvelu.</p>
+      <h1 id="heroTitle">Löydä Ainutlaatuisia Tuotteitasi</h1>
+      <p id="heroSubtitle">Kuratoidut tuotteet maailman johtavilta valmistajilta. Turvallinen ostaminen, nopea toimitus ja erinomainen asiakaspalvelu.</p>
     </div>
   </section>
   
-  <!-- KATEGORIAT -->
-  <section class="categories" id="categories">
-    <div class="section-title">Tuotekategoriat</div>
-    <div class="categories-grid" id="categoriesGrid">
-      <!-- Kategoriat ladataan JavaScriptillä -->
-    </div>
-  </section>
   
   <!-- TUOTTEET -->
   <section class="products" id="products">
-    <div class="products-container">
       <div class="products-header">
         <div class="section-title">Suositut Tuotteet</div>
-        <div class="products-filters" id="productFilters">
-          <!-- Suodattimet ladataan JavaScriptillä -->
-        </div>
       </div>
       <div class="products-grid" id="productsGrid">
         <!-- Tuotteet ladataan JavaScriptillä -->

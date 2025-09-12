@@ -110,12 +110,24 @@ class ShopApp {
   // KÄYTTÄJÄTIETOJEN HALLINTA
   loadUserInfo() {
     const userNameElement = document.getElementById('userName');
+    const userMenuElement = document.getElementById('userMenu');
+    
     if (this.currentUser) {
+      // Kirjautunut käyttäjä
       userNameElement.textContent = this.currentUser.name.split(' ')[0];
-    } else if (localStorage.getItem('guest_mode')) {
-      userNameElement.textContent = 'Vieras';
-    } else {
-      userNameElement.textContent = 'Kirjaudu';
+      userMenuElement.innerHTML = `
+        <a href="profile.html" class="user-menu-item">
+          <i class="fas fa-user"></i> Profiili
+        </a>
+  checkAuth() {
+    // Ei tehdä mitään - annetaan käyttäjän selata vapaasti
+  }     <a href="login.html" class="user-menu-item">
+          <i class="fas fa-sign-in-alt"></i> Kirjaudu sisään
+        </a>
+        <a href="login.html" class="user-menu-item">
+          <i class="fas fa-user-plus"></i> Rekisteröidy
+        </a>
+      `;
     }
   }
   
@@ -886,4 +898,98 @@ window.toggleFaq = function(element) {
   if (!isActive) {
     faqItem.classList.add('active');
   }
+};
+
+// KÄYTTÄJÄHALLINNAN FUNKTIOT
+window.logout = function() {
+  if (confirm('Haluatko varmasti kirjautua ulos?')) {
+    localStorage.removeItem('current_user');
+    localStorage.removeItem('user_logged_in');
+    localStorage.removeItem('guest_mode');
+    localStorage.removeItem('shopping_cart');
+    
+    // Päivitä käyttöliittymä
+    shopApp.currentUser = null;
+    shopApp.cart = [];
+    shopApp.loadUserInfo();
+    shopApp.updateCartUI();
+    
+    alert('Kirjauduit ulos onnistuneesti!');
+  }
+};
+
+window.showOrders = function() {
+    alert('Kirjaudu sisään nähdäksesi tilaukset!');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // Hakee tilaukset ja näyttää ne
+  const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
+  const userOrders = orders.filter(order => 
+    order.customer_email === shopApp.currentUser.email
+  );
+  
+  if (userOrders.length === 0) {
+    alert('Sinulla ei ole vielä tilauksia.');
+    return;
+  }
+  
+  let orderText = '📦 Tilauksesi:\n\n';
+  userOrders.forEach(order => {
+    orderText += `Tilaus #${order.id.toString().slice(-6)}\n`;
+    orderText += `Päivämäärä: ${order.order_date}\n`;
+    orderText += `Tuotteet: ${order.order_products}\n`;
+    orderText += `Summa: ${order.order_total}\n`;
+    orderText += `Tila: ${order.status === 'new' ? 'Käsittelyssä' : order.status === 'paid' ? 'Maksettu' : 'Odottaa maksua'}\n\n`;
+  });
+  
+  alert(orderText);
+};
+// KÄYTTÄJÄHALLINNAN FUNKTIOT
+window.logout = function() {
+  if (confirm('Haluatko varmasti kirjautua ulos?')) {
+    localStorage.removeItem('current_user');
+    localStorage.removeItem('user_logged_in');
+    localStorage.removeItem('guest_mode');
+    localStorage.removeItem('shopping_cart');
+    
+    // Päivitä käyttöliittymä
+    shopApp.currentUser = null;
+    shopApp.cart = [];
+    shopApp.loadUserInfo();
+    shopApp.updateCartUI();
+    
+    alert('Kirjauduit ulos onnistuneesti!');
+  }
+};
+
+window.showOrders = function() {
+  if (!shopApp.currentUser) {
+    alert('Kirjaudu sisään nähdäksesi tilaukset!');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // Hakee tilaukset ja näyttää ne
+  const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
+  const userOrders = orders.filter(order => 
+    order.customer_email === shopApp.currentUser.email
+  );
+  
+  if (userOrders.length === 0) {
+    alert('Sinulla ei ole vielä tilauksia.');
+    return;
+  }
+  
+  let orderText = '📦 Tilauksesi:\n\n';
+  userOrders.forEach(order => {
+    orderText += `Tilaus #${order.id.toString().slice(-6)}\n`;
+    orderText += `Päivämäärä: ${order.order_date}\n`;
+    orderText += `Tuotteet: ${order.order_products}\n`;
+    orderText += `Summa: ${order.order_total}\n`;
+    orderText += `Tila: ${order.status === 'new' ? 'Käsittelyssä' : order.status === 'paid' ? 'Maksettu' : 'Odottaa maksua'}\n\n`;
+  });
+  
+  alert(orderText);
 };
