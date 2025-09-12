@@ -12,6 +12,11 @@ class ShopApp {
   }
   
   async init() {
+    // Alusta Firebase ensin
+    if (window.firebaseDB) {
+      await window.firebaseDB.init();
+    }
+    
     this.loadUserInfo();
     await this.loadData();
     this.renderProducts();
@@ -21,13 +26,15 @@ class ShopApp {
   
   // DATAN LATAUS
   async loadData() {
-    // Lataa admin-tuotteet jos saatavilla
-    const adminProducts = JSON.parse(localStorage.getItem('admin_products')) || [];
-    const adminCategories = JSON.parse(localStorage.getItem('admin_categories')) || [];
-    
-    // Jos admin-tuotteita ei ole, käytä oletustuotteita
-    if (adminProducts.length > 0) {
-      this.products = adminProducts;
+    try {
+      // Lataa tuotteet ja kategoriat Firebase-tietokannasta
+      if (window.firebaseDB) {
+        this.products = await window.firebaseDB.getProducts();
+        this.categories = await window.firebaseDB.getCategories();
+      }
+      
+      // Jos ei saatu tuotteita Firebasesta, käytä oletustuotteita
+      if (this.products.length === 0) {
       this.categories = adminCategories;
     } else {
       this.products = [
@@ -153,6 +160,17 @@ class ShopApp {
         }
       ];
       
+      this.categories = [
+        { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
+        { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
+        { id: 3, name: "Audio", icon: "fas fa-headphones" },
+        { id: 4, name: "Älykodit", icon: "fas fa-home" }
+      ];
+      }
+    } catch (error) {
+      console.error('Virhe tietojen lataamisessa:', error);
+      // Käytä oletustuotteita jos tapahtuu virhe
+      this.products = [];
       this.categories = [
         { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
         { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
@@ -452,7 +470,17 @@ class ShopApp {
     document.body.appendChild(modal);
   }
 
-  sendOrderToFormspree(order) {
+  async sendOrderToFormspree(order) {
+    // Tallenna tilaus Firebase-tietokantaan
+    if (window.firebaseDB) {
+      try {
+        await window.firebaseDB.saveOrder(order);
+        console.log('✅ Tilaus tallennettu Firebase-tietokantaan');
+      } catch (error) {
+        console.error('❌ Firebase-virhe, käytetään LocalStorage:', error);
+      }
+    }
+    
     // Käytä Formspree-integraatiota jos saatavilla
     const formspreeUrl = 'https://formspree.io/f/mpwjnrwn';
     
@@ -521,6 +549,26 @@ function searchProducts() {
   }
 }
 
+// KATEGORIA SUODATUS
+function filterByCategory(categoryId) {
+  // Päivitä aktiivinen suodatin
+  document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  const activeBtn = document.querySelector(`[data-category="${categoryId}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
+  
+  // Aseta suodatin ja renderöi tuotteet
+  shopApp.currentFilter = categoryId;
+  shopApp.renderProducts();
+  
+  // Vieritä tuoteosioon
+  document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+}
+
 // FAQ TOIMINNOT
 function toggleFaq(element) {
   const faqItem = element.closest('.faq-item');
@@ -555,21 +603,28 @@ function logout() {
   }
 }
 
-function showOrders() {
+async function showOrders() {
   if (!shopApp.currentUser) {
     alert('Kirjaudu sisään nähdäksesi tilaukset!');
     window.location.href = 'login.html';
     return;
   }
   
-  // Hakee tilaukset ja näyttää ne
-  const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
-  const userOrders = orders.filter(order => 
-    order.customer_email === shopApp.currentUser.email
-  );
-  
-  if (userOrders.length === 0) {
-    alert('Sinulla ei ole vielä tilauksia.');
+  try {
+    // Hakee tilaukset Firebase-tietokannasta tai LocalStoragesta
+    let orders = [];
+    if (window.firebaseDB) {
+      orders = await window.firebaseDB.getOrders();
+    } else {
+      orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
+    }
+    
+    const userOrders = orders.filter(order => 
+      order.customer_email === shopApp.currentUser.email
+    );
+    
+    if (userOrders.length === 0) {
+      alert('Sinulla ei ole vielä tilauksia.');
     return;
   }
   
@@ -583,6 +638,10 @@ function showOrders() {
   });
   
   alert(orderText);
+  } catch (error) {
+    console.error('Virhe tilausten haussa:', error);
+    alert('Virhe tilausten haussa. Yritä myöhemmin uudelleen.');
+  }
 }
 
 // CHECKOUT MODAL FUNCTIONS
