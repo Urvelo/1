@@ -350,8 +350,13 @@ class LoginSystem {
     loadingDiv.className = 'loading-message';
     loadingDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
     
-    const container = document.querySelector('.auth-container');
-    container.insertBefore(loadingDiv, container.firstChild);
+    const container = document.querySelector('.login-container');
+    if (container) {
+      container.insertBefore(loadingDiv, container.firstChild);
+    } else {
+      console.warn('Login container ei löytynyt, lisätään body:yn');
+      document.body.appendChild(loadingDiv);
+    }
   }
 
   // NÄYTÄ VIRHEILMOITUS
@@ -361,8 +366,12 @@ class LoginSystem {
     errorDiv.className = 'error-message';
     errorDiv.textContent = message;
     
-    const container = document.querySelector('.auth-container');
-    container.insertBefore(errorDiv, container.firstChild);
+    const container = document.querySelector('.login-container');
+    if (container) {
+      container.insertBefore(errorDiv, container.firstChild);
+    } else {
+      document.body.appendChild(errorDiv);
+    }
     
     setTimeout(() => {
       errorDiv.remove();
@@ -376,8 +385,12 @@ class LoginSystem {
     successDiv.className = 'success-message';
     successDiv.textContent = message;
     
-    const container = document.querySelector('.auth-container');
-    container.insertBefore(successDiv, container.firstChild);
+    const container = document.querySelector('.login-container');
+    if (container) {
+      container.insertBefore(successDiv, container.firstChild);
+    } else {
+      document.body.appendChild(successDiv);
+    }
     
     setTimeout(() => {
       successDiv.remove();
