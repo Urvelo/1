@@ -742,18 +742,25 @@
   <!-- OVERLAY -->
   <div class="overlay" id="overlay" onclick="closeAll()"></div>
   
-  <!-- Firebase CDN -->
+    <!-- Firebase v11 - Moderni ES modules -->
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="firebase-auth-modern.js"></script>
+  <script type="module" src="firebase-db-modern.js"></script>
+  <script type="module" src="paypal-secure.js"></script>
+  
+  <!-- Fallback: Vanhat compat-versiot -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-  
-  <!-- Löytökauppa scripts -->
-  <script src="firebase-config.js"></script>
+
+  <!-- Legacy scripts -->
   <script src="firebase-db.js"></script>
   <script src="firebase-auth.js"></script>
   <script src="paypal-config.js"></script>
   <script src="admin-security.js"></script>
+  
+  <!-- Main application -->
   <script src="shop.js"></script>
 </body>
 </html>

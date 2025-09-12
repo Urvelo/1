@@ -842,8 +842,28 @@ async function processPayment() {
     alert('❌ Maksun käsittelyssä tapahtui virhe: ' + error.message);
   }
 }
+  
+  console.log('📦 Tilaus luotu:', order);
 
-// Vanhat funktiot (poistetaan myöhemmin)
+  // Sulkee checkout-modalin
+  closeCheckoutModal();
+
+  // Käsittele maksut PayPal-integraation kautta
+  if (selectedPayment === 'paypal') {
+    // PayPal-maksu käsitellään uudessa järjestelmässä
+    await processPayPalPayment(total, orderId);
+  } else if (selectedPayment === 'sandbox') {
+    // Sandbox-maksu simulaatio
+    await processTestPayment(orderId);
+  } else {
+    alert('💳 Maksuvaihtoehto "' + selectedPayment + '" ei ole vielä käytössä. Käytä PayPal:ia.');
+  }
+
+  } catch (error) {
+    console.error('❌ Maksun käsittely epäonnistui:', error);
+    alert('❌ Maksun käsittelyssä tapahtui virhe: ' + error.message);
+  }
+}
 
 // PayPal-maksu käsittely
 function processPayPalPayment(order) {
