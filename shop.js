@@ -216,8 +216,32 @@ class ShopApp {
     container.innerHTML = '';
     
     let filteredProducts = this.products;
+    
+    // Suodata kategorian mukaan
     if (this.currentFilter !== 'all') {
-      filteredProducts = this.products.filter(p => p.category == this.currentFilter);
+      filteredProducts = filteredProducts.filter(p => p.category == this.currentFilter);
+    }
+    
+    // Suodata haun mukaan
+    if (this.searchFilter) {
+      filteredProducts = filteredProducts.filter(p => 
+        p.name.toLowerCase().includes(this.searchFilter) ||
+        (p.description && p.description.toLowerCase().includes(this.searchFilter))
+      );
+    }
+    
+    if (filteredProducts.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+          <h3>Ei tuloksia haulle "${this.searchFilter || 'hakusana'}"</h3>
+          <p style="color: var(--text-muted);">Kokeile eri hakusanoja tai selaa kategorioita.</p>
+          <button class="btn btn-primary" onclick="shopApp.clearSearch()" style="margin-top: 1rem;">
+            Tyhjennä haku
+          </button>
+        </div>
+      `;
+      return;
     }
     
     filteredProducts.forEach(product => {
@@ -385,36 +409,221 @@ class ShopApp {
       alert('🛒 Ostoskori on tyhjä!');
       return;
     }
+
+    if (!this.currentUser) {
+      alert('🔒 Kirjaudu sisään ennen ostamista!');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    this.showCheckoutModal();
+  }
+
+  showCheckoutModal() {
+    const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
     
-    // Luo tilaus
-    const order = {
-      id: Date.now(),
-      customer_name: this.currentUser?.name || 'Vieras',
-      customer_email: this.currentUser?.email || '',
-      customer_phone: this.currentUser?.phone || '',
-      customer_address: this.currentUser?.address || '',
-      order_products: this.cart.map(item => `${item.name} (${item.quantity}kpl)`).join(', '),
-      order_total: this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2) + ' €',
-      payment_method: 'Kassalla maksettava',
-      order_date: new Date().toLocaleDateString('fi-FI'),
-      status: 'new'
-    };
+    const modal = document.createElement('div');
+    modal.className = 'checkout-modal';
+    modal.innerHTML = `
+      <div class="checkout-overlay" onclick="closeCheckoutModal()"></div>
+      <div class="checkout-content">
+        <div class="checkout-header">
+          <h2>🛒 Maksa tilaus</h2>
+          <button onclick="closeCheckoutModal()" class="close-btn">&times;</button>
+        </div>
+        
+        <div class="checkout-summary">
+          <h3>📦 Tilausyhteenveto</h3>
+          <div class="order-items">
+            ${this.cart.map(item => `
+              <div class="checkout-item">
+                <span>${item.name}</span>
+                <span>${item.quantity} × ${item.price.toFixed(2)}€</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="checkout-total">
+            <strong>Yhteensä: ${total}€</strong>
+          </div>
+        </div>
+
+        <div class="payment-methods">
+          <h3>💳 Valitse maksutapa</h3>
+          <div class="payment-options">
+            <label class="payment-option">
+              <input type="radio" name="payment" value="sandbox" checked>
+              <div class="payment-card">
+                <i class="fas fa-credit-card"></i>
+                <span>Sandbox Maksu (Testi)</span>
+                <small>Turvallinen testausmaksu</small>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="bank">
+              <div class="payment-card">
+                <i class="fas fa-university"></i>
+                <span>Verkkopankki</span>
+                <small>Turvallinen pankkisiirto</small>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="cash">
+              <div class="payment-card">
+                <i class="fas fa-money-bill"></i>
+                <span>Postiennakko</span>
+                <small>Maksa paketintuonnin yhteydessä</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="checkout-actions">
+          <button onclick="closeCheckoutModal()" class="btn btn-secondary">Peruuta</button>
+          <button onclick="processPayment()" class="btn btn-primary">
+            <i class="fas fa-lock"></i> Maksa turvallisesti
+          </button>
+        </div>
+      </div>
+    `;
     
-    // Tallenna tilaus
-    const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
-    orders.push(order);
-    localStorage.setItem('customer_orders', JSON.stringify(orders));
+    document.body.appendChild(modal);
     
-    // Lähetä Formspree-lomakkeella (jos integroitu)
-    this.sendOrderToFormspree(order);
-    
-    // Tyhjennä ostoskori
-    this.cart = [];
-    this.saveCart();
-    this.updateCartUI();
-    this.toggleCart();
-    
-    alert(`✅ Tilaus lähetetty!\nTilausnumero: #${order.id.toString().slice(-6)}\n\nSaat tilausvahvistuksen sähköpostiin.`);
+    // Lisää CSS-tyylit
+    if (!document.getElementById('checkout-styles')) {
+      const styles = document.createElement('style');
+      styles.id = 'checkout-styles';
+      styles.textContent = `
+        .checkout-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .checkout-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.8);
+        }
+        
+        .checkout-content {
+          background: var(--gray);
+          border-radius: 15px;
+          width: 90%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+          z-index: 1;
+          border: 1px solid var(--border);
+        }
+        
+        .checkout-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem;
+          border-bottom: 1px solid var(--border);
+        }
+        
+        .close-btn {
+          background: none;
+          border: none;
+          color: var(--text);
+          font-size: 1.5rem;
+          cursor: pointer;
+          padding: 0.5rem;
+        }
+        
+        .checkout-summary {
+          padding: 1.5rem;
+          border-bottom: 1px solid var(--border);
+        }
+        
+        .checkout-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid var(--border);
+        }
+        
+        .checkout-total {
+          margin-top: 1rem;
+          font-size: 1.2rem;
+          text-align: right;
+        }
+        
+        .payment-methods {
+          padding: 1.5rem;
+        }
+        
+        .payment-options {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-top: 1rem;
+        }
+        
+        .payment-option {
+          cursor: pointer;
+        }
+        
+        .payment-option input[type="radio"] {
+          display: none;
+        }
+        
+        .payment-card {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          border: 2px solid var(--border);
+          border-radius: 8px;
+          transition: all 0.3s ease;
+        }
+        
+        .payment-option input[type="radio"]:checked + .payment-card {
+          border-color: var(--primary);
+          background: rgba(37, 99, 235, 0.1);
+        }
+        
+        .payment-card i {
+          font-size: 1.5rem;
+          color: var(--primary);
+          width: 24px;
+        }
+        
+        .payment-card span {
+          font-weight: 600;
+        }
+        
+        .payment-card small {
+          color: var(--text-muted);
+          margin-left: auto;
+        }
+        
+        .checkout-actions {
+          display: flex;
+          gap: 1rem;
+          padding: 1.5rem;
+          justify-content: flex-end;
+        }
+        
+        .btn-secondary {
+          background: var(--gray-light);
+          color: var(--text);
+        }
+      `;
+      document.head.appendChild(styles);
+    }
   }
   
   sendOrderToFormspree(order) {
@@ -503,5 +712,178 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeAll();
+    closeCheckoutModal();
   }
 });
+
+// CHECKOUT MODAL FUNCTIONS
+window.closeCheckoutModal = function() {
+  const modal = document.querySelector('.checkout-modal');
+  if (modal) {
+    modal.remove();
+  }
+};
+
+window.processPayment = function() {
+  const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
+  const paymentMethods = {
+    sandbox: 'Sandbox Maksu (Testi)',
+    bank: 'Verkkopankki',
+    cash: 'Postiennakko'
+  };
+  
+  // Luo tilaus
+  const order = {
+    id: Date.now(),
+    customer_name: shopApp.currentUser?.name || 'Vieras',
+    customer_email: shopApp.currentUser?.email || '',
+    customer_phone: shopApp.currentUser?.phone || '',
+    customer_address: shopApp.currentUser?.address || '',
+    order_products: shopApp.cart.map(item => `${item.name} (${item.quantity}kpl)`).join(', '),
+    order_total: shopApp.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2) + ' €',
+    payment_method: paymentMethods[selectedPayment],
+    order_date: new Date().toLocaleDateString('fi-FI'),
+    status: selectedPayment === 'sandbox' ? 'paid' : 'pending'
+  };
+  
+  // Tallenna tilaus
+  const orders = JSON.parse(localStorage.getItem('customer_orders')) || [];
+  orders.push(order);
+  localStorage.setItem('customer_orders', JSON.stringify(orders));
+  
+  // Lähetä Formspree-lomakkeella
+  shopApp.sendOrderToFormspree(order);
+  
+  // Sandbox-maksu simulaatio
+  if (selectedPayment === 'sandbox') {
+    simulateSandboxPayment(order);
+  } else {
+    // Muut maksutavat
+    processOtherPayment(order, selectedPayment);
+  }
+};
+
+function simulateSandboxPayment(order) {
+  // Simuloi maksu-proseduuri
+  const loadingDiv = document.createElement('div');
+  loadingDiv.innerHTML = `
+    <div style="text-align: center; padding: 2rem;">
+      <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+      <p style="margin-top: 1rem;">Käsitellään maksua...</p>
+    </div>
+  `;
+  
+  document.querySelector('.checkout-content').innerHTML = loadingDiv.innerHTML;
+  
+  setTimeout(() => {
+  alert(`✅ Tilaus vahvistettu!\n\nTilausnumero: #${order.id.toString().slice(-6)}\n${messages[paymentType]}\n\nSaat tilausvahvistuksen sähköpostiin.`);
+}
+
+// HAKUTOIMINTO
+window.searchProducts = function() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+  shopApp.searchFilter = searchTerm;
+  shopApp.renderProducts();
+  
+  if (searchTerm) {
+    document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+// Tyhjennä haku
+ShopApp.prototype.clearSearch = function() {
+  this.searchFilter = '';
+  document.getElementById('searchInput').value = '';
+  this.renderProducts();
+};
+
+// Hakupalkki Enter-näppäin
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchProducts();
+      }
+    });
+  }
+});
+
+// FAQ TOIMINNOT
+window.toggleFaq = function(element) {
+  const faqItem = element.closest('.faq-item');
+  const isActive = faqItem.classList.contains('active');
+  
+  // Sulje kaikki muut FAQ:t
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Avaa tämä FAQ jos se ei ollut auki
+  if (!isActive) {
+    faqItem.classList.add('active');
+  }
+};   shopApp.cart = [];
+    shopApp.saveCart();
+    shopApp.updateCartUI();
+    
+    closeCheckoutModal();
+    
+    alert(`✅ Maksu onnistui!\n\nTilausnumero: #${order.id.toString().slice(-6)}\nMaksutapa: ${order.payment_method}\n\nSaat tilausvahvistuksen sähköpostiin.`);
+  }, 2000);
+}
+
+function processOtherPayment(order, paymentType) {
+  // Tyhjennä ostoskori
+  shopApp.cart = [];
+  shopApp.saveCart();
+  shopApp.updateCartUI();
+  
+  closeCheckoutModal();
+  
+  const messages = {
+    bank: 'Sinut ohjataan verkkopankkiin maksua varten.',
+    cash: 'Tilaus vahvistettu! Maksa paketti noudettaessa.'
+  };
+  
+  alert(`✅ Tilaus vahvistettu!\n\nTilausnumero: #${order.id.toString().slice(-6)}\n${messages[paymentType]}\n\nSaat tilausvahvistuksen sähköpostiin.`);
+}
+
+// HAKUTOIMINTO
+window.searchProducts = function() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+  shopApp.searchFilter = searchTerm;
+  shopApp.renderProducts();
+  
+  if (searchTerm) {
+    document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+// Hakupalkki Enter-näppäin
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchProducts();
+      }
+    });
+  }
+});
+
+// FAQ TOIMINNOT
+window.toggleFaq = function(element) {
+  const faqItem = element.closest('.faq-item');
+  const isActive = faqItem.classList.contains('active');
+  
+  // Sulje kaikki muut FAQ:t
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Avaa tämä FAQ jos se ei ollut auki
+  if (!isActive) {
+    faqItem.classList.add('active');
+  }
+};
