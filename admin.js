@@ -18,18 +18,31 @@ class AdminPanel {
   
   checkAdminAccess() {
     const userData = localStorage.getItem('current_user');
+    const isLoggedIn = localStorage.getItem('user_logged_in') === 'true';
     let isAdmin = false;
     
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        isAdmin = user && user.isAdmin === true;
-      } catch (error) {
-        console.error('Virhe käyttäjätietojen lukemisessa:', error);
-      }
+    console.log('🔍 Tarkistetaan admin-oikeudet...');
+    console.log('- userData:', userData);
+    console.log('- isLoggedIn:', isLoggedIn);
+    
+    if (!isLoggedIn || !userData) {
+      console.log('❌ Ei kirjautunut sisään');
+      alert('❌ Sinun täytyy kirjautua sisään!');
+      window.location.href = 'login.html';
+      return;
+    }
+    
+    try {
+      const user = JSON.parse(userData);
+      isAdmin = user && user.isAdmin === true;
+      console.log('- user.isAdmin:', user.isAdmin);
+      console.log('- user.email:', user.email);
+    } catch (error) {
+      console.error('Virhe käyttäjätietojen lukemisessa:', error);
     }
     
     if (!isAdmin) {
+      console.log('❌ Ei admin-oikeuksia');
       alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla.');
       window.location.href = 'login.html';
       return;
@@ -327,17 +340,8 @@ function logout() {
   }
 }
 
-// Tarkista kirjautuminen
-const currentUser = JSON.parse(localStorage.getItem('current_user') || 'null');
-const isLoggedIn = localStorage.getItem('user_logged_in') === 'true';
-
-if (!isLoggedIn || !currentUser) {
-  alert('❌ Sinun täytyy kirjautua sisään!');
-  window.location.href = 'login.html';
-} else if (!currentUser.isAdmin) {
-  alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla.');
-  window.location.href = 'login.html';
-}
-
-// Käynnistä admin-paneeli
-const admin = new AdminPanel();
+// Käynnistä admin-paneeli kun sivu latautuu
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Admin-sivu ladattu, alustetaan...');
+  const admin = new AdminPanel();
+});

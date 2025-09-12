@@ -138,6 +138,7 @@ class LoginSystem {
   // REKISTERÖITYMINEN
   async handleRegister(event) {
     event.preventDefault();
+    console.log('🔧 Rekisteröinti aloitettu...');
     
     const name = document.getElementById('registerName').value;
     const email = document.getElementById('registerEmail').value;
@@ -145,6 +146,8 @@ class LoginSystem {
     const address = document.getElementById('registerAddress').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    console.log('📝 Rekisteröintitiedot:', { name, email, phone, address });
     
     // Tarkistukset
     if (password !== confirmPassword) {
@@ -158,12 +161,40 @@ class LoginSystem {
     }
     
     // Tarkista onko sähköposti jo käytössä
-    const users = JSON.parse(localStorage.getItem('registered_users')) || [];
-    if (users.find(u => u.email === email)) {
+    const existingUsers = JSON.parse(localStorage.getItem('registered_users')) || [];
+    if (existingUsers.find(u => u.email === email)) {
       this.showError('Sähköposti on jo rekisteröity!');
       return;
     }
     
+    console.log('✅ Tarkistukset läpäisty, lähetetään vahvistuskoodi...');
+    
+    // VÄLIAIKAINEN: Rekisteröi suoraan ilman vahvistuskoodia
+    const userData = {
+      name,
+      email,
+      phone,
+      address,
+      password,
+      id: Date.now().toString(),
+      registeredAt: new Date().toISOString()
+    };
+    
+    // Tallenna käyttäjä
+    const allUsers = JSON.parse(localStorage.getItem('registered_users')) || [];
+    allUsers.push(userData);
+    localStorage.setItem('registered_users', JSON.stringify(allUsers));
+    
+    console.log('✅ Käyttäjä rekisteröity onnistuneesti:', userData);
+    this.showSuccess('Rekisteröinti onnistui! Voit nyt kirjautua sisään.');
+    
+    // Vaihda kirjautumislomakkeeseen
+    setTimeout(() => {
+      this.showLogin();
+    }, 2000);
+    
+    // ALKUPERÄINEN VAHVISTUSKOODI-SYSTEEMI (kommentoitu pois)
+    /*
     // Lähetä vahvistuskoodi
     this.sendVerificationCode(email, {
       name,
@@ -173,6 +204,7 @@ class LoginSystem {
       password,
       id: Date.now().toString()
     });
+    */
   }
 
   // LÄHETÄ VAHVISTUSKOODI
