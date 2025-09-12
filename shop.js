@@ -36,18 +36,29 @@ class ShopApp {
     });
   }
   
-  // DATAN LATAUS
+  // DATAN LATAUS - OPTIMOITU FREE TIER:LLE  
   async loadData() {
     try {
-      // Lataa tuotteet ja kategoriat Firebase-tietokannasta
-      if (window.firebaseDB) {
-        this.products = await window.firebaseDB.getProducts();
-        this.categories = await window.firebaseDB.getCategories();
+      console.log('📦 Ladataan data optimoidusti...');
+      
+      // ✅ TUOTTEET: Client-side JSON (ei Firestore-kulutusta!)
+      if (window.PRODUCTS_JSON) {
+        const jsonData = window.PRODUCTS_JSON.loadProductsFromJSON();
+        this.products = jsonData.products;
+        this.categories = jsonData.categories;
+        console.log('✅ Tuotteet ladattu JSON:sta:', this.products.length, 'tuotetta');
+      } else {
+        // Fallback: Firebase (kuluttaa free tier:ia)
+        console.log('⚠️ Fallback: Firebase-tuotteet (kuluttaa Firestore-tilaa)');
+        if (window.firebaseDB) {
+          this.products = await window.firebaseDB.getProducts();
+          this.categories = await window.firebaseDB.getCategories();
+        }
       }
       
-      // Jos ei saatu tuotteita Firebasesta, käytä oletustuotteita
+      // Jos ei saatu tuotteita, käytä fallback-tuotteita
       if (this.products.length === 0) {
-        console.log('📦 Ladataan esimerkkituotteet Firebase:n puuttuessa');
+        console.log('📦 Ladataan fallback-tuotteet...');
         this.products = [
         {
           id: 1,
@@ -170,18 +181,23 @@ class ShopApp {
           description: "Autoteline, latauskaapeli ja ilmanraikastin"
         }
       ];
-      
-      this.categories = [
-        { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
-        { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
-        { id: 3, name: "Audio", icon: "fas fa-headphones" },
-        { id: 4, name: "Älykodit", icon: "fas fa-home" }
-      ];
       }
+      
+      // Aseta kategoriat jos ei ole asetettu
+      if (this.categories.length === 0) {
+        this.categories = [
+          { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
+          { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
+          { id: 3, name: "Audio", icon: "fas fa-headphones" },
+          { id: 4, name: "Älykodit", icon: "fas fa-home" }
+        ];
+      }
+      
+      console.log('✅ Data ladattu:', this.products.length, 'tuotetta,', this.categories.length, 'kategoriaa');
+      
     } catch (error) {
-      console.error('Virhe tietojen lataamisessa:', error);
-      // Käytä oletustuotteita jos tapahtuu virhe
-      this.products = [];
+      console.error('❌ Datan lataus epäonnistui:', error);
+      this.products = this.getDefaultProducts();
       this.categories = [
         { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
         { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
@@ -189,6 +205,36 @@ class ShopApp {
         { id: 4, name: "Älykodit", icon: "fas fa-home" }
       ];
     }
+  }
+  
+  // Oletustuotteet fallbackina
+  getDefaultProducts() {
+    return [
+      {
+        id: 1,
+        name: "🔌 Langaton Latausasema",
+        price: 19.99,
+        category: 1,
+        image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400",
+        description: "Nopea langaton lataus kaikille laitteille"
+      },
+      {
+        id: 2,
+        name: "⌚ Premium Älykello",
+        price: 89.99,
+        category: 2,
+        image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+        description: "Täydellinen kumppani aktiiviseen elämään"
+      },
+      {
+        id: 3,
+        name: "🎧 Bluetooth Kuulokkeet Pro",
+        price: 59.99,
+        category: 3,
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+        description: "Kristallinkirkas ääni ja aktiivinen melunvaimennus"
+      }
+    ];
   }
   
   // KÄYTTÄJÄTIETOJEN HALLINTA
