@@ -37,16 +37,22 @@ export class LoginSystem {
     }
   }
 
-  async handleGoogleLogin() {
-    console.log('🔥 Google-kirjautuminen käynnistyi');
+  async handleGoogleLogin(useRedirect = false) {
+    console.log('🔥 Google-kirjautuminen käynnistyi', useRedirect ? '(redirect)' : '(popup)');
     
     this.showLoading('Kirjaudutaan Google-tilillä...');
 
     try {
       console.log('🔥 Käytetään Firebase v11 Google Authentication');
-      const result = await window.modernFirebaseAuth.loginWithGoogle();
+      const result = await window.modernFirebaseAuth.loginWithGoogle(useRedirect);
       
       console.log('🔍 Google login result:', result);
+      
+      if (result.success && result.pending) {
+        // Redirect tapahtuu, sivu latautuu uudelleen
+        this.showLoading('Siirrytään Googleen...');
+        return;
+      }
       
       if (result.success) {
         console.log('✅ Google-kirjautuminen onnistui!');
@@ -55,6 +61,11 @@ export class LoginSystem {
       } else {
         console.error('❌ Google-kirjautuminen epäonnistui:', result.error);
         this.showError(result.error || 'Google-kirjautuminen epäonnistui');
+        
+        // 🔧 Jos popup-ongelma, näytä vaihtoehtoinen painike
+        if (result.error.includes('popup') || result.error.includes('Popup')) {
+          this.showRedirectOption();
+        }
       }
     } catch (error) {
       console.error('❌ Google login error:', error);
@@ -246,8 +257,34 @@ export class LoginSystem {
 
   // PIILOTA VIESTIT
   hideMessages() {
-    document.querySelectorAll('.error-message, .success-message, .loading-message').forEach(msg => {
+    document.querySelectorAll('.error-message, .success-message, .loading-message, .redirect-option').forEach(msg => {
       msg.remove();
     });
+  }
+
+  // NÄYTÄ REDIRECT-VAIHTOEHTO
+  showRedirectOption() {
+    this.hideMessages();
+    const redirectDiv = document.createElement('div');
+    redirectDiv.className = 'redirect-option error-message';
+    redirectDiv.innerHTML = `
+      <i class="fas fa-exclamation-triangle"></i> 
+      Popup-kirjautuminen blokattiin. 
+      <button onclick="loginApp.handleGoogleLogin(true)" style="background: #4285f4; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-left: 10px; cursor: pointer;">
+        <i class="fab fa-google"></i> Kokeile uudelleenohjauksella
+      </button>
+    `;
+    
+    const containers = [
+      document.querySelector('.container'),
+      document.querySelector('.login-container'), 
+      document.querySelector('.main-content'),
+      document.body
+    ];
+    
+    const targetContainer = containers.find(container => container !== null);
+    if (targetContainer) {
+      targetContainer.appendChild(redirectDiv);
+    }
   }
 }

@@ -85,18 +85,40 @@ class ModernFirebaseAuth {
     }
   }
 
-  // GOOGLE-KIRJAUTUMINEN
-  async loginWithGoogle() {
+  // GOOGLE-KIRJAUTUMINEN (PARANNETTU VERSIO)
+  async loginWithGoogle(useRedirect = false) {
     try {
-      console.log('🔐 Google-kirjautuminen aloitettu');
+      console.log('🔐 Google-kirjautuminen aloitettu', useRedirect ? '(redirect)' : '(popup)');
       
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');
       
-      const result = await signInWithPopup(this.auth, provider);
-      const user = result.user;
+      // 🔧 Lisätään custom parameters popup-ongelmien välttämiseksi
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+
+      let result;
       
+      if (useRedirect) {
+        // Redirect-metodi (toimii aina, mutta sivu latautuu uudelleen)
+        const { signInWithRedirect, getRedirectResult } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
+        
+        // Tarkista onko redirect-tulos odottamassa
+        const redirectResult = await getRedirectResult(this.auth);
+        if (redirectResult) {
+          result = redirectResult;
+        } else {
+          await signInWithRedirect(this.auth, provider);
+          return { success: true, pending: true }; // Sivu latautuu uudelleen
+        }
+      } else {
+        // Popup-metodi (nopea, mutta voi blokkautua)
+        result = await signInWithPopup(this.auth, provider);
+      }
+      
+      const user = result.user;
       console.log('✅ Google-kirjautuminen onnistui:', user.email);
       
       // Tallennetaan/päivitetään käyttäjätiedot Firestore:en
@@ -123,8 +145,20 @@ class ModernFirebaseAuth {
     } catch (error) {
       console.error('❌ Google-kirjautuminen epäonnistui:', error);
       
+      // 🔧 PARANNETTU ERROR HANDLING
       if (error.code === 'auth/popup-closed-by-user') {
         return { success: false, error: 'Kirjautuminen peruutettiin' };
+      } else if (error.code === 'auth/popup-blocked') {
+        console.log('🚫 Popup blokattu, yritetään redirect-metodilla...');
+        // Automaattinen fallback redirect-metodiin
+        return await this.loginWithGoogle(true);
+      } else if (error.code === 'auth/unauthorized-domain') {
+        return { 
+          success: false, 
+          error: 'Domain ei ole valtuutettu. Lisää ' + window.location.hostname + ' Firebase-konsoliin.' 
+        };
+      } else if (error.code === 'auth/network-request-failed') {
+        return { success: false, error: 'Verkkovirhe. Tarkista internetyhteytesi.' };
       }
       
       return { success: false, error: this.getErrorMessage(error.code) };
@@ -255,7 +289,11 @@ class ModernFirebaseAuth {
       'auth/wrong-password': 'Väärä salasana',
       'auth/invalid-email': 'Virheellinen sähköpostiosoite',
       'auth/too-many-requests': 'Liian monta yritystä. Yritä hetken päästä uudelleen.',
-      'auth/network-request-failed': 'Verkkovirhe. Tarkista internetyhteytesi.'
+      'auth/network-request-failed': 'Verkkovirhe. Tarkista internetyhteytesi.',
+      'auth/unauthorized-domain': 'Domain ei ole valtuutettu Firebase-projektissa',
+      'auth/popup-blocked': 'Popup-ikkuna blokattiin. Salli popup-ikkunat tai käytä uudelleenohjausta.',
+      'auth/popup-closed-by-user': 'Kirjautuminen peruutettiin',
+      'auth/cancelled-popup-request': 'Popup-pyyntö peruutettiin'
     };
     
     return messages[errorCode] || 'Tuntematon virhe tapahtui';
