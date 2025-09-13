@@ -3,6 +3,8 @@ import {
   getAuth, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   updateProfile
@@ -83,10 +85,59 @@ class ModernFirebaseAuth {
     }
   }
 
-  // KIRJAUTUMINEN
+  // GOOGLE-KIRJAUTUMINEN
+  async loginWithGoogle() {
+    try {
+      console.log('🔐 Google-kirjautuminen aloitettu');
+      
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(this.auth, provider);
+      const user = result.user;
+      
+      console.log('✅ Google-kirjautuminen onnistui:', user.email);
+      
+      // Tallennetaan/päivitetään käyttäjätiedot Firestore:en
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+        provider: 'google',
+        createdAt: new Date(),
+        lastLogin: new Date()
+      };
+      
+      // Tallenna Firestore:en
+      await setDoc(doc(this.db, 'users', user.uid), userData, { merge: true });
+      
+      console.log('✅ Käyttäjätiedot tallennettu Firestore:en');
+      
+      return { 
+        success: true, 
+        user: userData 
+      };
+      
+    } catch (error) {
+      console.error('❌ Google-kirjautuminen epäonnistui:', error);
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        return { success: false, error: 'Kirjautuminen peruutettiin' };
+      }
+      
+      return { success: false, error: this.getErrorMessage(error.code) };
+    }
+  }
+
+  // KIRJAUTUMINEN (EMAIL/PASSWORD - säilytetään varmuuden vuoksi)
   async login(email, password) {
     try {
       console.log('🔐 Kirjaudutaan sisään:', email);
+      console.log('🔑 Salasanan pituus:', password?.length);
+      console.log('🔥 Auth objekti:', this.auth);
+      console.log('🌐 Auth domain:', this.auth?.config?.authDomain);
       
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       const user = userCredential.user;

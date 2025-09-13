@@ -7,6 +7,7 @@ class LoginSystem {
 
   init() {
     console.log('🔧 Alustus käynnissä...');
+    console.log('🔧 Window.modernFirebaseAuth:', window.modernFirebaseAuth);
     
     // Tarkista onko käyttäjä jo kirjautunut
     this.checkExistingLogin();
@@ -16,22 +17,55 @@ class LoginSystem {
   }
 
   setupEventListeners() {
-    // Login formin käsittely
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-      loginForm.addEventListener('submit', this.handleLogin.bind(this));
+    console.log('🔧 setupEventListeners käynnistyy...');
+    
+    // Google Sign In napin käsittely
+    const googleSignInBtn = document.getElementById('googleSignInBtn');
+    console.log('🔍 Google Sign In painike löytyi:', !!googleSignInBtn);
+    
+    if (googleSignInBtn) {
+      googleSignInBtn.addEventListener('click', this.handleGoogleLogin.bind(this));
+      console.log('✅ Lisätään Google Sign In -napin event listener');
+    } else {
+      console.error('❌ Google Sign In painiketta ei löytynyt!');
     }
 
-    // Register formin käsittely
+    // Register formin käsittely (säilytetään)
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
       registerForm.addEventListener('submit', this.handleRegister.bind(this));
+      console.log('✅ Lisätään register-formin event listener');
     }
 
     // Logout napin käsittely
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', this.logout.bind(this));
+    }
+  }
+
+  async handleGoogleLogin() {
+    console.log('🔥 Google-kirjautuminen käynnistyi');
+    
+    this.showLoading('Kirjaudutaan Google-tilillä...');
+
+    try {
+      console.log('🔥 Käytetään Firebase v11 Google Authentication');
+      const result = await window.modernFirebaseAuth.loginWithGoogle();
+      
+      console.log('🔍 Google login result:', result);
+      
+      if (result.success) {
+        console.log('✅ Google-kirjautuminen onnistui!');
+        console.log('👤 User data:', result.user);
+        this.handleSuccessfulLogin(result.user);
+      } else {
+        console.error('❌ Google-kirjautuminen epäonnistui:', result.error);
+        this.showError(result.error || 'Google-kirjautuminen epäonnistui');
+      }
+    } catch (error) {
+      console.error('❌ Google login error:', error);
+      this.showError('Google-kirjautuminen epäonnistui: ' + error.message);
     }
   }
 
@@ -44,6 +78,9 @@ class LoginSystem {
     
     console.log('📧 Email:', email);
     console.log('🔑 Password length:', password?.length);
+    console.log('🔍 Email tyyppi:', typeof email);
+    console.log('🔍 Password tyyppi:', typeof password);
+    console.log('📧 Email trimmed:', email?.trim());
     
     if (!email || !password) {
       this.showError('Sähköposti ja salasana vaaditaan');
