@@ -368,25 +368,19 @@
   <!-- LOGIN CONTAINER -->
   <div class="login-container">
     <div class="login-header">
-      <h1>Tervetuloa takaisin!</h1>
-      <p>Kirjaudu sisään tai luo uusi tili</p>
+      <h1>Tervetuloa Löytökauppaan!</h1>
+      <p>Kirjaudu sisään Google-tilillä</p>
     </div>
 
     <!-- Success/Error Messages -->
     <div class="success-message" id="successMessage"></div>
     <div class="error-message" id="errorMessage"></div>
 
-    <!-- Auth Tabs -->
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">Kirjaudu sisään</button>
-      <button class="auth-tab" onclick="switchTab('register')">Rekisteröidy</button>
-    </div>
-
     <!-- Login Form -->
     <div class="auth-form active" id="loginForm">
       <div style="text-align: center; margin-bottom: 2rem;">
-        <h3 style="color: var(--text); margin-bottom: 1rem;">Kirjaudu sisään Löytökauppaan</h3>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">Käytä Google-tiliäsi kirjautuaksesi</p>
+        <h3 style="color: var(--text); margin-bottom: 1rem;">Aloita ostosten etsiminen</h3>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Kirjaudu sisään jatkaaksesi</p>
       </div>
       
       <button type="button" id="googleSignInBtn" class="btn btn-google">
@@ -405,59 +399,6 @@
         </p>
       </div>
     </div>
-
-    <!-- Register Form -->
-    <form class="auth-form" id="registerForm">
-      <div class="form-group">
-        <label for="registerName">Koko nimi</label>
-        <input type="text" id="registerName" class="form-input" placeholder="Anna Esimerkki" required>
-      </div>
-      <div class="form-group">
-        <label for="registerEmail">Sähköposti</label>
-        <input type="email" id="registerEmail" class="form-input" placeholder="anna@esimerkki.fi" required>
-      </div>
-      <div class="form-group">
-        <label for="registerPhone">Puhelinnumero</label>
-        <input type="tel" id="registerPhone" class="form-input" placeholder="+358 50 123 4567" required>
-      </div>
-      <div class="form-group">
-        <label for="registerAddress">Osoite</label>
-        <input type="text" id="registerAddress" class="form-input" placeholder="Katuosoite, Kaupunki" required>
-      </div>
-      <div class="form-group">
-        <label for="registerPassword">Salasana</label>
-        <input type="password" id="registerPassword" class="form-input" placeholder="Vähintään 6 merkkiä" required>
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">Vahvista salasana</label>
-        <input type="password" id="confirmPassword" class="form-input" placeholder="Kirjoita salasana uudelleen" required>
-      </div>
-      <button type="submit" class="btn btn-primary">
-        <i class="fas fa-user-plus"></i>
-        Luo tili
-      </button>
-    </form>
-
-    <!-- Email Verification Form -->
-    <div class="verification-form" id="verificationForm">
-      <div class="code-info">
-        <i class="fas fa-envelope"></i>
-        <h3>Tarkista sähköpostisi</h3>
-        <p>Lähetimme 6-numeroisen koodin osoitteeseen <span id="verificationEmail"></span></p>
-      </div>
-      <div class="form-group">
-        <label for="verificationCode">Vahvistuskoodi</label>
-        <input type="text" id="verificationCode" class="form-input verification-code" 
-               placeholder="123456" maxlength="6" required>
-      </div>
-      <button onclick="verifyCode()" class="btn btn-primary">
-        <i class="fas fa-check"></i>
-        Vahvista koodi
-      </button>
-      <button onclick="resendCode()" class="resend-code">
-        Lähetä koodi uudelleen
-      </button>
-    </div>
   </div>
 
   <!-- Firebase v11 - Moderni ES modules -->
@@ -474,7 +415,21 @@
   <script src="firebase-auth.js"></script>
   -->
   
-  <!-- Login logic -->
-  <script src="login.js?v=6"></script>
+  <!-- Login logic - ES modules -->
+  <script type="module">
+    import { LoginSystem } from './login.js?v=8';
+    
+    // Alusta järjestelmä kun sivu on ladattu
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🚀 DOM ladattu, alustetaan Login System');
+      try {
+        window.loginSystem = new LoginSystem();
+        console.log('✅ LoginSystem alustettu onnistuneesti');
+      } catch (error) {
+        console.error('❌ LoginSystem alustus epäonnistui:', error);
+        console.error('❌ Error stack:', error.stack);
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
-// Login JavaScript - Puhdas versio
-class LoginSystem {
+// Login JavaScript - ES Modules versio
+export class LoginSystem {
   constructor() {
     this.currentUser = null;
     this.init();
@@ -28,13 +28,6 @@ class LoginSystem {
       console.log('✅ Lisätään Google Sign In -napin event listener');
     } else {
       console.error('❌ Google Sign In painiketta ei löytynyt!');
-    }
-
-    // Register formin käsittely (säilytetään)
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-      registerForm.addEventListener('submit', this.handleRegister.bind(this));
-      console.log('✅ Lisätään register-formin event listener');
     }
 
     // Logout napin käsittely
@@ -109,47 +102,6 @@ class LoginSystem {
     }
   }
 
-  async handleRegister(e) {
-    e.preventDefault();
-    
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (!name || !email || !password) {
-      this.showError('Kaikki kentät vaaditaan');
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      this.showError('Salasanat eivät täsmää');
-      return;
-    }
-    
-    if (password.length < 6) {
-      this.showError('Salasanan tulee olla vähintään 6 merkkiä');
-      return;
-    }
-
-    this.showLoading('Luodaan tiliä...');
-
-    try {
-      const result = await window.modernFirebaseAuth.register(email, password, name);
-      
-      if (result.success) {
-        this.showSuccess('Tili luotu onnistuneesti! Voit nyt kirjautua sisään.');
-        this.switchTab('login');
-        this.clearForm('registerForm');
-      } else {
-        this.showError(result.error || 'Rekisteröinti epäonnistui');
-      }
-    } catch (error) {
-      console.error('Register error:', error);
-      this.showError('Rekisteröinti epäonnistui: ' + error.message);
-    }
-  }
-
   handleSuccessfulLogin(user) {
     console.log('🎉 handleSuccessfulLogin kutsuttu user datalla:', user);
     this.hideMessages();
@@ -175,9 +127,12 @@ class LoginSystem {
       window.updateUserUI();
     }
     
-    console.log('🔄 Ohjataan index.html:ään');
-    // Ohjaa etusivulle
-    window.location.href = 'index.html';
+    console.log('🔄 Ohjataan index.html:ään 2 sekunnin kuluttua');
+    
+    // Pienet delay että käyttäjä näkee onnistumisviesti, sitten ohjaa etusivulle
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 2000);
   }
 
   logout() {
@@ -224,54 +179,6 @@ class LoginSystem {
     if (form) {
       form.reset();
     }
-  }
-
-  switchTab(tabName) {
-    // Piilota kaikki tabit
-    document.querySelectorAll('.tab-content').forEach(tab => {
-      tab.classList.remove('active');
-    });
-    
-    // Näytä valittu tabi
-    const selectedTab = document.getElementById(tabName + 'Tab');
-    if (selectedTab) {
-      selectedTab.classList.add('active');
-    }
-    
-    // Päivitä tab-napit
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    
-    const selectedBtn = document.querySelector(`[onclick*="${tabName}"]`);
-    if (selectedBtn) {
-      selectedBtn.classList.add('active');
-    }
-  }
-
-  verifyCode() {
-    const code = document.getElementById('verificationCode').value;
-    if (!code) {
-      this.showError('Anna vahvistuskoodi');
-      return;
-    }
-    
-    this.showLoading('Vahvistetaan koodia...');
-    
-    // Tässä olisi oikea vahvistuslogiikka
-    setTimeout(() => {
-      this.showSuccess('Koodi vahvistettu!');
-      this.switchTab('login');
-    }, 1000);
-  }
-
-  resendCode() {
-    this.showLoading('Lähetetään uusi koodi...');
-    
-    // Tässä olisi uudelleenlähetyslogiikka
-    setTimeout(() => {
-      this.showSuccess('Uusi koodi lähetetty!');
-    }, 1000);
   }
 
   // NÄYTÄ LATAUSVIESTI
@@ -344,34 +251,3 @@ class LoginSystem {
     });
   }
 }
-
-// Globaalit funktiot HTML:lle
-window.switchTab = function(tab) {
-  if (window.loginSystem) {
-    window.loginSystem.switchTab(tab);
-  }
-};
-
-window.verifyCode = function() {
-  if (window.loginSystem) {
-    window.loginSystem.verifyCode();
-  }
-};
-
-window.resendCode = function() {
-  if (window.loginSystem) {
-    window.loginSystem.resendCode();
-  }
-};
-
-// Alusta järjestelmä kun sivu on ladattu
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 DOM ladattu, alustetaan Login System');
-  try {
-    window.loginSystem = new LoginSystem();
-    console.log('✅ LoginSystem alustettu onnistuneesti');
-  } catch (error) {
-    console.error('❌ LoginSystem alustus epäonnistui:', error);
-    console.error('❌ Error stack:', error.stack);
-  }
-});
