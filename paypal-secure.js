@@ -201,7 +201,7 @@ class PayPalSecure {
 }
 
 // Globaali instanssi
-window.securePayPal = new SecurePayPalIntegration();
+window.securePayPal = new PayPalSecure();
 
 // Backward compatibility
 window.initPayPalPayment = async function(total, firestoreOrderId) {
@@ -266,4 +266,4 @@ window.initPayPalPayment = async function(total, firestoreOrderId) {
   }
 };
 
-export { SecurePayPalIntegration };
+export { PayPalSecure };

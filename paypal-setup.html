@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayPal Setup - Löytökauppa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .setup-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .step {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .input-group {
+            margin: 1rem 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn.secondary {
+            background: #2196F3;
+        }
+        .btn.secondary:hover {
+            background: #1976D2;
+        }
+        .status {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+        }
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #f44336;
+        }
+        .status.warning {
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid #FFC107;
+        }
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <h1>🔧 PayPal Setup - Löytökauppa</h1>
+        <p>Aseta PayPal Client ID checkout-toiminnallisuuden käyttöä varten.</p>
+
+        <div class="step">
+            <h3>📋 Vaihe 1: Hanki PayPal Client ID</h3>
+            <p>Jos sinulla ei ole PayPal Client ID:tä:</p>
+            <ol>
+                <li>Mene osoitteeseen: <a href="https://developer.paypal.com" target="_blank" style="color: #FFC107;">developer.paypal.com</a></li>
+                <li>Kirjaudu sisään PayPal-tilillä</li>
+                <li>Luo uusi sovellus (Create App)</li>
+                <li>Valitse "Sandbox" ympäristö testausta varten</li>
+                <li>Kopioi "Client ID" (alkaa yleensä "A..." kirjaimella)</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <h3>🔑 Vaihe 2: Aseta Client ID</h3>
+            <div class="input-group">
+                <label for="clientId">PayPal Sandbox Client ID:</label>
+                <input 
+                    type="text" 
+                    id="clientId" 
+                    placeholder="Esim: AfB87g-R1Y6r8j0IhP7Rk8NWNSIlwvjhJoFeO1_n3U0JZm-_s4FjDMxz8qG5ElIqEiAInOJo7kX0XqOq"
+                    style="font-family: monospace; font-size: 0.9rem;"
+                >
+            </div>
+            <button class="btn" onclick="setClientId()">💾 Tallenna Client ID</button>
+            <button class="btn secondary" onclick="useDefaultId()">🎯 Käytä Oletusta</button>
+        </div>
+
+        <div class="step">
+            <h3>📊 Vaihe 3: Tarkista Status</h3>
+            <div id="status-info">
+                <div class="status warning">
+                    ⏳ PayPal Client ID ei ole asetettu
+                </div>
+            </div>
+            <button class="btn secondary" onclick="checkStatus()">🔍 Tarkista Status</button>
+            <button class="btn secondary" onclick="testCheckout()">🛒 Testaa Checkout</button>
+        </div>
+
+        <div class="step">
+            <h3>🧹 Vaihe 4: Hallinta</h3>
+            <button class="btn" style="background: #FF5722;" onclick="clearClientId()">🗑️ Poista Client ID</button>
+            <button class="btn secondary" onclick="showCurrentId()">👁️ Näytä Nykyinen ID</button>
+        </div>
+
+        <div class="step">
+            <h3>📖 Tietoja</h3>
+            <p><strong>Sandbox vs Production:</strong></p>
+            <ul>
+                <li><strong>Sandbox:</strong> Testikäyttöön, ei oikeaa rahaa</li>
+                <li><strong>Production:</strong> Oikeaan käyttöön, oikeaa rahaa</li>
+            </ul>
+            <p>Tämä sivu asettaa vain Sandbox Client ID:n turvallista testausta varten.</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" style="color: #FFC107; text-decoration: none;">← Takaisin etusivulle</a>
+            <span style="margin: 0 1rem;">|</span>
+            <a href="checkout.html" style="color: #FFC107; text-decoration: none;">Siirry kassalle →</a>
+        </div>
+    </div>
+
+    <script>
+        function setClientId() {
+            const clientId = document.getElementById('clientId').value.trim();
+            
+            if (!clientId) {
+                showStatus('Syötä Client ID!', 'error');
+                return;
+            }
+            
+            if (clientId.length < 50) {
+                showStatus('Client ID näyttää liian lyhyeltä. Tarkista että kopioit koko ID:n.', 'warning');
+            }
+            
+            try {
+                sessionStorage.setItem('paypal_sandbox_client_id', clientId);
+                localStorage.setItem('paypal_setup_done', 'true');
+                showStatus(`✅ Client ID tallennettu onnistuneesti!<br>Pituus: ${clientId.length} merkkiä`, 'success');
+                
+                // Tarkista status automaattisesti
+                setTimeout(checkStatus, 1000);
+            } catch (error) {
+                showStatus('Virhe tallentaessa: ' + error.message, 'error');
+            }
+        }
+        
+        function useDefaultId() {
+            const defaultId = 'AfB87g-R1Y6r8j0IhP7Rk8NWNSIlwvjhJoFeO1_n3U0JZm-_s4FjDMxz8qG5ElIqEiAInOJo7kX0XqOq';
+            document.getElementById('clientId').value = defaultId;
+            
+            sessionStorage.setItem('paypal_sandbox_client_id', defaultId);
+            localStorage.setItem('paypal_setup_done', 'true');
+            showStatus('✅ Oletus Client ID asetettu! Tämä toimii testaukseen.', 'success');
+            
+            setTimeout(checkStatus, 1000);
+        }
+        
+        function checkStatus() {
+            const clientId = sessionStorage.getItem('paypal_sandbox_client_id');
+            const setupDone = localStorage.getItem('paypal_setup_done');
+            
+            let statusHtml = '';
+            
+            if (clientId) {
+                statusHtml += `
+                    <div class="status success">
+                        ✅ PayPal Client ID asetettu<br>
+                        Pituus: ${clientId.length} merkkiä<br>
+                        Alkaa: ${clientId.substring(0, 10)}...
+                    </div>
+                `;
+            } else {
+                statusHtml += `
+                    <div class="status error">
+                        ❌ PayPal Client ID ei ole asetettu
+                    </div>
+                `;
+            }
+            
+            if (setupDone) {
+                statusHtml += `
+                    <div class="status success">
+                        ✅ PayPal setup merkitty valmiiksi
+                    </div>
+                `;
+            }
+            
+            // Tarkista onko PayPal config ladattu
+            if (window.paypalConfig) {
+                statusHtml += `
+                    <div class="status success">
+                        ✅ PayPal Config objekti löytyi<br>
+                        Client ID: ${window.paypalConfig.clientId ? 'SET' : 'MISSING'}<br>
+                        Currency: ${window.paypalConfig.currency || 'N/A'}
+                    </div>
+                `;
+            } else {
+                statusHtml += `
+                    <div class="status warning">
+                        ⚠️ PayPal Config objektia ei löytynyt (normaalia tällä sivulla)
+                    </div>
+                `;
+            }
+            
+            document.getElementById('status-info').innerHTML = statusHtml;
+        }
+        
+        function clearClientId() {
+            if (confirm('Haluatko varmasti poistaa PayPal Client ID:n?')) {
+                sessionStorage.removeItem('paypal_sandbox_client_id');
+                localStorage.removeItem('paypal_setup_done');
+                document.getElementById('clientId').value = '';
+                showStatus('🗑️ Client ID poistettu', 'warning');
+                checkStatus();
+            }
+        }
+        
+        function showCurrentId() {
+            const clientId = sessionStorage.getItem('paypal_sandbox_client_id');
+            if (clientId) {
+                alert(`Nykyinen Client ID:\n\n${clientId}`);
+            } else {
+                alert('Client ID ei ole asetettu');
+            }
+        }
+        
+        function testCheckout() {
+            window.open('checkout.html', '_blank');
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status-info');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        // Lataa status sivun avautuessa
+        window.onload = function() {
+            checkStatus();
+            
+            // Esitäytä kenttä jos ID on jo asetettu
+            const existingId = sessionStorage.getItem('paypal_sandbox_client_id');
+            if (existingId) {
+                document.getElementById('clientId').value = existingId;
+            }
+        };
+    </script>
+</body>
+</html>

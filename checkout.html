@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kassalle - Löytökauppa</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --dark: #1f2937;
+      --darker: #111827;
+      --light: #f9fafb;
+      --border: #374151;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* HEADER */
+    .header {
+      background: rgba(31, 41, 55, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .back-link {
+      color: var(--text);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .back-link:hover {
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary);
+    }
+
+    /* MAIN CONTAINER */
+    .checkout-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 2rem;
+    }
+
+    .checkout-form {
+      background: var(--dark);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      height: fit-content;
+    }
+
+    .order-summary {
+      background: var(--darker);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      height: fit-content;
+      position: sticky;
+      top: 120px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 0.5rem;
+    }
+
+    /* FORM STYLES */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .required {
+      color: var(--danger);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--darker);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* ORDER SUMMARY */
+    .cart-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+
+    .item-image {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 1rem;
+    }
+
+    .item-info {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .item-quantity {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .item-price {
+      font-weight: bold;
+      color: var(--success);
+    }
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.5rem 0;
+      padding: 0.5rem 0;
+    }
+
+    .price-row.total {
+      border-top: 2px solid var(--border);
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--success);
+    }
+
+    /* PAYMENT SECTION */
+    .payment-section {
+      background: var(--darker);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-top: 1.5rem;
+    }
+
+    .payment-methods {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .payment-method {
+      flex: 1;
+      padding: 1rem;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .payment-method.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .payment-method:hover {
+      border-color: var(--primary);
+    }
+
+    #paypal-button-container {
+      margin-top: 1rem;
+      min-height: 45px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(37, 99, 235, 0.1);
+      border-color: var(--primary);
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    /* LOADING STATE */
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--primary);
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .checkout-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .header-content {
+        padding: 0 1rem;
+      }
+
+      .checkout-container {
+        padding: 0 1rem;
+      }
+    }
+
+    /* EMPTY CART */
+    .empty-cart {
+      text-align: center;
+      padding: 3rem 2rem;
+    }
+
+    .empty-cart i {
+      font-size: 4rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .empty-cart h3 {
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .empty-cart p {
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-content">
+      <a href="index.html" class="logo">
+        <i class="fas fa-store"></i>
+        Löytökauppa
+      </a>
+      <a href="index.html" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Takaisin ostoksiin
+      </a>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <div class="checkout-container" id="checkoutContainer">
+    <!-- LOADING STATE -->
+    <div id="loadingState" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+      <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+      <p style="margin-top: 1rem;">Ladataan kassaa...</p>
+    </div>
+  </div>
+
+  <!-- PayPal SDK -->
+  <script src="paypal-config-secure.js"></script>
+  <script type="module">
+    // PayPal SDK ladataan dynaamisesti konfiguraatiosta
+    async function loadPayPalSDK() {
+      try {
+        console.log('🔄 Aloitetaan PayPal SDK lataus...');
+        
+        // Odota PayPal config managerin latautumista (max 10 sekuntia)
+        let attempts = 0;
+        while ((!window.paypalConfig || !window.paypalConfig.clientId) && attempts < 100) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
+        
+        if (!window.paypalConfig || !window.paypalConfig.clientId) {
+          console.warn('⚠️ PayPal config puuttuu, käytetään fallback-konfiguraatiota');
+          // Fallback config
+          window.paypalConfig = {
+            clientId: 'AfB87g-R1Y6r8j0IhP7Rk8NWNSIlwvjhJoFeO1_n3U0JZm-_s4FjDMxz8qG5ElIqEiAInOJo7kX0XqOq',
+            currency: 'EUR',
+            environment: 'sandbox'
+          };
+        }
+        
+        console.log('✅ PayPal config löytyi ja on valmis käytettäväksi');
+        console.log('🔧 PayPal Config:', {
+          clientId: window.paypalConfig.clientId ? 'SET' : 'MISSING',
+          currency: window.paypalConfig.currency,
+          environment: window.paypalConfig.environment
+        });
+        
+        const script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${window.paypalConfig.clientId}&currency=${window.paypalConfig.currency}`;
+        
+        script.onload = () => {
+          console.log('✅ PayPal SDK script ladattu kassasivulle');
+          
+          // Odota hetki että PayPal objekti on varmasti saatavilla
+          setTimeout(() => {
+            if (window.paypal) {
+              console.log('✅ PayPal objekti on käytettävissä');
+              window.paypalSDKLoaded = true;
+            } else {
+              console.error('❌ PayPal objekti ei ole käytettävissä vaikka script latautui');
+              console.error('🔍 window.paypal:', window.paypal);
+              window.paypalSDKLoaded = false;
+            }
+          }, 500); // Odota 500ms
+        };
+        
+        script.onerror = (error) => {
+          console.error('❌ PayPal SDK lataus epäonnistui:', error);
+          window.paypalSDKLoaded = false;
+        };
+        
+        script.onabort = () => {
+          console.error('❌ PayPal SDK lataus keskeytetty');
+          window.paypalSDKLoaded = false;
+        };
+        
+        document.head.appendChild(script);
+        console.log('🔄 PayPal SDK script lisätty head:iin');
+        
+      } catch (error) {
+        console.error('❌ Virhe PayPal SDK latauksessa:', error);
+        window.paypalSDKLoaded = false;
+      }
+    }
+    
+    loadPayPalSDK();
+  </script>
+
+  <script>
+    let cart = [];
+    let paymentMethod = 'paypal';
+
+    // Lataa ostoskori
+    function loadCart() {
+      cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      console.log('🛒 Kassalla ostoskori:', cart);
+      
+      if (cart.length === 0) {
+        showEmptyCart();
+        return;
+      }
+      
+      renderCheckoutPage();
+    }
+
+    // Näytä tyhjä ostoskori
+    function showEmptyCart() {
+      const container = document.getElementById('checkoutContainer');
+      container.innerHTML = `
+        <div class="empty-cart" style="grid-column: 1 / -1;">
+          <i class="fas fa-shopping-cart"></i>
+          <h3>Ostoskorisi on tyhjä</h3>
+          <p>Lisää tuotteita ostoskoriin ennen kassalle siirtymistä.</p>
+          <a href="index.html" class="btn btn-primary">
+            <i class="fas fa-shopping-bag"></i>
+            Jatka ostoksia
+          </a>
+        </div>
+      `;
+    }
+
+    // Renderöi kassasivu
+    function renderCheckoutPage() {
+      const container = document.getElementById('checkoutContainer');
+      container.innerHTML = `
+        <!-- CHECKOUT FORM -->
+        <div class="checkout-form">
+          <h2 class="section-title">
+            <i class="fas fa-user"></i>
+            Asiakastiedot
+          </h2>
+          
+          <form id="checkoutForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">Etunimi <span class="required">*</span></label>
+                <input type="text" id="firstName" required>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Sukunimi <span class="required">*</span></label>
+                <input type="text" id="lastName" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Sähköposti <span class="required">*</span></label>
+              <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Puhelinnumero <span class="required">*</span></label>
+              <input type="tel" id="phone" required>
+            </div>
+
+            <h3 style="margin: 2rem 0 1rem 0; color: var(--text);">
+              <i class="fas fa-truck"></i>
+              Toimitusosoite
+            </h3>
+
+            <div class="form-group">
+              <label for="address">Katuosoite <span class="required">*</span></label>
+              <input type="text" id="address" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="postalCode">Postinumero <span class="required">*</span></label>
+                <input type="text" id="postalCode" required>
+              </div>
+              <div class="form-group">
+                <label for="city">Kaupunki <span class="required">*</span></label>
+                <input type="text" id="city" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="notes">Lisätietoja tilauksesta</label>
+              <textarea id="notes" placeholder="Esim. toimitusohjeita..."></textarea>
+            </div>
+          </form>
+
+          <!-- PAYMENT SECTION -->
+          <div class="payment-section">
+            <h3 style="margin-bottom: 1rem; color: var(--text);">
+              <i class="fas fa-credit-card"></i>
+              Maksutapa
+            </h3>
+            
+            <div class="payment-methods">
+              <div class="payment-method active" onclick="selectPaymentMethod('paypal')">
+                <i class="fab fa-paypal" style="font-size: 1.5rem; color: #0070ba; margin-bottom: 0.5rem;"></i>
+                <div>PayPal</div>
+              </div>
+            </div>
+
+            <div id="paypal-button-container"></div>
+          </div>
+        </div>
+
+        <!-- ORDER SUMMARY -->
+        <div class="order-summary">
+          <h2 class="section-title">
+            <i class="fas fa-receipt"></i>
+            Tilauksen yhteenveto
+          </h2>
+          
+          <div id="cartItems">
+            ${renderCartItems()}
+          </div>
+          
+          <div class="price-summary">
+            ${renderPriceSummary()}
+          </div>
+        </div>
+      `;
+
+      // Lataa PayPal-painikkeet kun SDK on valmis
+      waitForPayPalSDK();
+    }
+
+    // Renderöi ostoskorin tuotteet
+    function renderCartItems() {
+      return cart.map(item => `
+        <div class="cart-item">
+          <img src="${item.image}" alt="${item.name}" class="item-image">
+          <div class="item-info">
+            <div class="item-name">${item.name}</div>
+            <div class="item-quantity">Määrä: ${item.quantity} kpl</div>
+          </div>
+          <div class="item-price">${(item.price * item.quantity).toFixed(2).replace('.', ',')} €</div>
+        </div>
+      `).join('');
+    }
+
+    // Renderöi hintojen yhteenveto
+    function renderPriceSummary() {
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const shipping = subtotal >= 50 ? 0 : 5; // Ilmainen toimitus yli 50€ tilauksissa
+      const total = subtotal + shipping;
+
+      return `
+        <div class="price-row">
+          <span>Tuotteet:</span>
+          <span>${subtotal.toFixed(2).replace('.', ',')} €</span>
+        </div>
+        <div class="price-row">
+          <span>Toimitus:</span>
+          <span>${shipping === 0 ? 'Ilmainen' : shipping.toFixed(2).replace('.', ',') + ' €'}</span>
+        </div>
+        <div class="price-row total">
+          <span>Yhteensä:</span>
+          <span>${total.toFixed(2).replace('.', ',')} €</span>
+        </div>
+      `;
+    }
+
+    // Valitse maksutapa
+    function selectPaymentMethod(method) {
+      paymentMethod = method;
+      document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('active'));
+      event.target.closest('.payment-method').classList.add('active');
+    }
+
+    // Odota PayPal SDK:n latautumista
+    function waitForPayPalSDK() {
+      console.log('⏳ Odotetaan PayPal SDK:n latautumista...');
+      
+      let attempts = 0;
+      const maxAttempts = 150; // 15 sekuntia
+      
+      const checkSDK = () => {
+        attempts++;
+        
+        const debugInfo = {
+          paypal: !!window.paypal,
+          paypalSDKLoaded: !!window.paypalSDKLoaded,
+          paypalConfig: !!window.paypalConfig,
+          paypalType: typeof window.paypal,
+          paypalKeys: window.paypal ? Object.keys(window.paypal) : []
+        };
+        
+        console.log(`🔍 Tarkistetaan PayPal SDK (${attempts}/${maxAttempts}):`, debugInfo);
+        
+        if (window.paypal && window.paypal.Buttons && window.paypalSDKLoaded) {
+          console.log('✅ PayPal SDK valmis, alustetaan napit');
+          initPayPalButtons();
+        } else if (attempts >= maxAttempts) {
+          console.error('❌ PayPal SDK ei latautunut 15 sekunnin kuluessa');
+          console.error('🔍 Final state:', debugInfo);
+          showPayPalError();
+        } else {
+          setTimeout(checkSDK, 100);
+        }
+      };
+      checkSDK();
+    }
+
+    // Näytä PayPal virhe käyttäjälle
+    function showPayPalError() {
+      const container = document.getElementById('paypal-button-container');
+      if (container) {
+        container.innerHTML = `
+          <div style="background: #ff6b6b; color: white; padding: 1rem; border-radius: 8px; text-align: center;">
+            <strong>⚠️ PayPal ei käytettävissä</strong><br>
+            PayPal-maksu ei ole tällä hetkellä käytettävissä. Kokeile myöhemmin uudelleen.
+          </div>
+        `;
+      }
+    }
+
+    // Alusta PayPal-painikkeet
+    function initPayPalButtons() {
+      console.log('🔧 initPayPalButtons kutsuttu');
+      console.log('🔍 window.paypal:', !!window.paypal);
+      console.log('🔍 cart:', cart);
+      
+      if (!window.paypal) {
+        console.error('❌ PayPal SDK ei ole ladattu');
+        return;
+      }
+
+      const container = document.getElementById('paypal-button-container');
+      if (!container) {
+        console.error('❌ PayPal button container ei löydy');
+        return;
+      }
+
+      // Tyhjennä container ensin
+      container.innerHTML = '';
+
+      const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const shipping = total >= 50 ? 0 : 5;
+      const finalTotal = total + shipping;
+
+      console.log('💰 PayPal-tilauksen summa:', finalTotal);
+
+      paypal.Buttons({
+        style: {
+          layout: 'vertical',
+          color: 'blue',
+          shape: 'rect',
+          label: 'paypal'
+        },
+        createOrder: function(data, actions) {
+          // Validoi lomake ennen tilausta
+          if (!validateForm()) {
+            return Promise.reject('Täytä kaikki pakolliset kentät');
+          }
+
+          console.log('🔄 Luodaan PayPal-tilaus, summa:', finalTotal);
+          
+          return actions.order.create({
+            purchase_units: [{
+              amount: {
+                value: finalTotal.toFixed(2),
+                currency_code: 'EUR',
+                breakdown: {
+                  item_total: {
+                    currency_code: 'EUR',
+                    value: total.toFixed(2)
+                  },
+                  shipping: {
+                    currency_code: 'EUR',
+                    value: shipping.toFixed(2)
+                  }
+                }
+              },
+              items: cart.map(item => ({
+                name: item.name,
+                unit_amount: {
+                  currency_code: 'EUR',
+                  value: item.price.toFixed(2)
+                },
+                quantity: item.quantity.toString()
+              })),
+              description: 'Löytökauppa - Tilaus',
+              soft_descriptor: 'Löytökauppa'
+            }]
+          });
+        },
+        onApprove: function(data, actions) {
+          console.log('✅ PayPal-maksu hyväksytty:', data.orderID);
+          
+          return actions.order.capture().then(function(details) {
+            console.log('💳 Maksu suoritettu:', details);
+            
+            // Kerää tilauksen tiedot
+            const orderData = collectOrderData(details);
+            
+            // Tyhjennä ostoskori
+            localStorage.removeItem('cart');
+            
+            // Näytä onnistumissivu
+            showSuccessPage(orderData);
+          });
+        },
+        onError: function(err) {
+          console.error('❌ PayPal-virhe:', err);
+          showErrorMessage('Maksun käsittelyssä tapahtui virhe. Yritä uudelleen.');
+        },
+        onCancel: function(data) {
+          console.log('🚫 PayPal-maksu peruutettiin:', data);
+          showInfoMessage('Maksu peruutettiin.');
+        }
+      }).render('#paypal-button-container');
+    }
+
+    // Validoi lomake
+    function validateForm() {
+      const required = ['firstName', 'lastName', 'email', 'phone', 'address', 'postalCode', 'city'];
+      let isValid = true;
+
+      required.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field || !field.value.trim()) {
+          isValid = false;
+          if (field) {
+            field.style.borderColor = 'var(--danger)';
+            field.addEventListener('input', () => {
+              field.style.borderColor = 'var(--border)';
+            }, { once: true });
+          }
+        }
+      });
+
+      if (!isValid) {
+        showErrorMessage('Täytä kaikki pakolliset kentät (merkitty *)');
+      }
+
+      return isValid;
+    }
+
+    // Kerää tilauksen tiedot
+    function collectOrderData(paypalDetails) {
+      return {
+        orderId: paypalDetails.id,
+        customer: {
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value
+        },
+        shipping: {
+          address: document.getElementById('address').value,
+          postalCode: document.getElementById('postalCode').value,
+          city: document.getElementById('city').value
+        },
+        items: cart,
+        payment: {
+          method: 'PayPal',
+          transactionId: paypalDetails.id,
+          amount: paypalDetails.purchase_units[0].amount.value,
+          status: 'completed'
+        },
+        notes: document.getElementById('notes').value,
+        timestamp: new Date().toISOString()
+      };
+    }
+
+    // Näytä onnistumissivu
+    function showSuccessPage(orderData) {
+      const container = document.getElementById('checkoutContainer');
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <i class="fas fa-check-circle" style="font-size: 4rem; color: var(--success); margin-bottom: 2rem;"></i>
+          <h2 style="margin-bottom: 1rem; color: var(--success);">Tilaus vahvistettu!</h2>
+          <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Kiitos tilauksesta ${orderData.customer.firstName}!</p>
+          <p style="color: var(--text-muted); margin-bottom: 2rem;">
+            Tilausnumero: <strong>${orderData.orderId}</strong>
+          </p>
+          <p style="margin-bottom: 2rem; color: var(--text-muted);">
+            Lähetämme tilausvahvistuksen sähköpostiosoitteeseen ${orderData.customer.email}
+          </p>
+          <div style="max-width: 400px; margin: 0 auto; text-align: left; background: var(--dark); padding: 2rem; border-radius: 12px; border: 1px solid var(--border);">
+            <h3 style="margin-bottom: 1rem; color: var(--text);">Tilauksen tiedot:</h3>
+            <div style="margin-bottom: 1rem;">
+              <strong>Toimitusosoite:</strong><br>
+              ${orderData.shipping.address}<br>
+              ${orderData.shipping.postalCode} ${orderData.shipping.city}
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <strong>Maksutapa:</strong> PayPal<br>
+              <strong>Summa:</strong> ${orderData.payment.amount} €
+            </div>
+          </div>
+          <div style="margin-top: 2rem;">
+            <a href="index.html" class="btn btn-primary">
+              <i class="fas fa-home"></i>
+              Takaisin etusivulle
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    // Näytä virheilmoitus
+    function showErrorMessage(message) {
+      // Poista aiemmat virheilmoitukset
+      const existing = document.querySelector('.error-message');
+      if (existing) existing.remove();
+
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-message';
+      errorDiv.style.cssText = `
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--danger);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+      document.body.appendChild(errorDiv);
+
+      setTimeout(() => errorDiv.remove(), 5000);
+    }
+
+    // Näytä info-ilmoitus
+    function showInfoMessage(message) {
+      const infoDiv = document.createElement('div');
+      infoDiv.style.cssText = `
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--warning);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+      document.body.appendChild(infoDiv);
+
+      setTimeout(() => infoDiv.remove(), 3000);
+    }
+
+    // Alusta sivu kun DOM latautuu
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🚀 Kassasivu ladattu');
+      
+      // Piilota loading
+      setTimeout(() => {
+        document.getElementById('loadingState').style.display = 'none';
+        loadCart();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-// Firebase Authentication - Moderni v11 versio
+// Firebase Authentication - Moderni v11 versio (vain Auth, ei Firestore)
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
@@ -9,50 +9,115 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  collection,
-  query,
-  where,
-  getDocs
-} from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
 
 class ModernFirebaseAuth {
   constructor() {
     this.auth = null;
-    this.db = null;
     this.currentUser = null;
-    this.init();
+    this.debugMode = window.location.hostname.includes('localhost') || 
+                    window.location.hostname.includes('127.0.0.1') || 
+                    window.location.hostname.includes('github.dev') ||
+                    window.location.hostname.includes('codespaces');
+    
+    console.log('🔥 Firebase Auth Manager alustetaan...');
+    this.isInitialized = false;
+    
+    // Odota Firebase config:ia
+    this.initPromise = this.waitForFirebaseConfig();
+  }
+
+  // ADMIN-DOMAININ TARKISTUS (ei kovakoodattuja sähköposteja)
+  checkAdminDomain(email) {
+    if (!email) return false;
+    
+    const adminDomains = [
+      '@loytokauppa.fi',
+      '@admin.loytokauppa.fi'
+    ];
+    
+    return adminDomains.some(domain => email.endsWith(domain));
+  }
+
+  async waitForFirebaseConfig() {
+    let attempts = 0;
+    const maxAttempts = 50; // 5 sekuntia max
+    
+    while (attempts < maxAttempts) {
+      if (window.firebaseAuth) {
+        console.log('✅ Firebase Auth löytyi windowista');
+        this.auth = window.firebaseAuth;
+        this.isInitialized = true;
+        this.init();
+        return true;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    console.error('❌ Firebase Auth ei alustunu 5 sekunnissa');
+    throw new Error('Firebase Auth alustus epäonnistui');
+  }
+
+  // Turvallinen debug-logging
+  debugLog(message, sensitiveData = null) {
+    if (this.debugMode) {
+      if (sensitiveData) {
+        console.log(message, sensitiveData);
+      } else {
+        console.log(message);
+      }
+    } else {
+      // Tuotannossa näytä vain perusviesti
+      console.log(message.replace(/[:].*/,''));
+    }
   }
 
   async init() {
-    try {
-      // Odota että Firebase-config on ladattu
-      if (window.firebaseAuth && window.firebaseDB) {
-        this.auth = window.firebaseAuth;
-        this.db = window.firebaseDB.db;
-        
-        // Kuuntele kirjautumistilan muutoksia
-        onAuthStateChanged(this.auth, (user) => {
-          this.handleAuthStateChange(user);
-        });
-        
-        console.log('✅ ModernFirebaseAuth alustettu');
-      } else {
-        setTimeout(() => this.init(), 1000);
+    let attempts = 0;
+    const maxAttempts = 10; // Maksimissaan 10 yritystä (10 sekuntia)
+    
+    const tryInit = () => {
+      try {
+        // Odota että Firebase-config on ladattu
+        if (window.firebaseAuth) {
+          this.auth = window.firebaseAuth;
+          
+          // Kuuntele kirjautumistilan muutoksia
+          onAuthStateChanged(this.auth, (user) => {
+            this.handleAuthStateChange(user);
+          });
+          
+          // Tarkista mahdollinen redirect-tulos sivun latauksen yhteydessä
+          this.checkRedirectResult();
+          
+          console.log('✅ ModernFirebaseAuth alustettu (vain Auth)');
+        } else {
+          attempts++;
+          if (attempts < maxAttempts) {
+            console.log(`⏳ Odotetaan Firebase-config latautumista... (${attempts}/${maxAttempts})`);
+            setTimeout(tryInit, 1000);
+          } else {
+            console.error('❌ Firebase-config ei latautunut 10 sekunnin kuluessa');
+            console.error('🔧 Tarkista että firebase-config.js latautuu oikein');
+            
+            // Fallback: luo tyhjä auth-objekti virhetilanteessa
+            this.auth = null;
+            window.modernFirebaseAuthFailed = true;
+          }
+        }
+      } catch (error) {
+        console.error('❌ Virhe Firebase Auth alustuksessa:', error);
       }
-    } catch (error) {
-      console.error('❌ Virhe Firebase Auth alustuksessa:', error);
-    }
+    };
+    
+    tryInit();
   }
 
   // REKISTERÖINTI
   async register(email, password, userInfo) {
     try {
-      console.log('🔐 Rekisteröidään käyttäjä:', email);
+      this.debugLog('🔐 Rekisteröidään käyttäjä', this.debugMode ? email : '[sähköposti]');
       
       // Luo käyttäjä Firebase Auth:iin
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
@@ -63,18 +128,21 @@ class ModernFirebaseAuth {
         displayName: userInfo.name
       });
       
-      // Tallenna lisätiedot Firestore:en
+      // Tallenna lisätiedot localStorage:iin (vältetään Firestore-ongelmat)
       const userData = {
         uid: user.uid,
         name: userInfo.name,
         email: user.email,
         phone: userInfo.phone || '',
         address: userInfo.address || '',
+        provider: 'email',
         createdAt: new Date().toISOString(),
-        isAdmin: false
+        lastLogin: new Date().toISOString(),
+        isAdmin: this.checkAdminDomain(user.email)
       };
       
-      await setDoc(doc(this.db, 'users', user.uid), userData);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      localStorage.setItem('user_logged_in', 'true');
       
       console.log('✅ Käyttäjä rekisteröity onnistuneesti:', user.uid);
       return { success: true, user: userData };
@@ -85,57 +153,80 @@ class ModernFirebaseAuth {
     }
   }
 
-  // GOOGLE-KIRJAUTUMINEN (PARANNETTU VERSIO)
-  async loginWithGoogle(useRedirect = false) {
+  // GOOGLE-KIRJAUTUMINEN (REDIRECT-POHJAINEN)
+  async loginWithGoogle(useRedirect = true) {
     try {
-      console.log('🔐 Google-kirjautuminen aloitettu', useRedirect ? '(redirect)' : '(popup)');
+      console.log('� Google-kirjautuminen aloitetaan (redirect:', useRedirect, ')');
       
+      // Varmista että Firebase on alustettu
+      await this.initPromise;
+      
+      if (!this.auth) {
+        throw new Error('Firebase Auth ei ole käytettävissä');
+      }
+
+      // Lataa tarvittavat funktiot
+      const { GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
       const provider = new GoogleAuthProvider();
+      
+      // Lisää scope jos tarvitaan
       provider.addScope('email');
       provider.addScope('profile');
       
-      // 🔧 Lisätään custom parameters popup-ongelmien välttämiseksi
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-
       let result;
       
       if (useRedirect) {
-        // Redirect-metodi (toimii aina, mutta sivu latautuu uudelleen)
+        // Redirect-metodi (toimii aina, ei popup-ongelmia)
         const { signInWithRedirect, getRedirectResult } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
         
+        // Varmista että auth on alustettu
+        if (!this.auth) {
+          throw new Error('Firebase Auth ei ole alustettu');
+        }
+        
         // Tarkista onko redirect-tulos odottamassa
+        console.log('🔍 Tarkistetaan redirect-tulosta...');
         const redirectResult = await getRedirectResult(this.auth);
-        if (redirectResult) {
+        
+        if (redirectResult && redirectResult.user) {
+          console.log('✅ Redirect-tulos löytyi:', redirectResult.user.email);
           result = redirectResult;
-        } else {
+        } else if (redirectResult === null) {
+          console.log('🔄 Ei redirect-tulosta, aloitetaan uusi kirjautuminen');
           await signInWithRedirect(this.auth, provider);
           return { success: true, pending: true }; // Sivu latautuu uudelleen
+        } else {
+          console.log('⏳ Redirect käynnissä tai ei tulosta');
+          return { success: false, error: 'Redirect-kirjautuminen kesken' };
         }
       } else {
-        // Popup-metodi (nopea, mutta voi blokkautua)
+        // Popup-metodi (fallback)
+        if (!this.auth) {
+          throw new Error('Firebase Auth ei ole alustettu');
+        }
         result = await signInWithPopup(this.auth, provider);
       }
       
       const user = result.user;
       console.log('✅ Google-kirjautuminen onnistui:', user.email);
       
-      // Tallennetaan/päivitetään käyttäjätiedot Firestore:en
+      // Tallennetaan käyttäjätiedot localStorage:iin (vältetään Firestore-ongelmat)
       const userData = {
         uid: user.uid,
         email: user.email,
         name: user.displayName,
         photoURL: user.photoURL,
         provider: 'google',
-        createdAt: new Date(),
-        lastLogin: new Date()
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        isAdmin: this.checkAdminDomain(user.email)
       };
       
-      // Tallenna Firestore:en
-      await setDoc(doc(this.db, 'users', user.uid), userData, { merge: true });
+      // Tallenna localStorage:iin
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      localStorage.setItem('user_logged_in', 'true');
       
-      console.log('✅ Käyttäjätiedot tallennettu Firestore:en');
+      console.log('✅ Käyttäjätiedot tallennettu localStorage:iin');
       
       return { 
         success: true, 
@@ -176,28 +267,22 @@ class ModernFirebaseAuth {
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       const user = userCredential.user;
       
-      // Hae käyttäjätiedot Firestore:sta
-      const userDoc = await getDoc(doc(this.db, 'users', user.uid));
-      let userData;
+      // Luo käyttäjätiedot localStorage:iin (vältetään Firestore-ongelmat)
+      const userData = {
+        uid: user.uid,
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        phone: '',
+        address: '',
+        provider: 'email',
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        isAdmin: this.checkAdminDomain(user.email)
+      };
       
-      if (userDoc.exists()) {
-        userData = userDoc.data();
-      } else {
-        // Jos ei löydy Firestore:sta, luo perustiedot
-        userData = {
-          uid: user.uid,
-          name: user.displayName || user.email.split('@')[0],
-          email: user.email,
-          phone: '',
-          address: '',
-          createdAt: new Date().toISOString(),
-          isAdmin: false
-        };
-        await setDoc(doc(this.db, 'users', user.uid), userData);
-      }
-      
-      // Tarkista admin-oikeudet
-      userData.isAdmin = await this.checkAdminStatus(user.email);
+      // Tallenna localStorage:iin
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      localStorage.setItem('user_logged_in', 'true');
       
       console.log('✅ Kirjautuminen onnistui:', user.uid);
       return { success: true, user: userData };
@@ -208,11 +293,16 @@ class ModernFirebaseAuth {
     }
   }
 
+  // KIRJAUTUMINEN SÄHKÖPOSTILLA (erillinen wrapper-funktio)
+  async loginWithEmail(email, password) {
+    return await this.login(email, password);
+  }
+
   // ULOSKIRJAUTUMINEN
   async logout() {
     try {
       await signOut(this.auth);
-      localStorage.removeItem('current_user');
+      localStorage.removeItem('currentUser');
       localStorage.removeItem('user_logged_in');
       console.log('✅ Uloskirjautuminen onnistui');
       return { success: true };
@@ -222,46 +312,31 @@ class ModernFirebaseAuth {
     }
   }
 
-  // ADMIN-OIKEUKSIEN TARKISTUS
+  // ADMIN-OIKEUKSIEN TARKISTUS (domain-pohjainen)
   async checkAdminStatus(email) {
-    try {
-      const adminDoc = await getDoc(doc(this.db, 'admin_users', 'admin'));
-      if (adminDoc.exists()) {
-        const adminData = adminDoc.data();
-        return adminData.email === email;
-      }
-      return false;
-    } catch (error) {
-      console.error('Virhe admin-tarkistuksessa:', error);
-      return false;
-    }
+    return this.checkAdminDomain(email);
   }
 
-  // KIRJAUTUMISTILAN MUUTOS
+  // KIRJAUTUMISTILAN MUUTOS (localStorage-pohjainen)
   async handleAuthStateChange(user) {
     if (user) {
       console.log('🔄 Käyttäjä kirjautunut:', user.email);
       
-      // Hae tai luo käyttäjätiedot
-      const userDoc = await getDoc(doc(this.db, 'users', user.uid));
-      let userData;
+      // Luo käyttäjätiedot lokaalisti (ei Firestore-yhteyttä)
+      const userData = {
+        uid: user.uid,
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        phone: '',
+        address: '',
+        provider: 'firebase',
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        isAdmin: await this.checkAdminStatus(user.email)
+      };
       
-      if (userDoc.exists()) {
-        userData = userDoc.data();
-      } else {
-        userData = {
-          uid: user.uid,
-          name: user.displayName || user.email.split('@')[0],
-          email: user.email,
-          phone: '',
-          address: '',
-          createdAt: new Date().toISOString(),
-          isAdmin: await this.checkAdminStatus(user.email)
-        };
-      }
-      
-      // Tallenna localStorage:iin yhteensopivuutta varten
-      localStorage.setItem('current_user', JSON.stringify(userData));
+      // Tallenna localStorage:iin
+      localStorage.setItem('currentUser', JSON.stringify(userData));
       localStorage.setItem('user_logged_in', 'true');
       
       this.currentUser = userData;
@@ -272,11 +347,47 @@ class ModernFirebaseAuth {
         window.shopApp.loadUserInfo();
       }
       
+      console.log('✅ Käyttäjätilan päivitys valmis (localStorage)');
     } else {
       console.log('🔄 Käyttäjä kirjautunut ulos');
       this.currentUser = null;
-      localStorage.removeItem('current_user');
+      localStorage.removeItem('currentUser');
       localStorage.removeItem('user_logged_in');
+    }
+  }
+
+  // Tarkista redirect-tulos sivun latauksen yhteydessä
+  async checkRedirectResult() {
+    try {
+      const { getRedirectResult } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js');
+      const result = await getRedirectResult(this.auth);
+      
+      if (result && result.user) {
+        console.log('🎯 Redirect-kirjautuminen onnistui sivun latauksen yhteydessä:', result.user.email);
+        
+        // Käsittele kirjautuminen samalla tavalla kuin normaalissa loginWithGoogle:ssa
+        const userData = {
+          uid: result.user.uid,
+          email: result.user.email,
+          name: result.user.displayName,
+          photoURL: result.user.photoURL,
+          provider: 'google',
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString()
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+        localStorage.setItem('user_logged_in', 'true');
+        
+        console.log('✅ Redirect-kirjautuminen tallennettu localStorage:iin');
+        
+        // Päivitä UI jos mahdollista
+        if (typeof window.updateUserUI === 'function') {
+          window.updateUserUI();
+        }
+      }
+    } catch (error) {
+      console.log('🔍 Ei redirect-tulosta tai virhe tarkistuksessa:', error.message);
     }
   }
 

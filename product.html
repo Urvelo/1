@@ -202,6 +202,61 @@
       padding: 1.5rem;
       border-radius: 12px;
       border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-cart {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      font-size: 1.2rem;
+      padding: 1.2rem 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-cart:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    .btn-cart:active {
+      transform: translateY(0);
+    }
+
+    .btn-cart i {
+      font-size: 1.3rem;
+    }
+
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(37, 99, 235, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     .purchase-title {
@@ -303,32 +358,23 @@
         </div>
       </div>
 
-      <!-- PURCHASE SECTION -->
+      <!-- ACTION BUTTONS -->
       <div class="purchase-section">
-        <h3 class="purchase-title">💳 Osta nyt PayPalilla</h3>
-        <div id="paypal-button-container" class="paypal-container"></div>
+        <button class="btn btn-cart" onclick="addToCartFromProduct()">
+          <i class="fas fa-shopping-cart"></i>
+          <span>Lisää ostoskoriin</span>
+        </button>
+        <button class="btn btn-secondary" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          Takaisin tuotteisiin
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- 🔐 Turvallinen PayPal SDK - haetaan config Firebase:sta -->
-  <script type="module" src="firebase-config.js"></script>
-  <script type="module">
-    // PayPal SDK ladataan dynaamisesti konfiguraatiosta
-    async function loadPayPalSDK() {
-      while (!window.paypalConfig) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${window.paypalConfig.clientId}&currency=${window.paypalConfig.currency}`;
-      document.head.appendChild(script);
-      console.log('✅ PayPal SDK ladattu turvallisesti');
-    }
-    loadPayPalSDK();
-  </script>
-  
   <script>
+    let currentProduct = null;
+    
     // Kuvan vaihto funktio  
     function changeMainImage(thumbnail, fullImageUrl = null) {
       const mainImage = document.getElementById('mainImage');
@@ -348,103 +394,45 @@
       }
     }
 
-    // PayPal Buttons
-    paypal.Buttons({
-      style: {
-        layout: 'vertical',
-        color: 'blue',
-        shape: 'rect',
-        label: 'paypal'
-      },
-      createOrder: function(data, actions) {
-        const priceText = document.getElementById('productPrice').textContent;
-        const price = priceText.replace('€', '').replace(',', '.').trim();
-        const title = document.getElementById('productTitle').textContent;
+    // Lisää ostoskoriin tuotesivulta
+    function addToCartFromProduct() {
+      if (currentProduct) {
+        // Käytä samaa localStorage-avainta kuin shop.js
+        let cart = JSON.parse(localStorage.getItem('shopping_cart') || '[]');
+        const existingItem = cart.find(item => item.id === currentProduct.id);
         
-        console.log('Luodaan tilaus:', title, 'Hinta:', price);
+        if (existingItem) {
+          existingItem.quantity += 1;
+        } else {
+          cart.push({
+            id: currentProduct.id,
+            name: currentProduct.name,
+            price: currentProduct.price,
+            image: currentProduct.image,
+            quantity: 1
+          });
+        }
         
-        return actions.order.create({
-          purchase_units: [{
-            amount: {
-              value: price,
-              currency_code: 'EUR'
-            },
-            description: title,
-            soft_descriptor: 'Löytökauppa'
-          }]
-        });
-      },
-      onApprove: function(data, actions) {
-        console.log('Maksu hyväksytty, käsitellään...');
+        localStorage.setItem('shopping_cart', JSON.stringify(cart));
         
-        return actions.order.capture().then(function(details) {
-          console.log('Maksu suoritettu:', details);
-          
-          // Näytä onnistumisviesti
-          showSuccessMessage(details);
-          
-          // Piilota PayPal-painikkeet
-          document.getElementById('paypal-button-container').style.display = 'none';
-          
-          // Tässä voisi lähettää tilauksen tiedot palvelimelle
-          sendOrderToServer(details);
-        });
-      },
-      onError: function(err) {
-        console.error('PayPal virhe:', err);
-        showErrorMessage('Maksun käsittelyssä tapahtui virhe. Yritä uudelleen.');
-      },
-      onCancel: function(data) {
-        console.log('Maksu peruutettiin:', data);
-        showInfoMessage('Maksu peruutettiin.');
+        // Näytä onnistumisviesti
+        alert(`✅ ${currentProduct.name} lisätty ostoskoriin!`);
+        
+        console.log('🛒 Tuote lisätty ostoskoriin:', currentProduct.name);
+        console.log('🛒 Ostoskori nyt:', cart);
+      } else {
+        console.error('❌ currentProduct ei ole asetettu');
+        alert('❌ Virhe: Tuotetietoja ei löytynyt');
       }
-    }).render('#paypal-button-container');
-
-    // Apufunktiot viestien näyttämiseen
-    function showSuccessMessage(details) {
-      const container = document.querySelector('.purchase-section');
-      container.innerHTML = `
-        <div style="text-align: center; padding: 2rem;">
-          <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem;"></i>
-          <h3 style="color: var(--success); margin-bottom: 1rem;">Maksu onnistui!</h3>
-          <p>Kiitos ostoksesta ${details.payer.name.given_name}!</p>
-          <p style="margin-top: 0.5rem; color: var(--text-muted);">
-            Tilausnumero: ${details.id}
-          </p>
-          <p style="margin-top: 1rem; color: var(--text-muted);">
-            Saat sähköpostiin tilausvahvistuksen pian.
-          </p>
-        </div>
-      `;
     }
 
-    function showErrorMessage(message) {
-      const container = document.querySelector('.purchase-section');
-      const errorDiv = document.createElement('div');
-      errorDiv.style.cssText = 'background: var(--danger); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;';
-      errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
-      container.insertBefore(errorDiv, container.firstChild);
-      
-      // Poista virheilmoitus 5 sekunnin kuluttua
-      setTimeout(() => errorDiv.remove(), 5000);
-    }
-
-    function showInfoMessage(message) {
-      const container = document.querySelector('.purchase-section');
-      const infoDiv = document.createElement('div');
-      infoDiv.style.cssText = 'background: var(--warning); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;';
-      infoDiv.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
-      container.insertBefore(infoDiv, container.firstChild);
-      
-      // Poista info-viesti 3 sekunnin kuluttua
-      setTimeout(() => infoDiv.remove(), 3000);
-    }
-
-    // Lähetä tilaus palvelimelle (placeholder)
-    function sendOrderToServer(orderDetails) {
-      console.log('Lähetetään tilaus palvelimelle:', orderDetails);
-      // Tässä voisi tehdä AJAX-kutsu palvelimelle
-      // fetch('/api/orders', { method: 'POST', body: JSON.stringify(orderDetails) })
+    // Takaisin-funktio
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = 'index.html';
+      }
     }
 
     // URL-parametrien lukeminen ja tuotteen lataaminen
@@ -520,6 +508,16 @@
       document.getElementById('productColor').textContent = product.color;
       document.getElementById('productConditionDetail').textContent = product.conditionDetail;
       document.getElementById('productDescription').textContent = product.description;
+      
+      // Aseta currentProduct global muuttujaksi
+      currentProduct = {
+        id: productId,
+        name: product.title,
+        price: parseFloat(product.price.replace('€', '').replace(',', '.').trim()),
+        image: product.images ? product.images[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
+      };
+      
+      console.log('✅ currentProduct asetettu:', currentProduct);
       
       // Päivitä kuvat
       const mainImage = document.getElementById('mainImage');

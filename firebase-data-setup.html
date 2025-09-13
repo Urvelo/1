@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Tietojen Lisäys</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1a1a1a;
+      color: white;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #2a2a2a;
+      padding: 2rem;
+      border-radius: 12px;
+    }
+    
+    button {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    button:hover {
+      background: #3367d6;
+    }
+    
+    .success {
+      background: #059669;
+    }
+    
+    .error {
+      background: #dc2626;
+    }
+    
+    .log {
+      background: #1a1a1a;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Firebase Esimerkkitietojen Lisäys</h1>
+    <p>Tämä työkalu lisää esimerkkikäyttäjiä ja -tuotteita Firebase:een testausta varten.</p>
+    
+    <div>
+      <button onclick="addSampleUsers()">👥 Lisää esimerkkikäyttäjät</button>
+      <button onclick="addSampleProducts()">📦 Lisää esimerkkituotteet</button>
+      <button onclick="addSampleOrders()">🛒 Lisää esimerkkitilaukset</button>
+      <button onclick="clearLog()">🗑️ Tyhjennä loki</button>
+    </div>
+    
+    <div id="log" class="log">Valitse toiminto yllä olevista napeista...\n</div>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script type="module" src="firebase-config.js"></script>
+  <script type="module" src="firebase-auth-modern.js"></script>
+  
+  <script type="module">
+    import { getFirestore, collection, doc, setDoc, addDoc } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+    
+    let logElement = document.getElementById('log');
+    
+    function log(message) {
+      logElement.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    window.clearLog = () => {
+      logElement.textContent = 'Loki tyhjennetty...\n';
+    };
+    
+    // Odota että Firebase latautuu
+    setTimeout(async () => {
+      const db = window.firebaseDB?.db;
+      if (!db) {
+        log('❌ Firebase ei ole ladattu!');
+        return;
+      }
+      
+      log('✅ Firebase ladattu, valmis lisäämään tietoja');
+      
+      // LISÄÄ ESIMERKKIKÄYTTÄJÄT
+      window.addSampleUsers = async () => {
+        log('👥 Lisätään esimerkkikäyttäjiä...');
+        
+        const users = [
+          {
+            uid: 'demo-user-1',
+            name: 'Maija Meikäläinen',
+            email: 'maija@testi.fi',
+            phone: '+358 40 123 4567',
+            address: 'Testikatu 1, 00100 Helsinki',
+            isAdmin: false,
+            createdAt: new Date().toISOString(),
+            provider: 'email'
+          },
+          {
+            uid: 'demo-user-2', 
+            name: 'Pekka Pouta',
+            email: 'pekka@testi.fi',
+            phone: '+358 50 987 6543',
+            address: 'Esimerkkitie 5, 00200 Helsinki',
+            isAdmin: false,
+            createdAt: new Date().toISOString(),
+            provider: 'email'
+          },
+          {
+            uid: 'demo-admin-1',
+            name: 'Admin Käyttäjä',
+            email: 'admin@testi.fi',
+            phone: '+358 44 555 1234',
+            address: 'Ylläpitäjänkatu 10, 00300 Helsinki',
+            isAdmin: true,
+            createdAt: new Date().toISOString(),
+            provider: 'email'
+          }
+        ];
+        
+        try {
+          for (const user of users) {
+            await setDoc(doc(db, 'users', user.uid), user);
+            log(`✅ Käyttäjä lisätty: ${user.name} (${user.email})`);
+          }
+          log('🎉 Kaikki esimerkkikäyttäjät lisätty!');
+        } catch (error) {
+          log(`❌ Virhe käyttäjien lisäämisessä: ${error.message}`);
+        }
+      };
+      
+      // LISÄÄ ESIMERKKITUOTTEET
+      window.addSampleProducts = async () => {
+        log('📦 Lisätään esimerkkituotteita...');
+        
+        const products = [
+          {
+            id: 1,
+            name: 'iPhone 15 Pro Max',
+            price: 1199.00,
+            category: 'Elektroniikka',
+            condition: 'Kuin uusi',
+            description: 'Uusin iPhone titanium blue -värissä. A17 Pro -siru, ProRAW-kuvaus.',
+            image: 'https://images.unsplash.com/photo-1592286130927-570ecd1ded68?w=500',
+            seller: 'demo-user-1',
+            created: new Date().toISOString(),
+            available: true
+          },
+          {
+            id: 2,
+            name: 'MacBook Air M3',
+            price: 1299.00,
+            category: 'Elektroniikka', 
+            condition: 'Erinomainen',
+            description: 'Kevyt ja tehokas MacBook Air M3-sirulla. 18h akunkesto.',
+            image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
+            seller: 'demo-user-2',
+            created: new Date().toISOString(),
+            available: true
+          },
+          {
+            id: 3,
+            name: 'Sony WH-1000XM4 Kuulokkeet',
+            price: 89.90,
+            category: 'Äänentoisto',
+            condition: 'Hyvä',
+            description: 'Langattomaat kuulokkeet aktiivisella melunvaimennuksella.',
+            image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
+            seller: 'demo-user-1',
+            created: new Date().toISOString(),
+            available: true
+          }
+        ];
+        
+        try {
+          for (const product of products) {
+            await setDoc(doc(db, 'products', product.id.toString()), product);
+            log(`✅ Tuote lisätty: ${product.name} (${product.price}€)`);
+          }
+          log('🎉 Kaikki esimerkkituotteet lisätty!');
+        } catch (error) {
+          log(`❌ Virhe tuotteiden lisäämisessä: ${error.message}`);
+        }
+      };
+      
+      // LISÄÄ ESIMERKKITILAUKSET
+      window.addSampleOrders = async () => {
+        log('🛒 Lisätään esimerkkitilauksia...');
+        
+        const orders = [
+          {
+            orderId: 'ORDER-' + Date.now() + '-1',
+            customer: {
+              uid: 'demo-user-1',
+              name: 'Maija Meikäläinen',
+              email: 'maija@testi.fi',
+              phone: '+358 40 123 4567'
+            },
+            items: [
+              {
+                id: 3,
+                name: 'Sony WH-1000XM4 Kuulokkeet',
+                price: 89.90,
+                quantity: 1
+              }
+            ],
+            total: 89.90,
+            shipping: {
+              address: 'Testikatu 1',
+              postalCode: '00100',
+              city: 'Helsinki'
+            },
+            payment: {
+              method: 'PayPal',
+              status: 'completed',
+              transactionId: 'PAYPAL-' + Date.now()
+            },
+            status: 'completed',
+            createdAt: new Date().toISOString()
+          },
+          {
+            orderId: 'ORDER-' + Date.now() + '-2',
+            customer: {
+              uid: 'demo-user-2',
+              name: 'Pekka Pouta', 
+              email: 'pekka@testi.fi',
+              phone: '+358 50 987 6543'
+            },
+            items: [
+              {
+                id: 1,
+                name: 'iPhone 15 Pro Max',
+                price: 1199.00,
+                quantity: 1
+              }
+            ],
+            total: 1199.00,
+            shipping: {
+              address: 'Esimerkkitie 5',
+              postalCode: '00200', 
+              city: 'Helsinki'
+            },
+            payment: {
+              method: 'PayPal',
+              status: 'pending',
+              transactionId: 'PAYPAL-' + (Date.now() + 1000)
+            },
+            status: 'processing',
+            createdAt: new Date(Date.now() - 86400000).toISOString() // Eilen
+          }
+        ];
+        
+        try {
+          for (const order of orders) {
+            await addDoc(collection(db, 'orders'), order);
+            log(`✅ Tilaus lisätty: ${order.orderId} (${order.total}€)`);
+          }
+          log('🎉 Kaikki esimerkkitilaukset lisätty!');
+        } catch (error) {
+          log(`❌ Virhe tilausten lisäämisessä: ${error.message}`);
+        }
+      };
+      
+    }, 2000);
+  </script>
+</body>
+</html>

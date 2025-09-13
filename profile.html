@@ -295,7 +295,7 @@
 </head>
 <body>
   <div class="container">
-    <a href="k2.html" class="back-link">
+    <a href="index.html" class="back-link">
       <i class="fas fa-arrow-left"></i>
       Takaisin kauppaan
     </a>
@@ -433,8 +433,33 @@
   <script>
     class UserProfile {
       constructor() {
-        this.currentUser = JSON.parse(localStorage.getItem('current_user'));
+        this.currentUser = this.getCurrentUser();
         this.init();
+      }
+      
+      getCurrentUser() {
+        try {
+          const userData = localStorage.getItem('currentUser');
+          const isLoggedIn = localStorage.getItem('user_logged_in');
+          
+          console.log('🔍 Profile.html tarkistaa kirjautuminen:', {
+            userData: !!userData,
+            isLoggedIn: isLoggedIn,
+            userDataLength: userData?.length
+          });
+          
+          if (isLoggedIn === 'true' && userData) {
+            const user = JSON.parse(userData);
+            console.log('✅ Käyttäjä löydetty profile.html:ssä:', user.email);
+            return user;
+          }
+          
+          console.log('❌ Käyttäjä ei kirjautunut profile.html:ssä');
+          return null;
+        } catch (error) {
+          console.error('❌ Virhe käyttäjätietojen lukemisessa:', error);
+          return null;
+        }
       }
       
       init() {
@@ -470,7 +495,7 @@
               <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
               <p style="font-size: 1.2rem;">Ei tilauksia vielä</p>
               <p>Kun teet ensimmäisen tilauksesi, se näkyy täällä</p>
-              <a href="k2.html" class="btn" style="margin-top: 1rem; text-decoration: none;">
+              <a href="index.html" class="btn" style="margin-top: 1rem; text-decoration: none;">
                 <i class="fas fa-shopping-cart"></i> Aloita ostokset
               </a>
             </div>
@@ -576,7 +601,7 @@
         
         const updatedUser = db.updateUser(this.currentUser.id, updatedData);
         if (updatedUser) {
-          localStorage.setItem('current_user', JSON.stringify(updatedUser));
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
           this.currentUser = updatedUser;
           alert('✅ Profiili päivitetty onnistuneesti!');
           document.getElementById('profilePassword').value = '';
@@ -647,7 +672,7 @@
           localStorage.setItem('registered_users', JSON.stringify(filteredUsers));
           
           // Poista session tiedot
-          localStorage.removeItem('current_user');
+          localStorage.removeItem('currentUser');
           localStorage.removeItem('user_logged_in');
           localStorage.removeItem('shopping_cart');
           localStorage.removeItem('user_settings');

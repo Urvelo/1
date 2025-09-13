@@ -4,7 +4,7 @@ class ShopApp {
     this.products = [];
     this.categories = [];
     this.cart = JSON.parse(localStorage.getItem('shopping_cart')) || [];
-    this.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     this.currentFilter = 'all';
     this.searchFilter = '';
     
@@ -13,7 +13,7 @@ class ShopApp {
   
   async init() {
     // Päivitä käyttäjätiedot localStorage:sta (voi olla muuttunut)
-    this.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     
     this.loadUserInfo();
     await this.loadData();
@@ -23,8 +23,8 @@ class ShopApp {
     
     // Kuuntele localStorage muutoksia (kun käyttäjä kirjautuu toisessa välilehdessä)
     window.addEventListener('storage', (e) => {
-      if (e.key === 'current_user') {
-        console.log('🔄 Käyttäjätiedot muuttuivat, päivitetään UI');
+      if (e.key === 'currentUser') {
+        console.log('🔄 currentUser muuttui localStorage:ssa');
         this.currentUser = JSON.parse(e.newValue) || null;
         this.loadUserInfo();
       }
@@ -236,7 +236,7 @@ class ShopApp {
   loadUserInfo() {
     console.log('🔍 Ladataan käyttäjätiedot...');
     console.log('- currentUser:', this.currentUser);
-    console.log('- localStorage current_user:', localStorage.getItem('current_user'));
+    console.log('- localStorage currentUser:', localStorage.getItem('currentUser'));
     
     const userNameElement = document.getElementById('userName');
     const userMenuElement = document.getElementById('userMenu');
@@ -270,6 +270,9 @@ class ShopApp {
         </a>
         <a href="login.html" class="user-menu-item">
           <i class="fas fa-user-plus"></i> Rekisteröidy
+        </a>
+        <a href="#" class="user-menu-item" onclick="enableDemoAdmin()" style="color: #ff6b6b;">
+          <i class="fas fa-tools"></i> 🛠️ Demo Admin
         </a>
       `;
     }
@@ -328,15 +331,6 @@ class ShopApp {
         <div class="product-content">
           <h3 class="product-title">${product.name}</h3>
           <div class="product-price">${product.price.toFixed(2)} €</div>
-          <div class="product-actions">
-            <button class="btn btn-primary" onclick="shopApp.viewProduct(${product.id}); event.stopPropagation();">
-              <i class="fas fa-eye"></i>
-              Katso tuote
-            </button>
-            <button class="btn btn-icon" onclick="shopApp.toggleFavorite(${product.id}); event.stopPropagation();">
-              <i class="fas fa-heart"></i>
-            </button>
-          </div>
         </div>
       `;
       
@@ -468,13 +462,12 @@ class ShopApp {
       return;
     }
 
-    if (!this.currentUser) {
-      alert('🔒 Kirjaudu sisään ennen ostamista!');
-      window.location.href = 'login.html';
-      return;
-    }
-
-    this.showCheckoutModal();
+    // Tallennetaan ostoskori localStorageen kassasivua varten
+    localStorage.setItem('cart', JSON.stringify(this.cart));
+    
+    // Siirrytään kassasivulle
+    console.log('� Siirrytään kassalle, ostoskorissa', this.cart.length, 'tuotetta');
+    window.location.href = 'checkout.html';
   }
 
   showCheckoutModal() {
@@ -674,7 +667,7 @@ function toggleFaq(element) {
 // KÄYTTÄJÄHALLINNAN FUNKTIOT
 function logout() {
   if (confirm('Haluatko varmasti kirjautua ulos?')) {
-    localStorage.removeItem('current_user');
+    localStorage.removeItem('currentUser');
     localStorage.removeItem('user_logged_in');
     localStorage.removeItem('guest_mode');
     localStorage.removeItem('shopping_cart');
@@ -1010,11 +1003,72 @@ document.addEventListener('keydown', function(e) {
 window.updateUserUI = function() {
   if (window.shopApp) {
     console.log('🔄 Päivitetään käyttäjä-UI manuaalisesti');
-    window.shopApp.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
+    window.shopApp.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     window.shopApp.loadUserInfo();
   }
+};
+
+// 🛠️ DEMO ADMIN (kehityskäyttöön - Firebase-ongelmat kiertäen)
+window.enableDemoAdmin = function() {
+  const demoUser = {
+    uid: 'demo-admin-' + Date.now(),
+    name: 'Demo Admin',
+    email: 'admin@demo.fi',
+    isAdmin: true,
+    provider: 'demo'
+  };
+  
+  // Tallenna demo-käyttäjä
+  localStorage.setItem('currentUser', JSON.stringify(demoUser));
+  localStorage.setItem('user_logged_in', 'true');
+  
+  // Päivitä shop.js käyttäjätiedot
+  if (window.shopApp) {
+    window.shopApp.currentUser = demoUser;
+    window.shopApp.loadUserInfo();
+  }
+  
+  console.log('🛠️ Demo Admin aktivoitu!');
+  alert('🛠️ Demo Admin aktivoitu!\n\nVoit nyt:\n- Käyttää admin-tilaa\n- Testata ostoskorin toimintoja\n- Tehdä PayPal-maksuja\n\nTämä on vain kehityskäyttöön!');
+  
+  // Sulje user menu
+  document.getElementById('userMenu').classList.remove('active');
 };
 
 // Käynnistä sovellus
 const shopApp = new ShopApp();
 window.shopApp = shopApp;
+
+// Globaali funktio käyttäjän UI:n päivittämiseen (kutsutaan login.js:stä)
+window.updateUserUI = function() {
+  console.log('🔄 updateUserUI kutsuttu');
+  
+  // Päivitä käyttäjätiedot localStorage:sta
+  window.shopApp.currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+  
+  // Päivitä UI
+  window.shopApp.loadUserInfo();
+  
+  console.log('✅ Käyttäjä-UI päivitetty:', window.shopApp.currentUser?.name || 'Ei kirjautunut');
+};
+
+// Globaali checkout-funktio napin kutsulle
+window.checkout = function() {
+  console.log('🛒 Globaali checkout kutsuttu');
+  console.log('🔍 shopApp tila:', !!window.shopApp);
+  
+  if (window.shopApp) {
+    console.log('🔍 Ostoskorin sisältö:', window.shopApp.cart);
+    console.log('🔍 Ostoskorin pituus:', window.shopApp.cart?.length);
+    
+    try {
+      window.shopApp.checkout();
+    } catch (error) {
+      console.error('❌ Virhe checkout-kutsusta:', error);
+      alert('Virhe kassalle siirryttäessä: ' + error.message);
+    }
+  } else {
+    console.error('❌ shopApp ei ole saatavilla');
+    alert('❌ Sovellus ei ole valmis. Lataa sivu uudelleen.');
+  }
+};

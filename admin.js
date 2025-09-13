@@ -1,8 +1,8 @@
 // Admin-paneelin JavaScript
 class AdminPanel {
   constructor() {
-    // Tarkista admin-oikeudet heti alussa
-    this.checkAdminAccess();
+    // Tarkista salasanasuojaus heti alussa
+    this.checkPasswordAccess();
     
     this.products = JSON.parse(localStorage.getItem('admin_products')) || [];
     this.categories = JSON.parse(localStorage.getItem('admin_categories')) || [
@@ -16,39 +16,138 @@ class AdminPanel {
     this.init();
   }
   
-  checkAdminAccess() {
-    const userData = localStorage.getItem('current_user');
-    const isLoggedIn = localStorage.getItem('user_logged_in') === 'true';
-    let isAdmin = false;
+  checkPasswordAccess() {
+    // Tarkista onko salasana jo syötetty tässä istunnossa
+    const hasAccess = sessionStorage.getItem('admin_access') === 'granted';
     
-    console.log('🔍 Tarkistetaan admin-oikeudet...');
-    console.log('- userData:', userData);
-    console.log('- isLoggedIn:', isLoggedIn);
-    
-    if (!isLoggedIn || !userData) {
-      console.log('❌ Ei kirjautunut sisään');
-      alert('❌ Sinun täytyy kirjautua sisään!');
-      window.location.href = 'login.html';
-      return;
+    if (!hasAccess) {
+      this.showPasswordOverlay();
     }
+  }
+  
+  showPasswordOverlay() {
+    // Luo musta suodatin ja salasanakysely
+    const overlay = document.createElement('div');
+    overlay.id = 'admin-password-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    `;
     
-    try {
-      const user = JSON.parse(userData);
-      isAdmin = user && user.isAdmin === true;
-      console.log('- user.isAdmin:', user.isAdmin);
-      console.log('- user.email:', user.email);
-    } catch (error) {
-      console.error('Virhe käyttäjätietojen lukemisessa:', error);
+    overlay.innerHTML = `
+      <div style="
+        background: #1a1a1a;
+        padding: 3rem;
+        border-radius: 15px;
+        text-align: center;
+        border: 2px solid #333;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        max-width: 400px;
+        width: 90%;
+      ">
+        <h2 style="color: #fff; margin-bottom: 2rem; font-size: 1.5rem;">
+          🔒 Admin-alue
+        </h2>
+        <p style="color: #ccc; margin-bottom: 2rem;">
+          Anna salasana päästäksesi admin-paneeliin
+        </p>
+        <input 
+          type="password" 
+          id="admin-password-input"
+          placeholder="Salasana"
+          style="
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+            color: #fff;
+            margin-bottom: 1rem;
+            text-align: center;
+          "
+        >
+        <div id="password-error" style="color: #ff6b6b; margin-bottom: 1rem; min-height: 20px;"></div>
+        <button 
+          onclick="adminPanel.checkPassword()"
+          style="
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+          "
+          onmouseover="this.style.background='#45a049'"
+          onmouseout="this.style.background='#4CAF50'"
+        >
+          🔓 Avaa admin-paneeli
+        </button>
+        <div style="margin-top: 2rem;">
+          <a href="index.html" style="color: #888; text-decoration: none; font-size: 0.9rem;">
+            ← Takaisin etusivulle
+          </a>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Fokus salasanakenttään
+    setTimeout(() => {
+      const input = document.getElementById('admin-password-input');
+      if (input) {
+        input.focus();
+        // Enter-näppäin toimii
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            this.checkPassword();
+          }
+        });
+      }
+    }, 100);
+  }
+  
+  checkPassword() {
+    const input = document.getElementById('admin-password-input');
+    const errorDiv = document.getElementById('password-error');
+    const password = input.value;
+    
+    // Yksinkertainen salasana (voit vaihtaa tämän)
+    const correctPassword = 'admin123';
+    
+    if (password === correctPassword) {
+      // Salasana oikein - tallenna istuntoon ja piilota overlay
+      sessionStorage.setItem('admin_access', 'granted');
+      const overlay = document.getElementById('admin-password-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+      console.log('✅ Admin-pääsy myönnetty');
+    } else {
+      // Väärä salasana
+      errorDiv.textContent = '❌ Väärä salasana';
+      input.value = '';
+      input.style.borderColor = '#ff6b6b';
+      
+      // Palaa normaaliksi 2 sekunnin kuluttua
+      setTimeout(() => {
+        errorDiv.textContent = '';
+        input.style.borderColor = '#333';
+      }, 2000);
     }
-    
-    if (!isAdmin) {
-      console.log('❌ Ei admin-oikeuksia');
-      alert('🔒 Pääsy kielletty! Tämä sivu vaatii ylläpitäjän oikeudet.\n\nKirjaudu sisään admin-tunnuksilla.');
-      window.location.href = 'login.html';
-      return;
-    }
-    
-    console.log('✅ Admin-oikeudet vahvistettu');
   }
   
   init() {
