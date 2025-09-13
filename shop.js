@@ -12,11 +12,6 @@ class ShopApp {
   }
   
   async init() {
-    // Alusta Firebase ensin
-    if (window.firebaseDB) {
-      await window.firebaseDB.init();
-    }
-    
     // Päivitä käyttäjätiedot localStorage:sta (voi olla muuttunut)
     this.currentUser = JSON.parse(localStorage.getItem('current_user')) || null;
     
@@ -321,6 +316,7 @@ class ShopApp {
     filteredProducts.forEach(product => {
       const productCard = document.createElement('div');
       productCard.className = 'product-card';
+      productCard.style.cursor = 'pointer';
       
       const isNew = Date.now() - (product.created ? new Date(product.created).getTime() : 0) < 7 * 24 * 60 * 60 * 1000;
       
@@ -333,19 +329,35 @@ class ShopApp {
           <h3 class="product-title">${product.name}</h3>
           <div class="product-price">${product.price.toFixed(2)} €</div>
           <div class="product-actions">
-            <button class="btn btn-primary" onclick="shopApp.addToCart(${product.id})">
-              <i class="fas fa-cart-plus"></i>
-              Lisää koriin
+            <button class="btn btn-primary" onclick="shopApp.viewProduct(${product.id}); event.stopPropagation();">
+              <i class="fas fa-eye"></i>
+              Katso tuote
             </button>
-            <button class="btn btn-icon" onclick="shopApp.toggleFavorite(${product.id})">
+            <button class="btn btn-icon" onclick="shopApp.toggleFavorite(${product.id}); event.stopPropagation();">
               <i class="fas fa-heart"></i>
             </button>
           </div>
         </div>
       `;
       
+      // Lisää klikkaustapahtuma koko kortille
+      productCard.addEventListener('click', () => {
+        this.viewProduct(product.id);
+      });
+      
       container.appendChild(productCard);
     });
+  }
+
+  // TUOTTEEN KATSELU
+  viewProduct(productId) {
+    console.log('🔍 Siirrytään tuotesivulle, ID:', productId);
+    
+    // Tallenna tuotteen ID sessionStorageen jotta se voidaan ladata tuotesivulla
+    sessionStorage.setItem('viewingProductId', productId);
+    
+    // Siirry tuotesivulle
+    window.location.href = `product.html?id=${productId}`;
   }
   
   // OSTOSKORIN HALLINTA

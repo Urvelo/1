@@ -1,16 +1,27 @@
 // PayPal Secure Integration - Client Side
-// HUOM: Tuotannossa PayPal secret-avaimet pitää olla vain server-puolella!
+// ✅ Käyttää nyt Firebase-konfiguraation PayPal-asetuksia
 
-class SecurePayPalIntegration {
+class PayPalSecure {
   constructor() {
-    this.clientId = 'AegNS5T0gWjYPjNcnWxp_eI3s7tZYZ3in7DDndCf8m8klAN1eUlyauwFoGw72036gKGvL5sI_ul2-uP8'; // PUBLIC client ID
-    // SECRET ei saa olla client-koodissa!
-    this.isLoaded = false;
-    this.init();
+    this.clientId = null; // 🔐 Haetaan Firebase-konfiguraatiosta
+    this.isInitialized = false;
   }
 
   async init() {
     try {
+      // 🔐 Odota Firebase-konfiguraation latautumista
+      while (!window.paypalConfig) {
+        console.log('⏳ Odotetaan Firebase PayPal-konfiguraatiota...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      this.clientId = window.paypalConfig.clientId;
+      console.log('✅ PayPal Client ID haettu turvallisesti konfiguraatiosta');
+      
+      if (!this.clientId) {
+        throw new Error('PayPal Client ID ei löytynyt konfiguraatiosta');
+      }
+
       if (!window.paypal) {
         await this.loadPayPalSDK();
       }
