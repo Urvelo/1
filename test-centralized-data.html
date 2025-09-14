@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Keskitetty Data Testi</title>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .test-section { background: #1a1a1a; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .test-result { background: #2a2a2a; padding: 10px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #10b981; }
+        .btn { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #1d4ed8; }
+        pre { background: #0a0a0a; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Keskitetty Tuotedata Testi</h1>
+        <p>Tämä sivu testaa, että kaikki tuotedata tulee yhdestä paikasta: <code>products-data.js</code></p>
+        
+        <div class="test-section">
+            <h2>📊 Data Status</h2>
+            <div id="dataStatus">🔄 Ladataan...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🧪 CRUD Testit</h2>
+            <button class="btn" onclick="testAddProduct()">➕ Testi: Lisää tuote</button>
+            <button class="btn" onclick="testUpdateProduct()">✏️ Testi: Päivitä tuote</button>
+            <button class="btn" onclick="testDeleteProduct()">🗑️ Testi: Poista tuote</button>
+            <button class="btn" onclick="refreshTest()">🔄 Päivitä testi</button>
+            <div id="testResults"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📦 Tuotteet yhteensä</h2>
+            <div id="productsList"></div>
+        </div>
+    </div>
+
+    <script src="products-data.js"></script>
+    <script>
+        let testResults = document.getElementById('testResults');
+        let dataStatus = document.getElementById('dataStatus');
+        let productsList = document.getElementById('productsList');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'test-result';
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            if (type === 'error') div.style.borderLeftColor = '#dc2626';
+            if (type === 'success') div.style.borderLeftColor = '#10b981';
+            testResults.appendChild(div);
+        }
+        
+        function refreshTest() {
+            // Päivitä data status
+            if (window.PRODUCTS_JSON) {
+                dataStatus.innerHTML = `
+                    ✅ <strong>Keskitetty data ladattu!</strong><br>
+                    📦 Tuotteita: ${window.PRODUCTS_JSON.products.length}<br>
+                    📂 Kategorioita: ${window.PRODUCTS_JSON.categories.length}<br>
+                    🗂️ Data lähde: products-data.js
+                `;
+            } else {
+                dataStatus.innerHTML = '❌ Data ei ladattu';
+            }
+            
+            // Näytä tuotteet
+            if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.products) {
+                productsList.innerHTML = `
+                    <h3>📦 Kaikki tuotteet (${window.PRODUCTS_JSON.products.length} kpl):</h3>
+                    <pre>${JSON.stringify(window.PRODUCTS_JSON.products.slice(0, 3), null, 2)}...</pre>
+                `;
+            }
+        }
+        
+        function testAddProduct() {
+            try {
+                const testProduct = {
+                    name: `Testi Tuote ${Date.now()}`,
+                    price: 99.99,
+                    category: 1,
+                    description: "Automaattinen testi tuote"
+                };
+                
+                const result = addProduct(testProduct);
+                log(`✅ Tuote lisätty! ID: ${result.id}, Nimi: ${result.name}`, 'success');
+                refreshTest();
+            } catch (error) {
+                log(`❌ Virhe tuotteen lisäämisessä: ${error.message}`, 'error');
+            }
+        }
+        
+        function testUpdateProduct() {
+            try {
+                if (window.PRODUCTS_JSON.products.length === 0) {
+                    log('❌ Ei tuotteita päivitettäväksi', 'error');
+                    return;
+                }
+                
+                const firstProduct = window.PRODUCTS_JSON.products[0];
+                const updatedData = {
+                    name: firstProduct.name + ' (Päivitetty)',
+                    price: firstProduct.price + 10
+                };
+                
+                const result = updateProduct(firstProduct.id, updatedData);
+                log(`✅ Tuote päivitetty! ID: ${result.id}, Uusi nimi: ${result.name}`, 'success');
+                refreshTest();
+            } catch (error) {
+                log(`❌ Virhe tuotteen päivityksessä: ${error.message}`, 'error');
+            }
+        }
+        
+        function testDeleteProduct() {
+            try {
+                if (window.PRODUCTS_JSON.products.length === 0) {
+                    log('❌ Ei tuotteita poistettavaksi', 'error');
+                    return;
+                }
+                
+                const lastProduct = window.PRODUCTS_JSON.products[window.PRODUCTS_JSON.products.length - 1];
+                const success = deleteProduct(lastProduct.id);
+                
+                if (success) {
+                    log(`✅ Tuote poistettu! ID: ${lastProduct.id}, Nimi: ${lastProduct.name}`, 'success');
+                } else {
+                    log(`❌ Tuotteen poisto epäonnistui`, 'error');
+                }
+                refreshTest();
+            } catch (error) {
+                log(`❌ Virhe tuotteen poistamisessa: ${error.message}`, 'error');
+            }
+        }
+        
+        // Kuuntele data muutoksia
+        window.addEventListener('productsDataChanged', function(event) {
+            log(`🔄 Data muuttunut: ${event.detail.type} - ${event.detail.message}`, 'info');
+            refreshTest();
+        });
+        
+        // Käynnistä testi kun sivu latautuu
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(refreshTest, 500); // Anna datan latautua
+            log('🧪 Testi käynnistetty - Keskitetty tuotedata', 'info');
+        });
+    </script>
+</body>
+</html>

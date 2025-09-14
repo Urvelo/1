@@ -1,0 +1,1492 @@
+<!DOCTYPE html><!DOCTYPE html><!DOCTYPE html>
+
+<html lang="fi">
+
+<head><html lang="fi"><html lang="fi">
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><head><head>
+
+  <title>Tuote - Löytökauppa</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">  <meta charset="UTF-8">  <meta charset="UTF-8">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <title>Tuote - Löytökauppa</title>  <title>Tuote - Löytökauppa</title>
+
+  <style>
+
+    :root {  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+      --primary: #2563eb;
+
+      --secondary: #1d4ed8;  <link rel="preconnect" href="https://fonts.googleapis.com">  
+
+      --success: #059669;
+
+      --warning: #d97706;  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  <style>
+
+      --danger: #dc2626;
+
+      --dark: #111827;  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">    :root {
+
+      --darker: #1f2937;
+
+      --gray: #374151;        --primary: #2563eb;
+
+      --gray-light: #4b5563;
+
+      --border: #6b7280;  <style>      --secondary: #1d4ed8;
+
+      --text: #f9fafb;
+
+      --text-muted: #9ca3af;    :root {      --success: #059669;
+
+      --background: #111827;
+
+    }      --primary: #2563eb;      --warning: #d97706;
+
+
+
+    * {      --secondary: #1d4ed8;      --danger: #dc2626;
+
+      margin: 0;
+
+      padding: 0;      --success: #059669;      --dark: #111827;
+
+      box-sizing: border-box;
+
+    }      --warning: #d97706;      --darker: #1f2937;
+
+
+
+    body {      --danger: #dc2626;      --gray: #374151;
+
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+      background: var(--background);      --dark: #111827;      --gray-light: #4b5563;
+
+      color: var(--text);
+
+      line-height: 1.6;      --darker: #1f2937;      --border: #6b7280;
+
+      min-height: 100vh;
+
+    }      --gray: #374151;      --text: #f9fafb;
+
+
+
+    /* HEADER */      --gray-light: #4b5563;      --text-muted: #9ca3af;
+
+    .header {
+
+      background: var(--dark);      --border: #6b7280;      --background: #111827;
+
+      padding: 1rem 0;
+
+      border-bottom: 1px solid var(--border);      --text: #f9fafb;    }
+
+      position: sticky;
+
+      top: 0;      --text-muted: #9ca3af;
+
+      z-index: 100;
+
+    }      --background: #111827;    * {
+
+
+
+    .navbar {    }      margin: 0;
+
+      max-width: 1200px;
+
+      margin: 0 auto;      padding: 0;
+
+      padding: 0 1rem;
+
+      display: flex;    * {      box-sizing: border-box;
+
+      justify-content: space-between;
+
+      align-items: center;      margin: 0;    }
+
+    }
+
+      padding: 0;
+
+    .logo {
+
+      font-size: 1.5rem;      box-sizing: border-box;    body {
+
+      font-weight: 700;
+
+      color: var(--primary);    }      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+      text-decoration: none;
+
+    }      background: var(--background);
+
+
+
+    .back-link {    body {      color: var(--text);
+
+      background: var(--gray);
+
+      color: var(--text);      font-family: 'Inter', system-ui, -apple-system, sans-serif;      line-height: 1.6;
+
+      padding: 0.5rem 1rem;
+
+      border-radius: 0.5rem;      background: var(--background);    }
+
+      text-decoration: none;
+
+      transition: all 0.3s ease;      color: var(--text);
+
+      display: flex;
+
+      align-items: center;      line-height: 1.6;    /* HEADER */
+
+      gap: 0.5rem;
+
+    }      min-height: 100vh;    .header {
+
+
+
+    .back-link:hover {    }      background: var(--dark);
+
+      background: var(--primary);
+
+      transform: translateY(-1px);      padding: 1rem 0;
+
+    }
+
+    /* HEADER */      border-bottom: 1px solid var(--border);
+
+    /* MAIN CONTENT */
+
+    .container {    .header {      position: sticky;
+
+      max-width: 1200px;
+
+      margin: 0 auto;      background: var(--dark);      top: 0;
+
+      padding: 2rem 1rem;
+
+    }      padding: 1rem 0;      z-index: 100;
+
+
+
+    .product-detail {      border-bottom: 1px solid var(--border);    }
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;      position: sticky;
+
+      gap: 3rem;
+
+      align-items: start;      top: 0;    .navbar {
+
+    }
+
+      z-index: 100;      max-width: 1200px;
+
+    @media (max-width: 768px) {
+
+      .product-detail {    }      margin: 0 auto;
+
+        grid-template-columns: 1fr;
+
+        gap: 2rem;      display: flex;
+
+      }
+
+    }    .navbar {      justify-content: space-between;
+
+
+
+    /* PRODUCT IMAGE */      max-width: 1200px;      align-items: center;
+
+    .product-image-section {
+
+      background: var(--darker);      margin: 0 auto;      padding: 0 2rem;
+
+      border-radius: 1rem;
+
+      padding: 2rem;      padding: 0 1rem;    }
+
+      text-align: center;
+
+    }      display: flex;
+
+
+
+    .main-image {      justify-content: space-between;    .logo {
+
+      width: 100%;
+
+      max-width: 400px;      align-items: center;      font-size: 1.8rem;
+
+      height: 400px;
+
+      object-fit: cover;    }      font-weight: bold;
+
+      border-radius: 0.75rem;
+
+      margin-bottom: 1rem;      color: var(--primary);
+
+    }
+
+    .logo {      text-decoration: none;
+
+    /* PRODUCT INFO */
+
+    .product-info {      font-size: 1.5rem;    }
+
+      background: var(--darker);
+
+      border-radius: 1rem;      font-weight: 700;
+
+      padding: 2rem;
+
+    }      color: var(--primary);    .back-link {
+
+
+
+    .product-title {      text-decoration: none;      color: var(--text);
+
+      font-size: 2rem;
+
+      font-weight: 700;    }      text-decoration: none;
+
+      margin-bottom: 1rem;
+
+      color: var(--text);      padding: 0.5rem 1rem;
+
+    }
+
+    .back-link {      border-radius: 8px;
+
+    .product-price {
+
+      font-size: 2rem;      background: var(--gray);      transition: all 0.3s ease;
+
+      font-weight: 700;
+
+      color: var(--primary);      color: var(--text);      display: flex;
+
+      margin-bottom: 2rem;
+
+    }      padding: 0.5rem 1rem;      align-items: center;
+
+
+
+    .product-details {      border-radius: 0.5rem;      gap: 0.5rem;
+
+      margin-bottom: 2rem;
+
+    }      text-decoration: none;    }
+
+
+
+    .detail-row {      transition: all 0.3s ease;
+
+      display: flex;
+
+      justify-content: space-between;      display: flex;    .back-link:hover {
+
+      padding: 0.75rem 0;
+
+      border-bottom: 1px solid var(--border);      align-items: center;      background: rgba(37, 99, 235, 0.1);
+
+    }
+
+      gap: 0.5rem;      color: var(--primary);
+
+    .detail-label {
+
+      font-weight: 600;    }    }
+
+      color: var(--text-muted);
+
+    }
+
+
+
+    .detail-value {    .back-link:hover {    /* PRODUCT CONTAINER */
+
+      color: var(--text);
+
+      font-weight: 500;      background: var(--primary);    .product-container {
+
+    }
+
+      transform: translateY(-1px);      max-width: 1200px;
+
+    .product-description {
+
+      margin-bottom: 2rem;    }      margin: 2rem auto;
+
+    }
+
+      padding: 0 2rem;
+
+    .product-description h3 {
+
+      font-size: 1.25rem;    /* MAIN CONTENT */      display: grid;
+
+      font-weight: 600;
+
+      margin-bottom: 1rem;    .container {      grid-template-columns: 1fr 1fr;
+
+      color: var(--text);
+
+    }      max-width: 1200px;      gap: 3rem;
+
+
+
+    .product-description p {      margin: 0 auto;      align-items: start;
+
+      color: var(--text-muted);
+
+      line-height: 1.6;      padding: 2rem 1rem;    }
+
+    }
+
+    }
+
+    /* BUTTONS */
+
+    .btn {    /* PRODUCT IMAGES */
+
+      display: inline-flex;
+
+      align-items: center;    .product-detail {    .product-images {
+
+      gap: 0.5rem;
+
+      padding: 0.875rem 1.5rem;      display: grid;      display: flex;
+
+      border: none;
+
+      border-radius: 0.5rem;      grid-template-columns: 1fr 1fr;      flex-direction: column;
+
+      font-weight: 600;
+
+      text-decoration: none;      gap: 3rem;      gap: 1rem;
+
+      cursor: pointer;
+
+      transition: all 0.3s ease;      align-items: start;    }
+
+      font-size: 1rem;
+
+    }    }
+
+
+
+    .btn-primary {    .main-image {
+
+      background: var(--primary);
+
+      color: white;    @media (max-width: 768px) {      width: 100%;
+
+    }
+
+      .product-detail {      height: 400px;
+
+    .btn-primary:hover {
+
+      background: var(--secondary);        grid-template-columns: 1fr;      object-fit: cover;
+
+      transform: translateY(-1px);
+
+    }        gap: 2rem;      border-radius: 12px;
+
+
+
+    .btn-secondary {      }      border: 2px solid var(--border);
+
+      background: var(--gray);
+
+      color: var(--text);    }    }
+
+    }
+
+
+
+    .btn-secondary:hover {
+
+      background: var(--gray-light);    /* PRODUCT IMAGE */    .thumbnail-images {
+
+    }
+
+    .product-image-section {      display: flex;
+
+    .action-buttons {
+
+      display: flex;      background: var(--darker);      gap: 0.5rem;
+
+      gap: 1rem;
+
+      margin-top: 2rem;      border-radius: 1rem;      overflow-x: auto;
+
+    }
+
+      padding: 2rem;    }
+
+    @media (max-width: 568px) {
+
+      .action-buttons {      text-align: center;
+
+        flex-direction: column;
+
+      }    }    .thumbnail {
+
+    }
+
+      width: 80px;
+
+    /* ERROR MESSAGE */
+
+    .error-message {    .main-image {      height: 80px;
+
+      background: var(--darker);
+
+      border: 1px solid var(--danger);      width: 100%;      object-fit: cover;
+
+      border-radius: 0.75rem;
+
+      padding: 2rem;      max-width: 400px;      border-radius: 8px;
+
+      text-align: center;
+
+      color: var(--danger);      height: 400px;      border: 2px solid var(--border);
+
+    }
+
+      object-fit: cover;      cursor: pointer;
+
+    .loading {
+
+      text-align: center;      border-radius: 0.75rem;      transition: all 0.3s ease;
+
+      padding: 3rem;
+
+      color: var(--text-muted);      margin-bottom: 1rem;    }
+
+    }
+
+  </style>    }
+
+</head>
+
+<body>    .thumbnail:hover,
+
+  <!-- HEADER -->
+
+  <header class="header">    /* PRODUCT INFO */    .thumbnail.active {
+
+    <nav class="navbar">
+
+      <a href="../index.html" class="logo">🛍️ Löytökauppa</a>    .product-info {      border-color: var(--primary);
+
+      <a href="../index.html" class="back-link">
+
+        <i class="fas fa-arrow-left"></i>      background: var(--darker);    }
+
+        Takaisin kauppaan
+
+      </a>      border-radius: 1rem;
+
+    </nav>
+
+  </header>      padding: 2rem;    /* PRODUCT INFO */
+
+
+
+  <!-- MAIN CONTENT -->    }    .product-info {
+
+  <main class="container">
+
+    <div id="loadingMessage" class="loading">      background: var(--dark);
+
+      <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+
+      <p>Ladataan tuotetta...</p>    .product-title {      padding: 2rem;
+
+    </div>
+
+      font-size: 2rem;      border-radius: 12px;
+
+    <div id="errorMessage" class="error-message" style="display: none;">
+
+      <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>      font-weight: 700;      border: 1px solid var(--border);
+
+      <h2>Tuotetta ei löytynyt</h2>
+
+      <p>Valitsemaasi tuotetta ei löytynyt. Siirry takaisin kauppaan ja yritä uudelleen.</p>      margin-bottom: 1rem;    }
+
+      <a href="../index.html" class="btn btn-primary" style="margin-top: 1rem;">
+
+        <i class="fas fa-home"></i>      color: var(--text);
+
+        Takaisin kauppaan
+
+      </a>    }    .product-title {
+
+    </div>
+
+      font-size: 2rem;
+
+    <div id="productContent" class="product-detail" style="display: none;">
+
+      <!-- PRODUCT IMAGE -->    .product-price {      font-weight: bold;
+
+      <div class="product-image-section">
+
+        <img id="productImage" class="main-image" src="" alt="">      font-size: 2rem;      margin-bottom: 1rem;
+
+      </div>
+
+      font-weight: 700;      color: var(--text);
+
+      <!-- PRODUCT INFO -->
+
+      <div class="product-info">      color: var(--primary);    }
+
+        <h1 id="productTitle" class="product-title">Ladataan...</h1>
+
+        <div id="productPrice" class="product-price">€0.00</div>      margin-bottom: 2rem;
+
+
+
+        <div class="product-details">    }    .product-price {
+
+          <div class="detail-row">
+
+            <span class="detail-label">Kunto:</span>      font-size: 2rem;
+
+            <span id="productCondition" class="detail-value">Hyvä</span>
+
+          </div>    .product-details {      font-weight: bold;
+
+          <div class="detail-row">
+
+            <span class="detail-label">Kategoria:</span>      margin-bottom: 2rem;      color: var(--success);
+
+            <span id="productCategory" class="detail-value">-</span>
+
+          </div>    }      margin-bottom: 1rem;
+
+          <div class="detail-row">
+
+            <span class="detail-label">Varastossa:</span>    }
+
+            <span id="productStock" class="detail-value">-</span>
+
+          </div>    .detail-row {
+
+        </div>
+
+      display: flex;    .product-condition {
+
+        <div class="product-description">
+
+          <h3>Kuvaus</h3>      justify-content: space-between;      display: inline-block;
+
+          <p id="productDescription">Ladataan tuotteen kuvausta...</p>
+
+        </div>      padding: 0.75rem 0;      padding: 0.5rem 1rem;
+
+
+
+        <div class="action-buttons">      border-bottom: 1px solid var(--border);      background: var(--success);
+
+          <button id="addToCartBtn" class="btn btn-primary" onclick="addToCart()">
+
+            <i class="fas fa-shopping-cart"></i>    }      color: white;
+
+            Lisää ostoskoriin
+
+          </button>      border-radius: 20px;
+
+          <a href="../index.html" class="btn btn-secondary">
+
+            <i class="fas fa-arrow-left"></i>    .detail-label {      font-size: 0.9rem;
+
+            Jatka ostoksia
+
+          </a>      font-weight: 600;      margin-bottom: 1.5rem;
+
+        </div>
+
+      </div>      color: var(--text-muted);    }
+
+    </div>
+
+  </main>    }
+
+
+
+  <!-- SCRIPTS -->    .product-description {
+
+  <script src="../products-data.js"></script>
+
+  <script>    .detail-value {      margin-bottom: 2rem;
+
+    let currentProduct = null;
+
+      color: var(--text);    }
+
+    // Lataa tuote URL parametrista tai sessionStoragesta
+
+    function loadProductFromURL() {      font-weight: 500;
+
+      const urlParams = new URLSearchParams(window.location.search);
+
+      const productId = urlParams.get('id') || sessionStorage.getItem('viewingProductId');    }    .product-description h3 {
+
+      
+
+      console.log('🔍 Yritetään ladata tuotetta ID:', productId);      font-size: 1.2rem;
+
+      
+
+      if (productId) {    .product-description {      margin-bottom: 0.5rem;
+
+        loadProductData(parseInt(productId));
+
+      } else {      margin-bottom: 2rem;      color: var(--primary);
+
+        console.log('❌ Tuote ID:tä ei löytynyt');
+
+        showError('Tuotteen ID puuttuu URL:sta');    }    }
+
+      }
+
+    }
+
+
+
+    // Lataa tuotteen tiedot samasta lähteestä kuin etusivu    .product-description h3 {    .product-description p {
+
+    function loadProductData(productId) {
+
+      console.log('🔍 Ladataan tuotetta ID:', productId);      font-size: 1.25rem;      color: var(--text-muted);
+
+      
+
+      if (!window.PRODUCTS_JSON) {      font-weight: 600;      line-height: 1.6;
+
+        console.error('❌ PRODUCTS_JSON ei ole ladattu!');
+
+        showError('Tuotteiden latausvirhe - sivua ei voitu ladata');      margin-bottom: 1rem;    }
+
+        return;
+
+      }      color: var(--text);
+
+      
+
+      // Hae kaikki tuotteet samalla tavalla kuin etusivulla    }    .product-details {
+
+      const data = window.PRODUCTS_JSON.loadProductsFromJSON();
+
+      const products = data.products;      margin-bottom: 2rem;
+
+      
+
+      console.log('📦 Ladattuja tuotteita yhteensä:', products.length);    .product-description p {    }
+
+      console.log('📋 Tuotteet:', products.map(p => ({ id: p.id, name: p.name })));
+
+            color: var(--text-muted);
+
+      // Etsi oikea tuote
+
+      const product = products.find(p => p.id == productId);      line-height: 1.6;    .detail-row {
+
+      
+
+      if (product) {    }      display: flex;
+
+        console.log('✅ Tuote löytyi:', product.name);
+
+        displayProduct(product);      justify-content: space-between;
+
+      } else {
+
+        console.log('❌ Tuotetta ei löytynyt ID:llä:', productId);    /* BUTTONS */      padding: 0.5rem 0;
+
+        console.log('📋 Saatavilla olevat ID:t:', products.map(p => p.id));
+
+        showError(`Tuotetta ei löytynyt ID:llä ${productId}`);    .btn {      border-bottom: 1px solid var(--border);
+
+      }
+
+    }      display: inline-flex;    }
+
+    
+
+    function displayProduct(product) {      align-items: center;
+
+      currentProduct = product;
+
+            gap: 0.5rem;    .detail-row:last-child {
+
+      console.log('📦 Näytetään tuote:', product);
+
+            padding: 0.875rem 1.5rem;      border-bottom: none;
+
+      // Piilota loading ja error
+
+      document.getElementById('loadingMessage').style.display = 'none';      border: none;    }
+
+      document.getElementById('errorMessage').style.display = 'none';
+
+      document.getElementById('productContent').style.display = 'grid';      border-radius: 0.5rem;
+
+      
+
+      // Päivitä tuotteen tiedot      font-weight: 600;    .detail-label {
+
+      document.getElementById('productTitle').textContent = product.name;
+
+      document.getElementById('productPrice').textContent = `€${product.price.toFixed(2)}`;      text-decoration: none;      font-weight: 500;
+
+      document.getElementById('productCondition').textContent = 'Hyvä kunto';
+
+      document.getElementById('productCategory').textContent = getCategoryName(product.category);      cursor: pointer;      color: var(--text);
+
+      document.getElementById('productStock').textContent = `${product.stock || 0} kpl`;
+
+      document.getElementById('productDescription').textContent = product.description || 'Ei kuvausta saatavilla';      transition: all 0.3s ease;    }
+
+      
+
+      // Päivitä kuva      font-size: 1rem;
+
+      const productImage = document.getElementById('productImage');
+
+      if (productImage && product.image) {    }    .detail-value {
+
+        productImage.src = product.image;
+
+        productImage.alt = product.name;      color: var(--text-muted);
+
+      }
+
+          .btn-primary {    }
+
+      // Päivitä sivun otsikko
+
+      document.title = `${product.name} - Löytökauppa`;      background: var(--primary);
+
+    }
+
+          color: white;    /* PURCHASE SECTION */
+
+    function getCategoryName(categoryId) {
+
+      const categories = {    }    .purchase-section {
+
+        1: 'Elektroniikka',
+
+        2: 'Älykkäät laitteet',       background: var(--darker);
+
+        3: 'Kuulokkeet & Audio',
+
+        4: 'Kodin tavarat'    .btn-primary:hover {      padding: 1.5rem;
+
+      };
+
+      return categories[categoryId] || 'Muu';      background: var(--secondary);      border-radius: 12px;
+
+    }
+
+          transform: translateY(-1px);      border: 1px solid var(--border);
+
+    function showError(message) {
+
+      document.getElementById('loadingMessage').style.display = 'none';    }      display: flex;
+
+      document.getElementById('productContent').style.display = 'none';
+
+      document.getElementById('errorMessage').style.display = 'block';      flex-direction: column;
+
+      document.querySelector('#errorMessage p').textContent = message;
+
+    }    .btn-secondary {      gap: 1rem;
+
+
+
+    // Ostoskoriin lisääminen      background: var(--gray);    }
+
+    function addToCart() {
+
+      if (!currentProduct) {      color: var(--text);
+
+        alert('Virhe: Tuotetietoja ei löytynyt');
+
+        return;    }    .btn {
+
+      }
+
+            padding: 1rem 1.5rem;
+
+      // Hae nykyinen ostoskori
+
+      let cart = JSON.parse(localStorage.getItem('shopping_cart') || '[]');    .btn-secondary:hover {      border: none;
+
+      
+
+      // Tarkista onko tuote jo korissa      background: var(--gray-light);      border-radius: 10px;
+
+      const existingItem = cart.find(item => item.productId === currentProduct.id);
+
+          }      font-size: 1.1rem;
+
+      if (existingItem) {
+
+        existingItem.quantity += 1;      font-weight: 600;
+
+      } else {
+
+        cart.push({    .action-buttons {      cursor: pointer;
+
+          productId: currentProduct.id,
+
+          quantity: 1,      display: flex;      transition: all 0.3s ease;
+
+          addedAt: new Date().toISOString()
+
+        });      gap: 1rem;      display: flex;
+
+      }
+
+            margin-top: 2rem;      align-items: center;
+
+      // Tallenna ostoskori
+
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));    }      justify-content: center;
+
+      
+
+      // Näytä vahvistus      gap: 0.5rem;
+
+      alert(`✅ ${currentProduct.name} lisätty ostoskoriin!`);
+
+          @media (max-width: 568px) {      text-decoration: none;
+
+      console.log('🛒 Tuote lisätty ostoskoriin:', currentProduct.name);
+
+    }      .action-buttons {      position: relative;
+
+
+
+    // Lataa tuote kun sivu latautuu        flex-direction: column;      overflow: hidden;
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+      console.log('📄 Tuotesivu ladattu, aloitetaan tuotteen haku...');      }    }
+
+      loadProductFromURL();
+
+    });    }
+
+  </script>
+
+</body>    .btn-cart {
+
+</html>
+    /* ERROR MESSAGE */      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+    .error-message {      color: white;
+
+      background: var(--darker);      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+
+      border: 1px solid var(--danger);      font-size: 1.2rem;
+
+      border-radius: 0.75rem;      padding: 1.2rem 2rem;
+
+      padding: 2rem;      margin-bottom: 0.5rem;
+
+      text-align: center;    }
+
+      color: var(--danger);
+
+    }    .btn-cart:hover {
+
+      transform: translateY(-2px);
+
+    .loading {      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+
+      text-align: center;      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+
+      padding: 3rem;    }
+
+      color: var(--text-muted);
+
+    }    .btn-cart:active {
+
+  </style>      transform: translateY(0);
+
+</head>    }
+
+<body>
+
+  <!-- HEADER -->    .btn-cart i {
+
+  <header class="header">      font-size: 1.3rem;
+
+    <nav class="navbar">    }
+
+      <a href="../index.html" class="logo">🛍️ Löytökauppa</a>
+
+      <a href="../index.html" class="back-link">    .btn-secondary {
+
+        <i class="fas fa-arrow-left"></i>      background: var(--border);
+
+        Takaisin kauppaan      color: var(--text);
+
+      </a>      border: 1px solid var(--border);
+
+    </nav>    }
+
+  </header>
+
+    .btn-secondary:hover {
+
+  <!-- MAIN CONTENT -->      background: rgba(37, 99, 235, 0.1);
+
+  <main class="container">      border-color: var(--primary);
+
+    <div id="loadingMessage" class="loading">      color: var(--primary);
+
+      <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>    }
+
+      <p>Ladataan tuotetta...</p>
+
+    </div>    .purchase-title {
+
+      font-size: 1.3rem;
+
+    <div id="errorMessage" class="error-message" style="display: none;">      margin-bottom: 1rem;
+
+      <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>      color: var(--text);
+
+      <h2>Tuotetta ei löytynyt</h2>      text-align: center;
+
+      <p>Valitsemaasi tuotetta ei löytynyt. Siirry takaisin kauppaan ja yritä uudelleen.</p>    }
+
+      <a href="../index.html" class="btn btn-primary" style="margin-top: 1rem;">
+
+        <i class="fas fa-home"></i>    .paypal-container {
+
+        Takaisin kauppaan      margin-top: 1rem;
+
+      </a>    }
+
+    </div>
+
+    /* RESPONSIVE */
+
+    <div id="productContent" class="product-detail" style="display: none;">    @media (max-width: 768px) {
+
+      <!-- PRODUCT IMAGE -->      .product-container {
+
+      <div class="product-image-section">        grid-template-columns: 1fr;
+
+        <img id="productImage" class="main-image" src="" alt="">        gap: 2rem;
+
+      </div>      }
+
+
+
+      <!-- PRODUCT INFO -->      .navbar {
+
+      <div class="product-info">        padding: 0 1rem;
+
+        <h1 id="productTitle" class="product-title">Ladataan...</h1>      }
+
+        <div id="productPrice" class="product-price">€0.00</div>
+
+      .product-container {
+
+        <div class="product-details">        padding: 0 1rem;
+
+          <div class="detail-row">        margin: 1rem auto;
+
+            <span class="detail-label">Kunto:</span>      }
+
+            <span id="productCondition" class="detail-value">Hyvä</span>
+
+          </div>      .product-title {
+
+          <div class="detail-row">        font-size: 1.5rem;
+
+            <span class="detail-label">Kategoria:</span>      }
+
+            <span id="productCategory" class="detail-value">-</span>
+
+          </div>      .product-price {
+
+          <div class="detail-row">        font-size: 1.5rem;
+
+            <span class="detail-label">Varastossa:</span>      }
+
+            <span id="productStock" class="detail-value">-</span>    }
+
+          </div>  </style>
+
+        </div></head>
+
+<body>
+
+        <div class="product-description">  <!-- HEADER -->
+
+          <h3>Kuvaus</h3>  <header class="header">
+
+          <p id="productDescription">Ladataan tuotteen kuvausta...</p>    <nav class="navbar">
+
+        </div>      <a href="../" class="logo">🔍 Löytökauppa</a>
+
+      <a href="../" class="back-link">
+
+        <div class="action-buttons">        <i class="fas fa-arrow-left"></i>
+
+          <button id="addToCartBtn" class="btn btn-primary" onclick="addToCart()">        Takaisin hakuun
+
+            <i class="fas fa-shopping-cart"></i>      </a>
+
+            Lisää ostoskoriin    </nav>
+
+          </button>  </header>
+
+          <a href="../index.html" class="btn btn-secondary">
+
+            <i class="fas fa-arrow-left"></i>  <!-- PRODUCT CONTAINER -->
+
+            Jatka ostoksia  <div class="product-container">
+
+          </a>    <!-- PRODUCT IMAGES -->
+
+        </div>    <div class="product-images">
+
+      </div>      <img id="mainImage" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500" alt="Tuotekuva" class="main-image">
+
+    </div>      <div class="thumbnail-images">
+
+  </main>        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150" alt="Kuva 1" class="thumbnail active" onclick="changeMainImage(this)">
+
+        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150" alt="Kuva 2" class="thumbnail" onclick="changeMainImage(this)">
+
+  <!-- SCRIPTS -->        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=150" alt="Kuva 3" class="thumbnail" onclick="changeMainImage(this)">
+
+  <script src="../products-data.js"></script>      </div>
+
+  <script>    </div>
+
+    let currentProduct = null;
+
+    <!-- PRODUCT INFO -->
+
+    // Lataa tuote URL parametrista tai sessionStoragesta    <div class="product-info">
+
+    function loadProductFromURL() {      <h1 class="product-title" id="productTitle">Kuulokkeet - Sony WH-1000XM4</h1>
+
+      const urlParams = new URLSearchParams(window.location.search);      <div class="product-price" id="productPrice">89,90 €</div>
+
+      const productId = urlParams.get('id') || sessionStorage.getItem('viewingProductId');      <span class="product-condition" id="productCondition">Erinomainen kunto</span>
+
+      
+
+      console.log('🔍 Yritetään ladata tuotetta ID:', productId);      <div class="product-description">
+
+              <h3>Kuvaus</h3>
+
+      if (productId) {        <p id="productDescription">
+
+        loadProductData(parseInt(productId));          Laadukkaat langattoman kuulokkeet aktiivisella melunvaimennuksella. 
+
+      } else {          Toimivat moitteettomasti, mukana alkuperäinen latauskaapeli ja kuljetus pussi. 
+
+        console.log('❌ Tuote ID:tä ei löytynyt');          Paristojen kesto jopa 30 tuntia. Täydelliset matkustamiseen tai kotikäyttöön.
+
+        showError('Tuotteen ID puuttuu URL:sta');        </p>
+
+      }      </div>
+
+    }
+
+      <div class="product-details">
+
+    // Lataa tuotteen tiedot samasta lähteestä kuin etusivu        <div class="detail-row">
+
+    function loadProductData(productId) {          <span class="detail-label">Merkki</span>
+
+      console.log('🔍 Ladataan tuotetta ID:', productId);          <span class="detail-value" id="productBrand">Sony</span>
+
+              </div>
+
+      if (!window.PRODUCTS_JSON) {        <div class="detail-row">
+
+        console.error('❌ PRODUCTS_JSON ei ole ladattu!');          <span class="detail-label">Malli</span>
+
+        showError('Tuotteiden latausvirhe - sivua ei voitu ladata');          <span class="detail-value" id="productModel">WH-1000XM4</span>
+
+        return;        </div>
+
+      }        <div class="detail-row">
+
+                <span class="detail-label">Väri</span>
+
+      // Hae kaikki tuotteet samalla tavalla kuin etusivulla          <span class="detail-value" id="productColor">Musta</span>
+
+      const data = window.PRODUCTS_JSON.loadProductsFromJSON();        </div>
+
+      const products = data.products;        <div class="detail-row">
+
+                <span class="detail-label">Kunto</span>
+
+      console.log('📦 Ladattuja tuotteita yhteensä:', products.length);          <span class="detail-value" id="productConditionDetail">Erinomainen - pieniä käytön jälkiä</span>
+
+      console.log('📋 Tuotteet:', products.map(p => ({ id: p.id, name: p.name })));        </div>
+
+              <div class="detail-row">
+
+      // Etsi oikea tuote          <span class="detail-label">Toimitus</span>
+
+      const product = products.find(p => p.id == productId);          <span class="detail-value">Nouto tai postitse (+5€)</span>
+
+              </div>
+
+      if (product) {      </div>
+
+        console.log('✅ Tuote löytyi:', product.name);
+
+        displayProduct(product);      <!-- ACTION BUTTONS -->
+
+      } else {      <div class="purchase-section">
+
+        console.log('❌ Tuotetta ei löytynyt ID:llä:', productId);        <button class="btn btn-cart" onclick="addToCartFromProduct()">
+
+        console.log('📋 Saatavilla olevat ID:t:', products.map(p => p.id));          <i class="fas fa-shopping-cart"></i>
+
+        showError(`Tuotetta ei löytynyt ID:llä ${productId}`);          <span>Lisää ostoskoriin</span>
+
+      }        </button>
+
+    }        <button class="btn btn-secondary" onclick="goBack()">
+
+              <i class="fas fa-arrow-left"></i>
+
+    function displayProduct(product) {          Takaisin tuotteisiin
+
+      currentProduct = product;        </button>
+
+            </div>
+
+      console.log('📦 Näytetään tuote:', product);    </div>
+
+        </div>
+
+      // Piilota loading ja error
+
+      document.getElementById('loadingMessage').style.display = 'none';  <!-- Lataa products-data.js että saadaan sama data kuin etusivulla -->
+
+      document.getElementById('errorMessage').style.display = 'none';  <script src="../products-data.js"></script>
+
+      document.getElementById('productContent').style.display = 'grid';  <script>
+
+          let currentProduct = null;
+
+      // Päivitä tuotteen tiedot    
+
+      document.getElementById('productTitle').textContent = product.name;    // Kuvan vaihto funktio  
+
+      document.getElementById('productPrice').textContent = `€${product.price.toFixed(2)}`;    function changeMainImage(thumbnail, fullImageUrl = null) {
+
+      document.getElementById('productCondition').textContent = 'Hyvä kunto';      const mainImage = document.getElementById('mainImage');
+
+      document.getElementById('productCategory').textContent = getCategoryName(product.category);      const thumbnails = document.querySelectorAll('.thumbnail');
+
+      document.getElementById('productStock').textContent = `${product.stock || 0} kpl`;      
+
+      document.getElementById('productDescription').textContent = product.description || 'Ei kuvausta saatavilla';      // Poista active-luokka kaikista thumbnailista
+
+            thumbnails.forEach(thumb => thumb.classList.remove('active'));
+
+      // Päivitä kuva      
+
+      const productImage = document.getElementById('productImage');      // Lisää active-luokka klikattuun thumbnailiin
+
+      if (productImage && product.image) {      thumbnail.classList.add('active');
+
+        productImage.src = product.image;      
+
+        productImage.alt = product.name;      // Vaihda pääkuva
+
+      }      if (fullImageUrl) {
+
+              mainImage.src = fullImageUrl;
+
+      // Päivitä sivun otsikko      } else {
+
+      document.title = `${product.name} - Löytökauppa`;        mainImage.src = thumbnail.src.replace('w=150', 'w=500');
+
+    }      }
+
+        }
+
+    function getCategoryName(categoryId) {
+
+      const categories = {    // Lisää ostoskoriin tuotesivulta
+
+        1: 'Elektroniikka',    function addToCartFromProduct() {
+
+        2: 'Älykkäät laitteet',       if (currentProduct) {
+
+        3: 'Kuulokkeet & Audio',        // Käytä samaa localStorage-avainta kuin shop.js
+
+        4: 'Kodin tavarat'        let cart = JSON.parse(localStorage.getItem('shopping_cart') || '[]');
+
+      };        const existingItem = cart.find(item => item.id === currentProduct.id);
+
+      return categories[categoryId] || 'Muu';        
+
+    }        if (existingItem) {
+
+              existingItem.quantity += 1;
+
+    function showError(message) {        } else {
+
+      document.getElementById('loadingMessage').style.display = 'none';          cart.push({
+
+      document.getElementById('productContent').style.display = 'none';            id: currentProduct.id,
+
+      document.getElementById('errorMessage').style.display = 'block';            name: currentProduct.name,
+
+      document.querySelector('#errorMessage p').textContent = message;            price: currentProduct.price,
+
+    }            image: currentProduct.image,
+
+            quantity: 1
+
+    // Ostoskoriin lisääminen          });
+
+    function addToCart() {        }
+
+      if (!currentProduct) {        
+
+        alert('Virhe: Tuotetietoja ei löytynyt');        localStorage.setItem('shopping_cart', JSON.stringify(cart));
+
+        return;        
+
+      }        // Näytä onnistumisviesti
+
+              alert(`✅ ${currentProduct.name} lisätty ostoskoriin!`);
+
+      // Hae nykyinen ostoskori        
+
+      let cart = JSON.parse(localStorage.getItem('shopping_cart') || '[]');        console.log('🛒 Tuote lisätty ostoskoriin:', currentProduct.name);
+
+              console.log('🛒 Ostoskori nyt:', cart);
+
+      // Tarkista onko tuote jo korissa      } else {
+
+      const existingItem = cart.find(item => item.productId === currentProduct.id);        console.error('❌ currentProduct ei ole asetettu');
+
+              alert('❌ Virhe: Tuotetietoja ei löytynyt');
+
+      if (existingItem) {      }
+
+        existingItem.quantity += 1;    }
+
+      } else {
+
+        cart.push({    // Takaisin-funktio
+
+          productId: currentProduct.id,    function goBack() {
+
+          quantity: 1,      if (window.history.length > 1) {
+
+          addedAt: new Date().toISOString()        window.history.back();
+
+        });      } else {
+
+      }        window.location.href = '../';
+
+            }
+
+      // Tallenna ostoskori    }
+
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+
+          // URL-parametrien lukeminen ja tuotteen lataaminen
+
+      // Näytä vahvistus    function loadProductFromURL() {
+
+      alert(`✅ ${currentProduct.name} lisätty ostoskoriin!`);      const urlParams = new URLSearchParams(window.location.search);
+
+            const productId = urlParams.get('id') || sessionStorage.getItem('viewingProductId');
+
+      console.log('🛒 Tuote lisätty ostoskoriin:', currentProduct.name);      
+
+    }      if (productId) {
+
+        console.log('🔍 Ladataan tuote ID:', productId);
+
+    // Lataa tuote kun sivu latautuu        loadProductData(parseInt(productId));
+
+    document.addEventListener('DOMContentLoaded', function() {      } else {
+
+      console.log('📄 Tuotesivu ladattu, aloitetaan tuotteen haku...');        console.log('❌ Tuote ID:tä ei löytynyt, näytetään placeholder-data');
+
+      loadProductData();      }
+
+    });    }
+
+  </script>
+
+</body>    // Lataa tuotteen tiedot samasta lähteestä kuin etusivu
+
+</html>    function loadProductData(productId) {
+      console.log('🔍 Ladataan tuotetta ID:', productId);
+      
+      if (!window.PRODUCTS_JSON) {
+        console.error('❌ PRODUCTS_JSON ei ole ladattu!');
+        showError('Tuotteiden lataus epäonnistui');
+        return;
+      }
+      
+      // Hae kaikki tuotteet samalla tavalla kuin etusivulla
+      const data = window.PRODUCTS_JSON.loadProductsFromJSON();
+      const products = data.products;
+      
+      console.log('📦 Ladattuja tuotteita:', products.length);
+      
+      // Etsi oikea tuote
+      const product = products.find(p => p.id == productId);
+      
+      if (product) {
+        console.log('✅ Tuote löytyi:', product.name);
+        displayProduct(product);
+      } else {
+        console.log('❌ Tuotetta ei löytynyt ID:llä:', productId);
+        showError('Tuotetta ei löytynyt');
+      }
+    }
+    
+    function displayProduct(product) {
+      currentProduct = product;
+      
+      // Päivitä tuotteen tiedot
+      document.getElementById('productTitle').textContent = product.name;
+      document.getElementById('productPrice').textContent = `${product.price.toFixed(2)} €`;
+      document.getElementById('productCondition').textContent = 'Hyvä kunto';
+      document.getElementById('productBrand').textContent = product.brand || 'Ei tietoa';
+      document.getElementById('productModel').textContent = product.model || product.name;
+      document.getElementById('productColor').textContent = product.color || 'Ei tietoa';
+      document.getElementById('productConditionDetail').textContent = 'Huollettu ja testattu';
+      document.getElementById('productDescription').textContent = product.description || 'Ei kuvausta saatavilla';
+      
+      // Päivitä kuva
+      const mainImage = document.getElementById('mainProductImage');
+      if (mainImage && product.image) {
+        mainImage.src = product.image;
+        mainImage.alt = product.name;
+      }
+      
+      // Päivitä sivun otsikko
+      document.title = `${product.name} - Löytökauppa`;
+    }
+    
+    function showError(message) {
+      document.getElementById('productTitle').textContent = 'Tuotetta ei löytynyt';
+      document.getElementById('productDescription').textContent = message;
+      document.getElementById('productPrice').textContent = '';
+    }
+        // Ostoskoriin lisääminen
+        2: {
+          title: "MacBook Air M3",
+          price: "1299,00 €",
+          condition: "Erinomainen kunto",
+          brand: "Apple",
+          model: "MacBook Air M3",
+          color: "Midnight",
+          conditionDetail: "Erinomainen - huollettu ja testattu",
+          description: "Kevyt ja tehokas MacBook Air M3-sirulla. Täydellinen työntekoon ja luovuuteen. 18 tunnin akunkesto ja kristallin kirkas Liquid Retina -näyttö.",
+          images: [
+            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
+            "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500",
+            "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500"
+          ]
+        }
+      };
+
+      const product = products[productId] || {
+        title: "Kuulokkeet - Sony WH-1000XM4",
+        price: "89,90 €",
+        condition: "Erinomainen kunto",
+        brand: "Sony",
+        model: "WH-1000XM4",
+        color: "Musta",
+        conditionDetail: "Erinomainen - pieniä käytön jälkiä",
+        description: "Laadukkaat langattoman kuulokkeet aktiivisella melunvaimennuksella. Toimivat moitteettomasti, mukana alkuperäinen latauskaapeli ja kuljetus pussi.",
+        images: [
+          "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
+          "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500",
+          "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500"
+        ]
+      };
+      
+      // Päivitä HTML-elementit
+      document.getElementById('productTitle').textContent = product.title;
+      document.getElementById('productPrice').textContent = product.price;
+      document.getElementById('productCondition').textContent = product.condition;
+      document.getElementById('productBrand').textContent = product.brand;
+      document.getElementById('productModel').textContent = product.model;
+      document.getElementById('productColor').textContent = product.color;
+      document.getElementById('productConditionDetail').textContent = product.conditionDetail;
+      document.getElementById('productDescription').textContent = product.description;
+      
+      // Aseta currentProduct global muuttujaksi
+      currentProduct = {
+        id: productId,
+        name: product.title,
+        price: parseFloat(product.price.replace('€', '').replace(',', '.').trim()),
+        image: product.images ? product.images[0] : 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
+      };
+      
+      console.log('✅ currentProduct asetettu:', currentProduct);
+      
+      // Päivitä kuvat
+      const mainImage = document.getElementById('mainImage');
+      const thumbnails = document.querySelectorAll('.thumbnail');
+      
+      if (product.images && product.images.length > 0) {
+        mainImage.src = product.images[0];
+        
+        thumbnails.forEach((thumb, index) => {
+          if (product.images[index]) {
+            thumb.src = product.images[index].replace('w=500', 'w=150');
+            thumb.onclick = () => changeMainImage(thumb, product.images[index]);
+          }
+        });
+      }
+      
+      console.log('✅ Tuote ladattu:', product.title);
+    }
+
+    // Lataa tuote kun sivu latautuu
+    document.addEventListener('DOMContentLoaded', loadProductFromURL);
+  </script>
+</body>
+</html>

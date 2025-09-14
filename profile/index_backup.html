@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Käyttäjäprofiili - ShopMax</title>
+  <title>Käyttäjäprofiili - Löytökauppa</title>
+  <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary: #667eea;
-      --secondary: #764ba2;
-      --accent: #f093fb;
-      --success: #4ecdc4;
-      --danger: #ff6b6b;
-      --warning: #feca57;
-      --dark: #0a0a0a;
-      --darker: #121212;
-      --gray: #1e1e1e;
-      --gray-light: #2a2a2a;
-      --text: #ffffff;
-      --text-muted: #b0b0b0;
-      --border: #333333;
+      --primary: #2563eb;
+      --secondary: #1d4ed8;
+      --accent: #3b82f6;
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --dark: #111827;
+      --darker: #1f2937;
+      --gray: #374151;
+      --gray-light: #4b5563;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --border: #6b7280;
     }
     
     * {
@@ -31,7 +32,7 @@
     body {
       background: var(--dark);
       color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       line-height: 1.6;
     }
     
@@ -295,7 +296,7 @@
 </head>
 <body>
   <div class="container">
-    <a href="index.html" class="back-link">
+    <a href="../" class="back-link">
       <i class="fas fa-arrow-left"></i>
       Takaisin kauppaan
     </a>
@@ -465,7 +466,7 @@
       init() {
         if (!this.currentUser) {
           alert('❌ Sinun täytyy kirjautua sisään!');
-          window.location.href = 'login.html';
+          window.location.href = '../auth/login.html';
           return;
         }
         
@@ -495,7 +496,7 @@
               <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
               <p style="font-size: 1.2rem;">Ei tilauksia vielä</p>
               <p>Kun teet ensimmäisen tilauksesi, se näkyy täällä</p>
-              <a href="index.html" class="btn" style="margin-top: 1rem; text-decoration: none;">
+              <a href="../" class="btn" style="margin-top: 1rem; text-decoration: none;">
                 <i class="fas fa-shopping-cart"></i> Aloita ostokset
               </a>
             </div>
@@ -678,7 +679,7 @@
           localStorage.removeItem('user_settings');
           
           alert('🗑️ Tili poistettu. Olet kirjautunut ulos.');
-          window.location.href = 'login.html';
+          window.location.href = '../auth/login.html';
         }
       }
     }

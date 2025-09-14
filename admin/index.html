@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Paneeli - Keskitetty Tuotehallinta</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="admin-header text-center mb-xl">
+      <h1 class="text-primary mb-sm">🔧 Admin Paneeli</h1>
+      <p class="text-muted">Keskitetty tuotehallinta - Kaikki data yhdessä paikassa</p>
+      <a href="../" class="btn btn-secondary mt-md">
+        <i class="fas fa-arrow-left"></i>
+        Takaisin kauppaan
+      </a>
+    </header>
+    
+    <!-- Navigation -->
+    <nav class="admin-nav mb-xl">
+      <button class="btn btn-primary active" onclick="showSection('products')">
+        <i class="fas fa-box"></i>
+        Tuotteet
+      </button>
+      <button class="btn btn-secondary" onclick="showSection('categories')">
+        <i class="fas fa-folder"></i>
+        Kategoriat
+      </button>
+      <button class="btn btn-secondary" onclick="showSection('stats')">
+        <i class="fas fa-chart-bar"></i>
+        Tilastot
+      </button>
+    </nav>
+    
+    <!-- Products Section -->
+    <section id="products" class="admin-section">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-primary">
+            <i class="fas fa-box"></i>
+            Tuotteiden hallinta
+          </h2>
+        </div>
+        
+        <div class="card-body">
+          <!-- Add Product Form -->
+          <div class="form-section mb-xl">
+            <h3 class="mb-lg">
+              <i class="fas fa-plus"></i>
+              Lisää uusi tuote
+            </h3>
+            
+            <form id="addProductForm" class="grid-cols-2">
+              <div class="form-group">
+                <label for="productName">Tuotteen nimi</label>
+                <input type="text" id="productName" class="form-input" placeholder="Esim. Älypuhelin">
+              </div>
+              
+              <div class="form-group">
+                <label for="productPrice">Hinta (€)</label>
+                <input type="number" id="productPrice" class="form-input" placeholder="29.99" step="0.01">
+              </div>
+              
+              <div class="form-group">
+                <label for="productCategory">Kategoria</label>
+                <select id="productCategory" class="form-input">
+                  <option value="elektroniikka">Elektroniikka</option>
+                  <option value="vaatteet">Vaatteet</option>
+                  <option value="koti">Koti</option>
+                  <option value="urheilu">Urheilu</option>
+                  <option value="kauneus">Kauneus</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="productImage">Kuvan URL</label>
+                <input type="url" id="productImage" class="form-input" placeholder="https://example.com/image.jpg">
+              </div>
+              
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="productDescription">Kuvaus</label>
+                <textarea id="productDescription" class="form-input" rows="3" placeholder="Tuotteen kuvaus..."></textarea>
+              </div>
+              
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <button type="submit" class="btn btn-success">
+                  <i class="fas fa-plus"></i>
+                  Lisää tuote
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- Product Management Actions -->
+          <div class="admin-actions mb-lg">
+            <button class="btn btn-primary" onclick="adminPanel.displayProducts()">
+              <i class="fas fa-sync"></i>
+              Päivitä lista
+            </button>
+            <button class="btn btn-warning" onclick="adminPanel.refreshData()">
+              <i class="fas fa-download"></i>
+              Päivitä data
+            </button>
+            <button class="btn btn-success" onclick="adminPanel.exportData()">
+              <i class="fas fa-file-export"></i>
+              Vie Data
+            </button>
+            <button class="btn btn-danger" onclick="adminPanel.clearAllProducts()">
+              <i class="fas fa-trash"></i>
+              Tyhjennä kaikki
+            </button>
+          </div>
+          
+          <!-- Products List -->
+          <div class="products-list">
+            <h3 class="mb-lg">
+              <i class="fas fa-list"></i>
+              Nykyiset tuotteet
+            </h3>
+            <div id="adminProductsList" class="products-grid">
+              <!-- Products will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Categories Section -->
+    <section id="categories" class="admin-section hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-primary">
+            <i class="fas fa-folder"></i>
+            Kategorioiden hallinta
+          </h2>
+        </div>
+        <div class="card-body">
+          <p class="text-muted">Kategorioiden hallinta tulossa...</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Stats Section -->
+    <section id="stats" class="admin-section hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-primary">
+            <i class="fas fa-chart-bar"></i>
+            Tilastot
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Tuotteet</h3>
+              <div class="stat-number" id="totalProducts">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Kategoriat</h3>
+              <div class="stat-number" id="totalCategories">5</div>
+            </div>
+            <div class="stat-card">
+              <h3>Käyttäjät</h3>
+              <div class="stat-number">1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Alert Messages -->
+  <div id="alertContainer"></div>
+
+  <!-- Scripts -->
+  <script src="../products-data.js"></script>
+  <script src="admin.js"></script>
+  <script>
+    function showSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.admin-section').forEach(section => {
+        section.classList.add('hidden');
+      });
+      
+      // Remove active class from all nav buttons
+      document.querySelectorAll('.admin-nav .btn').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-secondary');
+      });
+      
+      // Show selected section
+      document.getElementById(sectionName).classList.remove('hidden');
+      
+      // Add active class to clicked button
+      event.target.classList.remove('btn-secondary');
+      event.target.classList.add('btn-primary');
+      
+      // Update stats if stats section is shown
+      if (sectionName === 'stats') {
+        updateStats();
+      }
+    }
+    
+    function updateStats() {
+      const products = loadProductsFromJSON();
+      document.getElementById('totalProducts').textContent = products.length;
+    }
+  </script>
+</body>
+</html>

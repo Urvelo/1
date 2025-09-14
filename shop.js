@@ -29,6 +29,12 @@ class ShopApp {
         this.loadUserInfo();
       }
     });
+    
+    // ✅ Kuuntele tuotemuutoksia admin-paneelista
+    window.addEventListener('productsDataChanged', (event) => {
+      console.log('🔄 Tuotedata muuttui:', event.detail);
+      this.refreshProducts();
+    });
   }
   
   // DATAN LATAUS - OPTIMOITU FREE TIER:LLE  
@@ -51,154 +57,38 @@ class ShopApp {
         }
       }
       
-      // Jos ei saatu tuotteita, käytä fallback-tuotteita
+      // Jos ei saatu tuotteita, näytä tyhjä lista
       if (this.products.length === 0) {
-        console.log('📦 Ladataan fallback-tuotteet...');
-        this.products = [
-        {
-          id: 1,
-          name: "🔌 Langaton Latausasema",
-          price: 19.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400",
-          description: "Nopea langaton lataus kaikille laitteille"
-        },
-        {
-          id: 2,
-          name: "⌚ Premium Älykello",
-          price: 89.99,
-          category: 2,
-          image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
-          description: "Täydellinen kumppani aktiiviseen elämään"
-        },
-        {
-          id: 3,
-          name: "🎧 Bluetooth Kuulokkeet Pro",
-          price: 59.99,
-          category: 3,
-          image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-          description: "Kristallinkirkas ääni ja aktiivinen melunvaimennus"
-        },
-        {
-          id: 4,
-          name: "📱 Magneetillinen Autoteline",
-          price: 12.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1551798507-629020c81463?w=400",
-          description: "Turvallinen ja kätevä puhelinteline autoon"
-        },
-        {
-          id: 5,
-          name: "💡 Älykäs LED-valaisin",
-          price: 24.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=400",
-          description: "Säädettävä värilämpötila ja kirkkaus"
-        },
-        {
-          id: 6,
-          name: "🔊 Vedenkestävä Kaiutin",
-          price: 34.99,
-          category: 3,
-          image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400",
-          description: "Täydellinen uima-altaalle ja retkille"
-        },
-        {
-          id: 7,
-          name: "📷 Mini Action-kamera",
-          price: 79.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400",
-          description: "4K videotallennus pienessä koossa"
-        },
-        {
-          id: 8,
-          name: "🔋 Powerbank 20000mAh",
-          price: 29.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400",
-          description: "Pikalataus useammalle laitteelle samanaikaisesti"
-        },
-        {
-          id: 9,
-          name: "🖥️ USB-C Telakka",
-          price: 45.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400",
-          description: "Yhdistä kaikki laitteet yhteen hub:iin"
-        },
-        {
-          id: 10,
-          name: "📚 Tabletti-teline",
-          price: 15.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
-          description: "Säädettävä teline tabletin ja puhelimen katseluun"
-        },
-        {
-          id: 11,
-          name: "🌡️ Älythermostaatti",
-          price: 129.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-          description: "WiFi-ohjattava lämmönsäätö älypuhelimelta"
-        },
-        {
-          id: 12,
-          name: "🔐 Bluetooth Lukko",
-          price: 69.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400",
-          description: "Avaa ovi älypuhelimella tai sormenjäljellä"
-        },
-        {
-          id: 13,
-          name: "🎮 Langaton Peliohain",
-          price: 39.99,
-          category: 2,
-          image: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=400",
-          description: "Ergonominen ohjain PC ja konsolipelaamiseen"
-        },
-        {
-          id: 14,
-          name: "☕ Älyketoni",
-          price: 89.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400",
-          description: "Keitä kahvi puhelimesta käsin sovelluksella"
-        },
-        {
-          id: 15,
-          name: "🚗 Autovarustepaketti",
-          price: 55.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400",
-          description: "Autoteline, latauskaapeli ja ilmanraikastin"
-        }
-      ];
+        console.log('📦 Ei tuotteita saatavilla - odottaa admin-lisäyksiä');
+        this.products = [];
       }
-      
-      // Aseta kategoriat jos ei ole asetettu
-      if (this.categories.length === 0) {
-        this.categories = [
-          { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
-          { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
-          { id: 3, name: "Audio", icon: "fas fa-headphones" },
-          { id: 4, name: "Älykodit", icon: "fas fa-home" }
-        ];
-      }
-      
+
       console.log('✅ Data ladattu:', this.products.length, 'tuotetta,', this.categories.length, 'kategoriaa');
-      
     } catch (error) {
       console.error('❌ Datan lataus epäonnistui:', error);
-      this.products = this.getDefaultProducts();
+      this.products = [];
       this.categories = [
         { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
-        { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
+        { id: 2, name: "Älylaitteet", icon: "fas fa-robot" },
         { id: 3, name: "Audio", icon: "fas fa-headphones" },
-        { id: 4, name: "Älykodit", icon: "fas fa-home" }
+        { id: 4, name: "Kodin tavarat", icon: "fas fa-home" }
       ];
+    }
+  }
+
+  // ✅ Päivitä tuotteet kun admin muuttaa dataa
+  async refreshProducts() {
+    console.log('🔄 Päivitetään tuotedata...');
+    try {
+      if (window.PRODUCTS_JSON) {
+        const jsonData = window.PRODUCTS_JSON.loadProductsFromJSON();
+        this.products = jsonData.products;
+        this.categories = jsonData.categories;
+        this.renderProducts();
+        console.log('✅ Tuotteet päivitetty! Tuotteita nyt:', this.products.length);
+      }
+    } catch (error) {
+      console.error('❌ Tuotteiden päivitys epäonnistui:', error);
     }
   }
   
@@ -247,15 +137,18 @@ class ShopApp {
     if (this.currentUser) {
       // Kirjautunut käyttäjä
       console.log('✅ Näytetään kirjautuneen käyttäjän tiedot:', this.currentUser.name);
+      console.log('🔍 isAdmin tila:', this.currentUser.isAdmin, 'tyyppi:', typeof this.currentUser.isAdmin);
       userNameElement.textContent = this.currentUser.name.split(' ')[0];
       userMenuElement.innerHTML = `
-        <a href="profile.html" class="user-menu-item">
-          <i class="fas fa-user"></i> Profiili
+        <a href="profile/index.html" class="user-menu-item">
+          <i class="fas fa-user"></i>
+          Profiili
         </a>
-        <a href="#" class="user-menu-item" onclick="showOrders()">
-          <i class="fas fa-box"></i> Tilaukset
+        <a href="profile/index.html" class="user-menu-item">
+          <i class="fas fa-history"></i>
+          Tilaushistoria
         </a>
-        ${this.currentUser.isAdmin ? '<a href="admin.html" class="user-menu-item"><i class="fas fa-cog"></i> Hallinta</a>' : ''}
+        ${this.currentUser.isAdmin ? '<a href="admin/index.html" class="user-menu-item"><i class="fas fa-cog"></i> Hallinta</a>' : ''}
         <a href="#" class="user-menu-item" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> Kirjaudu ulos
         </a>
@@ -265,14 +158,11 @@ class ShopApp {
       console.log('ℹ️ Näytetään kirjautumattoman käyttäjän valikko');
       userNameElement.textContent = 'Kirjaudu';
       userMenuElement.innerHTML = `
-        <a href="login.html" class="user-menu-item">
+        <a href="login/" class="user-menu-item">
           <i class="fas fa-sign-in-alt"></i> Kirjaudu sisään
         </a>
-        <a href="login.html" class="user-menu-item">
+        <a href="login/" class="user-menu-item">
           <i class="fas fa-user-plus"></i> Rekisteröidy
-        </a>
-        <a href="#" class="user-menu-item" onclick="enableDemoAdmin()" style="color: #ff6b6b;">
-          <i class="fas fa-tools"></i> 🛠️ Demo Admin
         </a>
       `;
     }
@@ -351,7 +241,7 @@ class ShopApp {
     sessionStorage.setItem('viewingProductId', productId);
     
     // Siirry tuotesivulle
-    window.location.href = `product.html?id=${productId}`;
+    window.location.href = `products/?id=${productId}`;
   }
   
   // OSTOSKORIN HALLINTA
@@ -467,7 +357,7 @@ class ShopApp {
     
     // Siirrytään kassasivulle
     console.log('� Siirrytään kassalle, ostoskorissa', this.cart.length, 'tuotetta');
-    window.location.href = 'checkout.html';
+    window.location.href = 'checkout/';
   }
 
   showCheckoutModal() {
@@ -589,9 +479,9 @@ class ShopApp {
 
 // GLOBAALIT FUNKTIOT
 function handleUserClick() {
-  if (!shopApp.currentUser) {
+  if (!window.shopApp?.currentUser) {
     // Jos ei ole kirjautunut, vie login-sivulle
-    window.location.href = 'login.html';
+    window.location.href = 'login/';
   } else {
     // Jos on kirjautunut, näytä valikko
     toggleUserMenu();
@@ -685,7 +575,7 @@ function logout() {
 async function showOrders() {
   if (!shopApp.currentUser) {
     alert('Kirjaudu sisään nähdäksesi tilaukset!');
-    window.location.href = 'login.html';
+    window.location.href = 'login/';
     return;
   }
   
@@ -775,7 +665,7 @@ async function processTestPayment(orderId) {
     shopApp.updateCartUI();
     
     // Ohjaa tilausten näkymään
-    window.location.href = 'profile.html';
+    window.location.href = 'profile/';
     
   } catch (error) {
     console.error('❌ Testmaksun käsittely epäonnistui:', error);

@@ -1,111 +1,8 @@
-// 🛒 Tuotteet - Client-side JSON (ei Firestore:a!)
-// Tämä säästää Firestore-tilaa ja nopeuttaa sivua
+// 🛒 Tuotteet - Keskitetty tuotehallinta
+// Kaikki tuotteet hallitaan admin-paneelista, ei esimerkkituotteita
 
 const PRODUCTS_DATA = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro Max",
-    price: 1199.00,
-    originalPrice: 1399.00,
-    image: "https://images.unsplash.com/photo-1592286130927-570ecd1ded68?w=400",
-    category: 1,
-    description: "Uusin iPhone huippuominaisuuksilla. A17 Pro -siru, titaanikuori ja ProRAW-kuvaus.",
-    features: ["A17 Pro siru", "Titanium design", "ProRAW kuvaus", "5G connectivity"],
-    stock: 25,
-    rating: 4.8,
-    reviews: 1247
-  },
-  {
-    id: 2,
-    name: "MacBook Air M3",
-    price: 1299.00,
-    originalPrice: 1499.00,
-    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400",
-    category: 1,
-    description: "Kevyt ja tehokas MacBook Air M3-sirulla. Täydellinen työntekoon ja luovuuteen.",
-    features: ["M3 chip", "18h akunkesto", "Liquid Retina display", "MagSafe lataus"],
-    stock: 12,
-    rating: 4.9,
-    reviews: 856
-  },
-  {
-    id: 3,
-    name: "AirPods Pro 3rd Gen",
-    price: 279.00,
-    originalPrice: 329.00,
-    image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400",
-    category: 3,
-    description: "Aktiivinen melunpoisto ja spatiaalinen ääni. USB-C latauskotelolla.",
-    features: ["Active Noise Cancellation", "Spatial Audio", "USB-C kotelo", "6h kuuntelua"],
-    stock: 45,
-    rating: 4.7,
-    reviews: 2103
-  },
-  {
-    id: 4,
-    name: "iPad Pro 12.9\" M3",
-    price: 1099.00,
-    originalPrice: 1299.00,
-    image: "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=400",
-    category: 1,
-    description: "Ammattilais-tabletti M3-sirulla. Liquid Retina XDR näyttö ja Apple Pencil -tuki.",
-    features: ["M3 chip", "Liquid Retina XDR", "Apple Pencil support", "5G cellular"],
-    stock: 8,
-    rating: 4.8,
-    reviews: 432
-  },
-  {
-    id: 5,
-    name: "Apple Watch Series 9",
-    price: 429.00,
-    originalPrice: 499.00,
-    image: "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=400",
-    category: 2,
-    description: "Älykello S9-sirulla. Terveysseuranta, fitness ja älypuhelimen toiminnot.",
-    features: ["S9 SiP", "Always-On Retina", "EKG & SpO2", "Crash Detection"],
-    stock: 67,
-    rating: 4.6,
-    reviews: 1893
-  },
-  {
-    id: 6,
-    name: "HomePod mini",
-    price: 99.00,
-    originalPrice: 129.00,
-    image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400",
-    category: 2,
-    description: "Kompakti älykaiutin. Siri-tuki ja HomeKit-integraatio.",
-    features: ["360° ääni", "Siri built-in", "HomeKit hub", "Touch controls"],
-    stock: 34,
-    rating: 4.4,
-    reviews: 567
-  },
-  {
-    id: 7,
-    name: "Magic Keyboard",
-    price: 179.00,
-    originalPrice: 199.00,
-    image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400",
-    category: 1,
-    description: "Langaton näppäimistö Touch ID:llä. Yhteensopiva Mac ja iPad kanssa.",
-    features: ["Touch ID", "Backlit keys", "USB-C lataus", "Multi-device"],
-    stock: 23,
-    rating: 4.5,
-    reviews: 789
-  },
-  {
-    id: 8,
-    name: "AirTag 4-pack",
-    price: 99.00,
-    originalPrice: 119.00,
-    image: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400",
-    category: 2,
-    description: "Bluetooth-seurantalaitteet. Löydä kadonneet esineet Find My -verkosta.",
-    features: ["Precision Finding", "Privacy built-in", "Water resistant", "1 year battery"],
-    stock: 78,
-    rating: 4.3,
-    reviews: 1245
-  }
+  // Tuotteet lisätään admin-paneelista dynaamisesti
 ];
 
 const CATEGORIES_DATA = [
@@ -118,12 +15,55 @@ const CATEGORIES_DATA = [
 // 🎯 Optimoitu latausfunktio - ei API-kutsuja!
 function loadProductsFromJSON() {
   console.log('📦 Ladataan tuotteet client-side JSON:sta (ei Firestore kulutusta)');
+  
+  // Check if admin has added/modified products
+  let products = [...PRODUCTS_DATA];
+  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
+  
+  if (adminProducts.length > 0) {
+    console.log('🔄 Löydettiin admin-tuotteita:', adminProducts.length);
+    
+    // Convert admin products to the format expected by the main site
+    const convertedAdminProducts = adminProducts.map(adminProduct => ({
+      id: adminProduct.id,
+      name: adminProduct.name,
+      price: adminProduct.price,
+      originalPrice: adminProduct.price * 1.2, // Add 20% as original price for discount display
+      image: adminProduct.image || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+      category: getCategoryIdByName(adminProduct.category),
+      description: adminProduct.description || 'Lisätty admin-paneelista',
+      features: ['Admin-tuote'],
+      stock: adminProduct.stock || 0,
+      rating: 4.5,
+      reviews: 12,
+      featured: adminProduct.featured || false
+    }));
+    
+    // Replace existing products with admin versions or add new ones
+    const adminProductIds = adminProducts.map(p => p.id);
+    products = products.filter(p => !adminProductIds.includes(p.id));
+    products = [...products, ...convertedAdminProducts];
+    
+    console.log('✅ Synkattu admin-tuotteet pääsivulle:', products.length, 'tuotetta yhteensä');
+  }
+  
   return {
-    products: PRODUCTS_DATA,
+    products: products,
     categories: CATEGORIES_DATA,
-    source: 'client-json',
+    source: 'client-json-with-admin',
     timestamp: new Date().toISOString()
   };
+}
+
+// Helper function to convert category name to ID
+function getCategoryIdByName(categoryName) {
+  const categoryMap = {
+    'Elektroniikka': 1,
+    'Älylaitteet': 2, 
+    'Audio': 3,
+    'Älykodit': 4
+  };
+  return categoryMap[categoryName] || 1;
 }
 
 // 🔍 Hakutoiminnot (client-side, nopea)
@@ -179,8 +119,115 @@ function getSaleProducts(limit = 4) {
     .slice(0, limit);
 }
 
-// 🔄 Backward compatibility ShopApp:lle
+// 🛠️ ADMIN CRUD FUNKTIOT - KESKITETTY TUOTEHALLINTA
+function addProduct(productData) {
+  const newProduct = {
+    id: Date.now(),
+    name: productData.name,
+    price: parseFloat(productData.price),
+    originalPrice: parseFloat(productData.price) * 1.2,
+    image: productData.image || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+    category: getCategoryIdByName(productData.category),
+    description: productData.description || '',
+    features: productData.features || ['Admin-tuote'],
+    stock: parseInt(productData.stock) || 0,
+    rating: 4.5,
+    reviews: 12,
+    featured: productData.featured || false
+  };
+  
+  PRODUCTS_DATA.push(newProduct);
+  
+  // Tallenna myös localStorage:iin että etusivu näkee
+  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
+  adminProducts.push(newProduct);
+  localStorage.setItem('admin_products', JSON.stringify(adminProducts));
+  
+  console.log('✅ Tuote lisätty:', newProduct.name);
+  console.log('💾 Tallennettu localStorage:iin');
+  notifyDataChange();
+  return newProduct;
+}
+
+function updateProduct(id, productData) {
+  const index = PRODUCTS_DATA.findIndex(p => p.id == id);
+  if (index === -1) return null;
+  
+  const updatedProduct = {
+    ...PRODUCTS_DATA[index],
+    name: productData.name,
+    price: parseFloat(productData.price),
+    originalPrice: parseFloat(productData.price) * 1.2,
+    image: productData.image,
+    category: getCategoryIdByName(productData.category),
+    description: productData.description,
+    stock: parseInt(productData.stock) || 0,
+    featured: productData.featured || false
+  };
+  
+  PRODUCTS_DATA[index] = updatedProduct;
+  
+  // Päivitä myös localStorage
+  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
+  const adminIndex = adminProducts.findIndex(p => p.id == id);
+  if (adminIndex !== -1) {
+    adminProducts[adminIndex] = updatedProduct;
+    localStorage.setItem('admin_products', JSON.stringify(adminProducts));
+  }
+  
+  console.log('✅ Tuote päivitetty:', updatedProduct.name);
+  console.log('💾 Päivitetty localStorage:iin');
+  notifyDataChange();
+  return updatedProduct;
+}
+
+function deleteProduct(id) {
+  const index = PRODUCTS_DATA.findIndex(p => p.id == id);
+  if (index === -1) return false;
+  
+  const deletedProduct = PRODUCTS_DATA[index];
+  PRODUCTS_DATA.splice(index, 1);
+  
+  // Poista myös localStorage:sta
+  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
+  const adminIndex = adminProducts.findIndex(p => p.id == id);
+  if (adminIndex !== -1) {
+    adminProducts.splice(adminIndex, 1);
+    localStorage.setItem('admin_products', JSON.stringify(adminProducts));
+  }
+  
+  console.log('✅ Tuote poistettu:', deletedProduct.name);
+  console.log('💾 Poistettu localStorage:sta');
+  notifyDataChange();
+  return true;
+}
+
+function getCategoryIdByName(categoryName) {
+  const categoryMap = {
+    'Elektroniikka': 1,
+    'Älylaitteet': 2, 
+    'Audio': 3,
+    'Älykodit': 4
+  };
+  return categoryMap[categoryName] || 1;
+}
+
+// 📢 Ilmoita muutoksista muille komponenteille
+function notifyDataChange() {
+  // Päivitä etusivu jos se on auki
+  if (window.shopApp && typeof window.shopApp.renderProducts === 'function') {
+    window.shopApp.renderProducts();
+  }
+  
+  // Lähetä custom event
+  window.dispatchEvent(new CustomEvent('productsUpdated', {
+    detail: { products: PRODUCTS_DATA, timestamp: new Date() }
+  }));
+}
+
+// 🔄 Backward compatibility ShopApp:lle + ADMIN CRUD
 window.PRODUCTS_JSON = {
+  // Haku ja näyttö
   loadProductsFromJSON,
   searchProducts,
   getProductById,
@@ -188,8 +235,103 @@ window.PRODUCTS_JSON = {
   getCategoryById,
   getPopularProducts,
   getSaleProducts,
+  
+  // Admin CRUD funktiot
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  getCategoryIdByName,
+  notifyDataChange,
+  
+  // Data
   PRODUCTS_DATA,
-  CATEGORIES_DATA
+  CATEGORIES_DATA,
+  
+  // Getterit live-datalle
+  get products() { return PRODUCTS_DATA; },
+  get categories() { return CATEGORIES_DATA; }
 };
+
+// 🌍 AliExpress tuotteiden haku backend-palvelun kautta
+async function fetchFromAliExpress(productId) {
+  try {
+    console.log(`🔄 Haetaan AliExpress tuote: ${productId}`);
+    
+    const response = await fetch(`http://localhost:3001/api/product/${productId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const productData = await response.json();
+    
+    // Lisää tuote keskitettyyn järjestelmään
+    const addedProduct = addProduct(productData);
+    
+    console.log(`✅ AliExpress tuote lisätty:`, addedProduct.name);
+    return addedProduct;
+    
+  } catch (error) {
+    console.error('❌ AliExpress haku epäonnistui:', error.message);
+    throw error;
+  }
+}
+
+// 🛒 Lisää useita AliExpress tuotteita kerralla
+async function fetchMultipleFromAliExpress(productIds) {
+  try {
+    console.log(`🔄 Haetaan ${productIds.length} tuotetta AliExpressistä...`);
+    
+    const response = await fetch('http://localhost:3001/api/products/batch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productIds })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const { results, errors } = await response.json();
+    
+    // Lisää onnistuneet tuotteet keskitettyyn järjestelmään
+    const addedProducts = [];
+    for (const productData of results) {
+      try {
+        const addedProduct = addProduct(productData);
+        addedProducts.push(addedProduct);
+      } catch (error) {
+        console.warn(`⚠️ Tuotteen lisäys epäonnistui:`, error.message);
+      }
+    }
+    
+    console.log(`✅ Lisätty ${addedProducts.length}/${productIds.length} tuotetta`);
+    
+    if (errors.length > 0) {
+      console.warn(`⚠️ Virheitä: ${errors.length}`, errors);
+    }
+    
+    return { addedProducts, errors };
+    
+  } catch (error) {
+    console.error('❌ Batch haku epäonnistui:', error.message);
+    throw error;
+  }
+}
+
+// 📊 Tarkista backend yhteys
+async function checkBackendConnection() {
+  try {
+    const response = await fetch('http://localhost:3001/api/status');
+    const status = await response.json();
+    console.log('🔗 Backend status:', status);
+    return status;
+  } catch (error) {
+    console.error('❌ Backend ei vastaa:', error.message);
+    return null;
+  }
+}
 
 console.log('✅ Tuote-JSON ladattu:', PRODUCTS_DATA.length, 'tuotetta,', CATEGORIES_DATA.length, 'kategoriaa');

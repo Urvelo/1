@@ -9,7 +9,11 @@
     :root {
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
-      --success: #059669;
+           <a href="../" class="logo">
+        <i class="fas fa-shopping-bag"></i>
+        Löytökauppa
+      </a>
+      <a href="../" class="back-link">ccess: #059669;
       --warning: #d97706;
       --danger: #dc2626;
       --dark: #1f2937;
@@ -367,11 +371,11 @@
   <!-- HEADER -->
   <header class="header">
     <div class="header-content">
-      <a href="index.html" class="logo">
+      <a href="../" class="logo">
         <i class="fas fa-store"></i>
         Löytökauppa
       </a>
-      <a href="index.html" class="back-link">
+      <a href="../" class="back-link">
         <i class="fas fa-arrow-left"></i>
         Takaisin ostoksiin
       </a>
@@ -388,6 +392,7 @@
   </div>
 
   <!-- PayPal SDK -->
+  <script src="paypal-auto-setup.js"></script>
   <script src="paypal-config-secure.js"></script>
   <script type="module">
     // PayPal SDK ladataan dynaamisesti konfiguraatiosta
@@ -406,7 +411,7 @@
           console.warn('⚠️ PayPal config puuttuu, käytetään fallback-konfiguraatiota');
           // Fallback config
           window.paypalConfig = {
-            clientId: 'AfB87g-R1Y6r8j0IhP7Rk8NWNSIlwvjhJoFeO1_n3U0JZm-_s4FjDMxz8qG5ElIqEiAInOJo7kX0XqOq',
+            clientId: 'AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R',
             currency: 'EUR',
             environment: 'sandbox'
           };
@@ -420,26 +425,33 @@
         });
         
         const script = document.createElement('script');
-        script.src = `https://www.paypal.com/sdk/js?client-id=${window.paypalConfig.clientId}&currency=${window.paypalConfig.currency}`;
+        script.src = `https://www.paypal.com/sdk/js?client-id=${window.paypalConfig.clientId}&currency=${window.paypalConfig.currency}&intent=capture`;
+        script.async = true;
+        script.defer = true;
         
         script.onload = () => {
           console.log('✅ PayPal SDK script ladattu kassasivulle');
+          console.log('🔍 Script src:', script.src);
           
           // Odota hetki että PayPal objekti on varmasti saatavilla
           setTimeout(() => {
-            if (window.paypal) {
-              console.log('✅ PayPal objekti on käytettävissä');
+            if (window.paypal && window.paypal.Buttons) {
+              console.log('✅ PayPal objekti ja Buttons ovat käytettävissä');
+              console.log('🔍 PayPal version:', window.paypal.version || 'unknown');
               window.paypalSDKLoaded = true;
             } else {
-              console.error('❌ PayPal objekti ei ole käytettävissä vaikka script latautui');
-              console.error('🔍 window.paypal:', window.paypal);
+              console.error('❌ PayPal objekti ei ole täysin käytettävissä');
+              console.error('🔍 window.paypal:', !!window.paypal);
+              console.error('🔍 window.paypal.Buttons:', !!(window.paypal && window.paypal.Buttons));
               window.paypalSDKLoaded = false;
             }
-          }, 500); // Odota 500ms
+          }, 1000); // Odota 1000ms
         };
         
         script.onerror = (error) => {
           console.error('❌ PayPal SDK lataus epäonnistui:', error);
+          console.error('🔍 Script src:', script.src);
+          console.error('🔍 Possible issue: Invalid Client ID or network error');
           window.paypalSDKLoaded = false;
         };
         
@@ -485,7 +497,7 @@
           <i class="fas fa-shopping-cart"></i>
           <h3>Ostoskorisi on tyhjä</h3>
           <p>Lisää tuotteita ostoskoriin ennen kassalle siirtymistä.</p>
-          <a href="index.html" class="btn btn-primary">
+          <a href="../" class="btn btn-primary">
             <i class="fas fa-shopping-bag"></i>
             Jatka ostoksia
           </a>
@@ -858,7 +870,7 @@
             </div>
           </div>
           <div style="margin-top: 2rem;">
-            <a href="index.html" class="btn btn-primary">
+            <a href="../" class="btn btn-primary">
               <i class="fas fa-home"></i>
               Takaisin etusivulle
             </a>
