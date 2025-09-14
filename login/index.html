@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirjaudu sisään - Löytökauppa</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <a href="../" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Takaisin kauppaan
+      </a>
+      
+      <div class="auth-header">
+        <div class="auth-logo">🛍️ Löytökauppa</div>
+        <p class="auth-subtitle">Kirjaudu sisään tai luo uusi tili</p>
+      </div>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Kirjaudu</button>
+        <button class="auth-tab" onclick="switchTab('register')">Rekisteröidy</button>
+      </div>
+
+      <div class="auth-form active" id="loginTab">
+        <div class="text-center mb-lg">
+          <h3 class="text-primary mb-sm">🔍 Tervetuloa takaisin!</h3>
+          <p class="text-muted">Kirjaudu sisään tehdäksesi ostoksia</p>
+        </div>
+        
+        <form id="loginForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="loginEmail">Sähköposti</label>
+            <input type="email" id="loginEmail" class="form-input" placeholder="anna@esimerkki.fi">
+          </div>
+          
+          <div class="form-group">
+            <label for="loginPassword">Salasana</label>
+            <input type="password" id="loginPassword" class="form-input" placeholder="Salasana">
+          </div>
+          
+          <button type="submit" id="emailSignInBtn" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt"></i>
+            Kirjaudu sisään
+          </button>
+        </form>
+        
+        <div class="text-center mt-md">
+          <p class="text-muted text-sm">
+            💡 Demo: demo@loytokauppa.fi / demo123
+          </p>
+        </div>
+      </div>
+
+      <div class="auth-form" id="registerTab">
+        <div class="text-center mb-lg">
+          <h3 class="text-primary mb-sm">🎉 Luo uusi tili</h3>
+          <p class="text-muted">Liity yhteisöömme ja aloita ostokset</p>
+        </div>
+        
+        <form id="registerForm" onsubmit="return false;">
+          <div class="form-group">
+            <label for="registerName">Nimi</label>
+            <input type="text" id="registerName" class="form-input" placeholder="Koko nimesi">
+          </div>
+          
+          <div class="form-group">
+            <label for="registerEmail">Sähköposti</label>
+            <input type="email" id="registerEmail" class="form-input" placeholder="anna@esimerkki.fi">
+          </div>
+          
+          <div class="form-group">
+            <label for="registerPassword">Salasana</label>
+            <input type="password" id="registerPassword" class="form-input" placeholder="Vähintään 6 merkkiä">
+          </div>
+          
+          <div class="form-group">
+            <label for="registerConfirmPassword">Vahvista salasana</label>
+            <input type="password" id="registerConfirmPassword" class="form-input" placeholder="Toista salasana">
+          </div>
+          
+          <button type="submit" id="emailRegisterBtn" class="btn btn-success">
+            <i class="fas fa-user-plus"></i>
+            Rekisteröidy
+          </button>
+        </form>
+      </div>
+
+      <div class="text-center mt-xl">
+        <a href="../index.html" class="text-muted">
+          <i class="fas fa-arrow-left"></i>
+          Takaisin etusivulle
+        </a>
+      </div>
+      
+      <div class="text-center mt-md">
+        <p class="text-muted text-sm">
+          💡 Admin: admin@loytokauppa.fi / admin123
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusMessage" class="status-message"></div>
+
+  <script src="login.js"></script>
+  <script>
+    function switchTab(tabName) {
+      document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabName + 'Tab').classList.add('active');
+    }
+  </script>
+</body>
+</html>

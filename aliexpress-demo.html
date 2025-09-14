@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 AliExpress + Keskitetty Data Demo</title>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; line-height: 1.6; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; padding: 40px 0; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 15px; margin-bottom: 30px; }
+        .demo-section { background: #1a1a1a; padding: 25px; margin: 20px 0; border-radius: 10px; border-left: 4px solid #f59e0b; }
+        .demo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin: 30px 0; }
+        .demo-card { background: #2a2a2a; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .btn { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px 5px; text-decoration: none; display: inline-block; }
+        .btn:hover { background: #1d4ed8; }
+        .btn.orange { background: #f59e0b; }
+        .btn.green { background: #10b981; }
+        .btn.purple { background: #8b5cf6; }
+        .status { background: #374151; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .code-block { background: #0a0a0a; padding: 15px; border-radius: 8px; margin: 15px 0; font-family: 'Courier New', monospace; border-left: 3px solid #10b981; }
+        .flow-diagram { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 20px 0; }
+        .flow-step { background: #374151; padding: 15px; border-radius: 10px; text-align: center; flex: 1; margin: 0 10px; min-width: 150px; }
+        .flow-arrow { font-size: 24px; color: #f59e0b; }
+        .feature-list { list-style: none; padding: 0; }
+        .feature-list li { padding: 8px 0; border-bottom: 1px solid #333; }
+        .feature-list li:before { content: '✅ '; color: #10b981; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 AliExpress + Keskitetty Tuotedata</h1>
+            <p>RapidAPI → Node.js Backend → Keskitetty hallinta → Etusivu</p>
+            <p style="font-size: 14px; opacity: 0.8;">Täysin integroitu järjestelmä turvalliseen tuotteiden hakuun ja hallintaan</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Järjestelmän Arkkitehtuuri</h2>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <h4>🌐 AliExpress</h4>
+                    <p>RapidAPI</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>🛡️ Node.js Backend</h4>
+                    <p>Port 3001</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>📦 Keskitetty Data</h4>
+                    <p>products-data.js</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>👑 Admin Panel</h4>
+                    <p>Port 8080/admin</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">
+                    <h4>🏪 Etusivu</h4>
+                    <p>Port 8080</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-grid">
+            <div class="demo-card">
+                <h3>🔐 Turvallisuus</h3>
+                <ul class="feature-list">
+                    <li>RapidAPI avain backend:ssa (piilossa)</li>
+                    <li>CORS suojaus</li>
+                    <li>Rate limiting (10 req/min)</li>
+                    <li>Input validointi</li>
+                    <li>Error handling</li>
+                </ul>
+            </div>
+
+            <div class="demo-card">
+                <h3>⚡ Optimointi</h3>
+                <ul class="feature-list">
+                    <li>5 minuutin cache</li>
+                    <li>Batch haku (max 5 tuotetta)</li>
+                    <li>Automaattinen cleanup</li>
+                    <li>Keskitetty data hallinta</li>
+                    <li>Reaaliaikainen sync</li>
+                </ul>
+            </div>
+
+            <div class="demo-card">
+                <h3>🎯 Ominaisuudet</h3>
+                <ul class="feature-list">
+                    <li>URL/ID parsing</li>
+                    <li>Kategoria mapping</li>
+                    <li>Feature extraction</li>
+                    <li>Hinta konvertointi</li>
+                    <li>Auto-lisäys admin:iin</li>
+                </ul>
+            </div>
+
+            <div class="demo-card">
+                <h3>🔄 Data Flow</h3>
+                <ul class="feature-list">
+                    <li>AliExpress → Backend API</li>
+                    <li>Backend → products-data.js</li>
+                    <li>Admin lisäää → Event trigger</li>
+                    <li>Etusivu päivittyy automaattisesti</li>
+                    <li>Ei duplikaatteja!</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🧪 Testaa Järjestelmä</h2>
+            <div style="text-align: center;">
+                <a href="http://localhost:3001/api/status" target="_blank" class="btn green">📊 Backend Status</a>
+                <a href="http://localhost:8080/admin/" target="_blank" class="btn orange">👑 Admin Panel</a>
+                <a href="http://localhost:8080/" target="_blank" class="btn purple">🏪 Etusivu</a>
+                <a href="http://localhost:8080/test-centralized-data.html" target="_blank" class="btn">🧪 Data Testi</a>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📝 Käyttöohje</h2>
+            
+            <h3>1. 🔍 Hae AliExpress tuote</h3>
+            <div class="code-block">
+                Admin Panel → AliExpress Tuotehaku → Anna ID tai URL:
+                <br>• 1005004123456789 (pelkkä ID)
+                <br>• https://www.aliexpress.com/item/1005004123456789.html (koko URL)
+                <br>• Paina "🔍 Hae AliExpressistä"
+            </div>
+
+            <h3>2. 🛒 Batch-haku</h3>
+            <div class="code-block">
+                Batch-haku osiossa → Anna useita ID:itä:
+                <br>1005004123456789, 1005004987654321, 1005004555666777
+                <br>• Max 5 tuotetta kerralla
+                <br>• Paina "🛒 Hae useita tuotteita"
+            </div>
+
+            <h3>3. ✅ Automaattinen integraatio</h3>
+            <div class="code-block">
+                • Tuote haetaan AliExpressistä
+                <br>• Konvertoidaan keskitettyyn muotoon
+                <br>• Lisätään products-data.js:ään
+                <br>• Näkyy heti admin-listassa
+                <br>• Päivittyy automaattisesti etusivulle
+            </div>
+        </div>
+
+        <div id="status" class="status">
+            <h3>🔄 Järjestelmän Status</h3>
+            <div id="statusContent">Ladataan...</div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🏆 Lopputulos</h2>
+            <p><strong>🎯 Täydellinen integraatio:</strong></p>
+            <ul class="feature-list">
+                <li>RapidAPI turvassa backend:ssa</li>
+                <li>Kaikki tuotteet yhdessä paikassa</li>
+                <li>Automaattinen AliExpress haku</li>
+                <li>Reaaliaikainen päivitys</li>
+                <li>Ei duplikaatteja tai hajautettua dataa</li>
+                <li>Skaalautuva ja turvallinen</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="products-data.js"></script>
+    <script>
+        async function checkSystemStatus() {
+            const statusContent = document.getElementById('statusContent');
+            let status = '';
+
+            // Backend status
+            try {
+                const backendResponse = await fetch('http://localhost:3001/api/status');
+                const backendData = await backendResponse.json();
+                status += `✅ <strong>Backend:</strong> OK (Cache: ${backendData.cache_size} tuotetta)<br>`;
+            } catch (error) {
+                status += `❌ <strong>Backend:</strong> Ei yhteyttä (${error.message})<br>`;
+            }
+
+            // Frontend status
+            try {
+                const frontendResponse = await fetch('http://localhost:8080/');
+                if (frontendResponse.ok) {
+                    status += `✅ <strong>Frontend:</strong> OK (Port 8080)<br>`;
+                } else {
+                    status += `⚠️ <strong>Frontend:</strong> Vastaa mutta ${frontendResponse.status}<br>`;
+                }
+            } catch (error) {
+                status += `❌ <strong>Frontend:</strong> Ei yhteyttä<br>`;
+            }
+
+            // Data status
+            if (window.PRODUCTS_JSON) {
+                const data = window.PRODUCTS_JSON.loadProductsFromJSON();
+                status += `✅ <strong>Data:</strong> Ladattu (${data.products.length} tuotetta, ${data.categories.length} kategoriaa)<br>`;
+            } else {
+                status += `❌ <strong>Data:</strong> Ei ladattu<br>`;
+            }
+
+            status += `<br>🕒 <strong>Tarkistettu:</strong> ${new Date().toLocaleTimeString()}`;
+            statusContent.innerHTML = status;
+        }
+
+        // Tarkista status sivun latautuessa
+        document.addEventListener('DOMContentLoaded', checkSystemStatus);
+
+        // Päivitä status 30 sekunnin välein
+        setInterval(checkSystemStatus, 30000);
+    </script>
+</body>
+</html>

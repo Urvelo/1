@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kaikki tuotteet - Löytökauppa</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <nav class="navbar">
+      <a href="../" class="logo">🛍️ Löytökauppa</a>
+      <div class="nav-links">
+        <a href="../" class="nav-link">
+          <i class="fas fa-home"></i>
+          Etusivu
+        </a>
+        <a href="all.html" class="nav-link active">
+          <i class="fas fa-th-large"></i>
+          Kaikki tuotteet
+        </a>
+        <div class="cart-icon" onclick="toggleCart()">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </div>
+        <div class="hamburger" onclick="toggleMobileMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="container">
+      <div class="page-header">
+        <h1>Kaikki tuotteet</h1>
+        <p class="text-muted">Löydä juuri sinulle sopiva tuote laajasta valikoimastamme</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-section mb-xl">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label for="categoryFilter">Kategoria:</label>
+            <select id="categoryFilter" class="form-select">
+              <option value="all">Kaikki kategoriat</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="searchInput">Haku:</label>
+            <input type="text" id="searchInput" class="form-input" placeholder="Hae tuotteita...">
+          </div>
+          <div class="filter-group">
+            <label for="sortSelect">Järjestys:</label>
+            <select id="sortSelect" class="form-select">
+              <option value="name">Nimi A-Z</option>
+              <option value="price-low">Hinta: Halvin ensin</option>
+              <option value="price-high">Hinta: Kallein ensin</option>
+              <option value="newest">Uusimmat ensin</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="allProductsGrid">
+        <!-- Products will be loaded here -->
+      </div>
+
+      <!-- Loading state -->
+      <div id="loadingProducts" class="text-center py-2xl">
+        <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+        <p class="text-muted mt-lg">Ladataan tuotteita...</p>
+      </div>
+
+      <!-- No products message -->
+      <div id="noProductsFound" class="text-center py-2xl" style="display: none;">
+        <i class="fas fa-search fa-2x text-muted"></i>
+        <h3 class="mt-lg">Ei tuotteita</h3>
+        <p class="text-muted">Valitettavasti hakuehdoilla ei löytynyt yhtään tuotetta.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Shopping Cart Sidebar -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>🛒 Ostoskori</h3>
+      <button class="close-cart" onclick="closeCart()">&times;</button>
+    </div>
+    <div class="cart-content" id="cartContent">
+      <!-- Cart items will appear here -->
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total" id="cartTotal">Yhteensä: 0.00 €</div>
+      <button class="btn btn-primary btn-block" onclick="goToCheckout()" id="checkoutBtn" style="display: none;">
+        Siirry kassalle
+      </button>
+      <div class="empty-cart-message" id="emptyCartMessage">
+        Ostoskorisi on tyhjä
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../products-data.js"></script>
+  <script src="../shop.js"></script>
+  <script>
+    let allProducts = [];
+    let filteredProducts = [];
+    let categories = [];
+    let cart = JSON.parse(localStorage.getItem('shopping_cart')) || [];
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('🚀 All Products page loading...');
+      await loadProducts();
+      setupFilters();
+      updateCartUI();
+    });
+
+    async function loadProducts() {
+      try {
+        const loadingEl = document.getElementById('loadingProducts');
+        const gridEl = document.getElementById('allProductsGrid');
+        
+        loadingEl.style.display = 'block';
+        gridEl.style.display = 'none';
+
+        // Load products from JSON using the same system as the main shop
+        if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+          const data = await window.PRODUCTS_JSON.loadProductsFromJSON();
+          allProducts = data.products || [];
+          categories = data.categories || [];
+          console.log('📦 Loaded', allProducts.length, 'products and', categories.length, 'categories');
+        } else {
+          console.error('❌ Products data not available');
+          allProducts = [];
+          categories = [];
+        }
+
+        // Populate category filter
+        const categoryFilter = document.getElementById('categoryFilter');
+        categoryFilter.innerHTML = '<option value="all">Kaikki kategoriat</option>';
+        categories.forEach(cat => {
+          categoryFilter.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+        });
+
+        filteredProducts = [...allProducts];
+        displayProducts();
+
+        loadingEl.style.display = 'none';
+        gridEl.style.display = 'grid';
+
+      } catch (error) {
+        console.error('❌ Error loading products:', error);
+        document.getElementById('loadingProducts').innerHTML = 
+          '<p class="text-danger">Virhe tuotteiden latauksessa</p>';
+      }
+    }
+
+    function setupFilters() {
+      const categoryFilter = document.getElementById('categoryFilter');
+      const searchInput = document.getElementById('searchInput');
+      const sortSelect = document.getElementById('sortSelect');
+
+      categoryFilter.addEventListener('change', filterProducts);
+      searchInput.addEventListener('input', filterProducts);
+      sortSelect.addEventListener('change', filterProducts);
+    }
+
+    function filterProducts() {
+      const categoryFilter = document.getElementById('categoryFilter').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const sortBy = document.getElementById('sortSelect').value;
+
+      // Filter by category
+      filteredProducts = allProducts.filter(product => {
+        if (categoryFilter !== 'all' && product.category != categoryFilter) {
+          return false;
+        }
+        return true;
+      });
+
+      // Filter by search term
+      if (searchTerm) {
+        filteredProducts = filteredProducts.filter(product => {
+          return product.name.toLowerCase().includes(searchTerm) ||
+                 product.description.toLowerCase().includes(searchTerm);
+        });
+      }
+
+      // Sort products
+      switch (sortBy) {
+        case 'name':
+          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'price-low':
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case 'price-high':
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+        case 'newest':
+          filteredProducts.sort((a, b) => b.id - a.id);
+          break;
+      }
+
+      displayProducts();
+    }
+
+    function displayProducts() {
+      const gridEl = document.getElementById('allProductsGrid');
+      const noProductsEl = document.getElementById('noProductsFound');
+
+      if (filteredProducts.length === 0) {
+        gridEl.style.display = 'none';
+        noProductsEl.style.display = 'block';
+        return;
+      }
+
+      noProductsEl.style.display = 'none';
+      gridEl.style.display = 'grid';
+
+      // Use the same product card structure as the main shop
+      gridEl.innerHTML = filteredProducts.map(product => {
+        const categoryName = categories.find(cat => cat.id == product.category)?.name || 'Tuntematon';
+        const isNew = Date.now() - (product.created ? new Date(product.created).getTime() : 0) < 7 * 24 * 60 * 60 * 1000;
+        
+        return `
+          <div class="product-card" onclick="openProduct(${product.id})" style="cursor: pointer;">
+            <div class="product-image-container">
+              <img src="${product.image}" alt="${product.name}" class="product-image" loading="lazy">
+              ${isNew ? '<div class="product-badge">Uusi!</div>' : ''}
+              ${product.featured ? '<div class="featured-badge">⭐ Suosittu</div>' : ''}
+            </div>
+            <div class="product-content">
+              <h3 class="product-title">${product.name}</h3>
+              <p class="product-category">${categoryName}</p>
+              <p class="product-description">${product.description.length > 100 ? product.description.substring(0, 100) + '...' : product.description}</p>
+              <div class="product-footer">
+                <div class="product-price">${product.price.toFixed(2)} €</div>
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); addToCart(${product.id})">
+                  <i class="fas fa-cart-plus"></i>
+                  Lisää koriin
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openProduct(productId) {
+      // Navigate to single product page (we're in /products/ so go to index.html)
+      window.location.href = `index.html?id=${productId}`;
+    }
+
+    function addToCart(productId) {
+      const product = allProducts.find(p => p.id === productId);
+      if (!product) return;
+      
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({
+          id: productId,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity: 1
+        });
+      }
+      
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartUI();
+      
+      // Show feedback
+      const button = event.target.closest('button');
+      const originalText = button.innerHTML;
+      button.innerHTML = '<i class="fas fa-check"></i> Lisätty!';
+      button.style.background = 'var(--success)';
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.style.background = '';
+      }, 1000);
+    }
+
+    function updateCartUI() {
+      const cartCount = document.getElementById('cartCount');
+      const cartTotal = document.getElementById('cartTotal');
+      const cartContent = document.getElementById('cartContent');
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      const emptyMessage = document.getElementById('emptyCartMessage');
+      
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      if (cartCount) cartCount.textContent = totalItems;
+      if (cartTotal) cartTotal.textContent = `Yhteensä: ${totalPrice.toFixed(2)} €`;
+      
+      if (cart.length > 0) {
+        if (checkoutBtn) checkoutBtn.style.display = 'block';
+        if (emptyMessage) emptyMessage.style.display = 'none';
+      } else {
+        if (checkoutBtn) checkoutBtn.style.display = 'none';
+        if (emptyMessage) emptyMessage.style.display = 'block';
+      }
+      
+      if (cartContent) {
+        cartContent.innerHTML = cart.map(item => `
+          <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+            <div class="cart-item-details">
+              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-price">${item.price.toFixed(2)} €</div>
+              <div class="cart-item-quantity">
+                <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+                <span>${item.quantity}</span>
+                <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+              </div>
+            </div>
+            <button onclick="removeFromCart(${item.id})" class="cart-item-remove">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function updateQuantity(productId, newQuantity) {
+      if (newQuantity <= 0) {
+        removeFromCart(productId);
+        return;
+      }
+      
+      const item = cart.find(item => item.id === productId);
+      if (item) {
+        item.quantity = newQuantity;
+        localStorage.setItem('shopping_cart', JSON.stringify(cart));
+        updateCartUI();
+      }
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(item => item.id !== productId);
+      localStorage.setItem('shopping_cart', JSON.stringify(cart));
+      updateCartUI();
+    }
+
+    // Cart functions
+    function toggleCart() {
+      const cartSidebar = document.getElementById('cartSidebar');
+      const overlay = document.getElementById('cartOverlay');
+      
+      if (cartSidebar) cartSidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('active');
+    }
+
+    function closeCart() {
+      const cartSidebar = document.getElementById('cartSidebar');
+      const overlay = document.getElementById('cartOverlay');
+      
+      if (cartSidebar) cartSidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+    }
+
+    function goToCheckout() {
+      window.location.href = '../checkout/';
+    }
+
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const navLinks = document.querySelector('.nav-links');
+      navLinks.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>

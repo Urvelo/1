@@ -1,4 +1,32 @@
 // Shop JavaScript - Löytökauppa
+// UI helpers for navigation/drawer/search
+function toggleCategoryMenu(force) {
+  const drawer = document.getElementById('categoryDrawer');
+  const overlay = document.getElementById('overlay');
+  if(!drawer || !overlay) return;
+  const willOpen = typeof force === 'boolean' ? force : !drawer.classList.contains('open');
+  if(willOpen){
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden','false');
+  } else {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden','true');
+  }
+}
+
+function toggleMobileSearch(){
+  const bar = document.getElementById('mobileSearchBar');
+  if(!bar) return;
+  const visible = bar.style.display !== 'none';
+  bar.style.display = visible ? 'none' : 'block';
+  if(!visible){
+    const input = bar.querySelector('input');
+    if(input) setTimeout(()=> input.focus(), 50);
+  }
+}
+
 class ShopApp {
   constructor() {
     this.products = [];
@@ -17,6 +45,7 @@ class ShopApp {
     
     this.loadUserInfo();
     await this.loadData();
+  this.populateCategories();
     this.renderProducts();
     this.updateCartUI();
     this.checkAuth();
@@ -29,18 +58,42 @@ class ShopApp {
         this.loadUserInfo();
       }
     });
+    
+    // ✅ Kuuntele tuotemuutoksia admin-paneelista
+    window.addEventListener('productsDataChanged', (event) => {
+      console.log('🔄 Tuotedata muuttui:', event.detail);
+      this.refreshProducts();
+    });
+  }
+
+  populateCategories(){
+    const list = document.getElementById('categoryList');
+    if(!list) return;
+    list.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'category-link';
+    allBtn.setAttribute('data-category','all');
+    allBtn.innerHTML = '<i class="fas fa-layer-group"></i> <span>Kaikki</span>';
+    allBtn.onclick = () => { this.currentFilter='all'; this.renderProducts(); toggleCategoryMenu(false); };
+    list.appendChild(allBtn);
+    this.categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'category-link';
+      btn.setAttribute('data-category', cat.id);
+      btn.innerHTML = `<i class="${cat.icon || 'fas fa-tag'}"></i> <span>${cat.name}</span>`;
+      btn.onclick = () => { this.currentFilter = cat.id; this.renderProducts(); toggleCategoryMenu(false); };
+      list.appendChild(btn);
+    });
   }
   
   // DATAN LATAUS - OPTIMOITU FREE TIER:LLE  
   async loadData() {
     try {
-      console.log('📦 Ladataan data optimoidusti...');
-      
-      // ✅ TUOTTEET: Client-side JSON (ei Firestore-kulutusta!)
-      if (window.PRODUCTS_JSON) {
-        const jsonData = window.PRODUCTS_JSON.loadProductsFromJSON();
-        this.products = jsonData.products;
-        this.categories = jsonData.categories;
+      console.log('📦 Ladataan tuotteet products-data.js kautta...');
+      if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+        const jsonData = await window.PRODUCTS_JSON.loadProductsFromJSON();
+        this.products = jsonData.products || [];
+        this.categories = jsonData.categories || [];
         console.log('✅ Tuotteet ladattu JSON:sta:', this.products.length, 'tuotetta');
       } else {
         // Fallback: Firebase (kuluttaa free tier:ia)
@@ -48,157 +101,46 @@ class ShopApp {
         if (window.firebaseDB) {
           this.products = await window.firebaseDB.getProducts();
           this.categories = await window.firebaseDB.getCategories();
+        } else {
+          this.products = this.getDefaultProducts();
+          this.categories = [
+            { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
+            { id: 2, name: "Älylaitteet", icon: "fas fa-robot" },
+            { id: 3, name: "Audio", icon: "fas fa-headphones" },
+            { id: 4, name: "Kodin tavarat", icon: "fas fa-home" }
+          ];
         }
       }
-      
-      // Jos ei saatu tuotteita, käytä fallback-tuotteita
-      if (this.products.length === 0) {
-        console.log('📦 Ladataan fallback-tuotteet...');
-        this.products = [
-        {
-          id: 1,
-          name: "🔌 Langaton Latausasema",
-          price: 19.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400",
-          description: "Nopea langaton lataus kaikille laitteille"
-        },
-        {
-          id: 2,
-          name: "⌚ Premium Älykello",
-          price: 89.99,
-          category: 2,
-          image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
-          description: "Täydellinen kumppani aktiiviseen elämään"
-        },
-        {
-          id: 3,
-          name: "🎧 Bluetooth Kuulokkeet Pro",
-          price: 59.99,
-          category: 3,
-          image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-          description: "Kristallinkirkas ääni ja aktiivinen melunvaimennus"
-        },
-        {
-          id: 4,
-          name: "📱 Magneetillinen Autoteline",
-          price: 12.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1551798507-629020c81463?w=400",
-          description: "Turvallinen ja kätevä puhelinteline autoon"
-        },
-        {
-          id: 5,
-          name: "💡 Älykäs LED-valaisin",
-          price: 24.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=400",
-          description: "Säädettävä värilämpötila ja kirkkaus"
-        },
-        {
-          id: 6,
-          name: "🔊 Vedenkestävä Kaiutin",
-          price: 34.99,
-          category: 3,
-          image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400",
-          description: "Täydellinen uima-altaalle ja retkille"
-        },
-        {
-          id: 7,
-          name: "📷 Mini Action-kamera",
-          price: 79.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400",
-          description: "4K videotallennus pienessä koossa"
-        },
-        {
-          id: 8,
-          name: "🔋 Powerbank 20000mAh",
-          price: 29.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=400",
-          description: "Pikalataus useammalle laitteelle samanaikaisesti"
-        },
-        {
-          id: 9,
-          name: "🖥️ USB-C Telakka",
-          price: 45.99,
-          category: 1,
-          image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400",
-          description: "Yhdistä kaikki laitteet yhteen hub:iin"
-        },
-        {
-          id: 10,
-          name: "📚 Tabletti-teline",
-          price: 15.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
-          description: "Säädettävä teline tabletin ja puhelimen katseluun"
-        },
-        {
-          id: 11,
-          name: "🌡️ Älythermostaatti",
-          price: 129.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-          description: "WiFi-ohjattava lämmönsäätö älypuhelimelta"
-        },
-        {
-          id: 12,
-          name: "🔐 Bluetooth Lukko",
-          price: 69.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400",
-          description: "Avaa ovi älypuhelimella tai sormenjäljellä"
-        },
-        {
-          id: 13,
-          name: "🎮 Langaton Peliohain",
-          price: 39.99,
-          category: 2,
-          image: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=400",
-          description: "Ergonominen ohjain PC ja konsolipelaamiseen"
-        },
-        {
-          id: 14,
-          name: "☕ Älyketoni",
-          price: 89.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400",
-          description: "Keitä kahvi puhelimesta käsin sovelluksella"
-        },
-        {
-          id: 15,
-          name: "🚗 Autovarustepaketti",
-          price: 55.99,
-          category: 4,
-          image: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400",
-          description: "Autoteline, latauskaapeli ja ilmanraikastin"
-        }
-      ];
+      if (!this.products || this.products.length === 0) {
+        console.log('📦 Ei tuotteita JSON:sta – käytetään fallback-etuus tuotteita näkymän elävöittämiseksi');
+        this.products = this.getDefaultProducts();
       }
-      
-      // Aseta kategoriat jos ei ole asetettu
-      if (this.categories.length === 0) {
-        this.categories = [
-          { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
-          { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
-          { id: 3, name: "Audio", icon: "fas fa-headphones" },
-          { id: 4, name: "Älykodit", icon: "fas fa-home" }
-        ];
-      }
-      
       console.log('✅ Data ladattu:', this.products.length, 'tuotetta,', this.categories.length, 'kategoriaa');
-      
     } catch (error) {
       console.error('❌ Datan lataus epäonnistui:', error);
       this.products = this.getDefaultProducts();
       this.categories = [
         { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
-        { id: 2, name: "Pelit", icon: "fas fa-gamepad" },
+        { id: 2, name: "Älylaitteet", icon: "fas fa-robot" },
         { id: 3, name: "Audio", icon: "fas fa-headphones" },
-        { id: 4, name: "Älykodit", icon: "fas fa-home" }
+        { id: 4, name: "Kodin tavarat", icon: "fas fa-home" }
       ];
+    }
+  }
+
+  // ✅ Päivitä tuotteet kun admin muuttaa dataa
+  async refreshProducts() {
+    console.log('🔄 Päivitetään tuotedata...');
+    try {
+      if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+        const jsonData = await window.PRODUCTS_JSON.loadProductsFromJSON();
+        this.products = jsonData.products || [];
+        this.categories = jsonData.categories || [];
+        await this.renderProducts();
+        console.log('✅ Tuotteet päivitetty! Tuotteita nyt:', this.products.length);
+      }
+    } catch (error) {
+      console.error('❌ Tuotteiden päivitys epäonnistui:', error);
     }
   }
   
@@ -247,15 +189,18 @@ class ShopApp {
     if (this.currentUser) {
       // Kirjautunut käyttäjä
       console.log('✅ Näytetään kirjautuneen käyttäjän tiedot:', this.currentUser.name);
+      console.log('🔍 isAdmin tila:', this.currentUser.isAdmin, 'tyyppi:', typeof this.currentUser.isAdmin);
       userNameElement.textContent = this.currentUser.name.split(' ')[0];
       userMenuElement.innerHTML = `
-        <a href="profile.html" class="user-menu-item">
-          <i class="fas fa-user"></i> Profiili
+        <a href="profile/index.html" class="user-menu-item">
+          <i class="fas fa-user"></i>
+          Profiili
         </a>
-        <a href="#" class="user-menu-item" onclick="showOrders()">
-          <i class="fas fa-box"></i> Tilaukset
+        <a href="profile/index.html" class="user-menu-item">
+          <i class="fas fa-history"></i>
+          Tilaushistoria
         </a>
-        ${this.currentUser.isAdmin ? '<a href="admin.html" class="user-menu-item"><i class="fas fa-cog"></i> Hallinta</a>' : ''}
+        ${this.currentUser.isAdmin ? '<a href="admin/index.html" class="user-menu-item"><i class="fas fa-cog"></i> Hallinta</a>' : ''}
         <a href="#" class="user-menu-item" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> Kirjaudu ulos
         </a>
@@ -265,14 +210,11 @@ class ShopApp {
       console.log('ℹ️ Näytetään kirjautumattoman käyttäjän valikko');
       userNameElement.textContent = 'Kirjaudu';
       userMenuElement.innerHTML = `
-        <a href="login.html" class="user-menu-item">
+        <a href="login/" class="user-menu-item">
           <i class="fas fa-sign-in-alt"></i> Kirjaudu sisään
         </a>
-        <a href="login.html" class="user-menu-item">
+        <a href="login/" class="user-menu-item">
           <i class="fas fa-user-plus"></i> Rekisteröidy
-        </a>
-        <a href="#" class="user-menu-item" onclick="enableDemoAdmin()" style="color: #ff6b6b;">
-          <i class="fas fa-tools"></i> 🛠️ Demo Admin
         </a>
       `;
     }
@@ -283,17 +225,22 @@ class ShopApp {
   }
   
   // TUOTTEIDEN NÄYTTÄMINEN
-  renderProducts() {
+  async renderProducts() {
+    // Ensure products are loaded (async)
+    if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+      const jsonData = await window.PRODUCTS_JSON.loadProductsFromJSON();
+      this.products = jsonData.products || [];
+      this.categories = jsonData.categories || [];
+    }
     const container = document.getElementById('productsGrid');
+    if (!container) return;
     container.innerHTML = '';
-    
     let filteredProducts = this.products;
-    
+    console.log('🧪 renderProducts: total loaded products =', this.products.length);
     // Suodata kategorian mukaan
     if (this.currentFilter !== 'all') {
       filteredProducts = filteredProducts.filter(p => p.category == this.currentFilter);
     }
-    
     // Suodata haun mukaan
     if (this.searchFilter) {
       filteredProducts = filteredProducts.filter(p => 
@@ -301,28 +248,27 @@ class ShopApp {
         (p.description && p.description.toLowerCase().includes(this.searchFilter))
       );
     }
-    
+    console.log('🧪 renderProducts: after filters =', filteredProducts.length, 'filter=', this.currentFilter, 'search=', this.searchFilter);
     if (filteredProducts.length === 0) {
+      const suggestions = this.products.slice(0,6).map(p => `<div class="suggestion-chip" onclick="shopApp.viewProduct(${p.id})">${p.name.split(' ').slice(0,2).join(' ')}</div>`).join('');
       container.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-          <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state-icon"><i class="fas fa-search"></i></div>
           <h3>Ei tuloksia haulle "${this.searchFilter || 'hakusana'}"</h3>
-          <p style="color: var(--text-muted);">Kokeile eri hakusanoja tai selaa kategorioita.</p>
-          <button class="btn btn-primary" onclick="shopApp.clearSearch()" style="margin-top: 1rem;">
-            Tyhjennä haku
-          </button>
-        </div>
-      `;
+          <p>Kokeile eri hakusanoja tai selaa kategorioita vasemmasta valikosta.</p>
+          <div class="empty-state-actions">
+            <button class="btn btn-secondary" onclick="shopApp.clearSearch()">Tyhjennä haku</button>
+            <button class="btn btn-primary" onclick="toggleCategoryMenu(true)">Avaa kategoriat</button>
+          </div>
+          ${suggestions ? `<div class="empty-suggestions">${suggestions}</div>` : ''}
+        </div>`;
       return;
     }
-    
     filteredProducts.forEach(product => {
       const productCard = document.createElement('div');
       productCard.className = 'product-card';
       productCard.style.cursor = 'pointer';
-      
       const isNew = Date.now() - (product.created ? new Date(product.created).getTime() : 0) < 7 * 24 * 60 * 60 * 1000;
-      
       productCard.innerHTML = `
         <div class="product-image-container">
           <img src="${product.image}" alt="${product.name}" class="product-image">
@@ -333,12 +279,10 @@ class ShopApp {
           <div class="product-price">${product.price.toFixed(2)} €</div>
         </div>
       `;
-      
       // Lisää klikkaustapahtuma koko kortille
       productCard.addEventListener('click', () => {
         this.viewProduct(product.id);
       });
-      
       container.appendChild(productCard);
     });
   }
@@ -351,20 +295,21 @@ class ShopApp {
     sessionStorage.setItem('viewingProductId', productId);
     
     // Siirry tuotesivulle
-    window.location.href = `product.html?id=${productId}`;
+    window.location.href = `products/index.html?id=${productId}`;
   }
   
   // OSTOSKORIN HALLINTA
   addToCart(productId) {
-    const product = this.products.find(p => p.id === productId);
+    const product = this.products.find(p => p.id === productId || p.productId === productId);
     if (!product) return;
     
-    const existingItem = this.cart.find(item => item.id === productId);
+    const pid = product.id || product.productId;
+    const existingItem = this.cart.find(item => item.id === pid);
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
       this.cart.push({
-        id: product.id,
+        id: pid,
         name: product.name,
         price: product.price,
         image: product.image,
@@ -376,7 +321,7 @@ class ShopApp {
     this.updateCartUI();
     
     // Näytä onnistumisviesti
-    this.showCartNotification(`${product.name} lisätty koriin!`);
+    try { this.showCartNotification(`${product.name} lisätty koriin!`); } catch(_) {}
   }
   
   removeFromCart(productId) {
@@ -402,34 +347,62 @@ class ShopApp {
     const cartCount = document.getElementById('cartCount');
     const cartItems = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
+    const cartSidebar = document.getElementById('cartSidebar');
     
     const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    cartCount.textContent = totalItems;
-    cartTotal.textContent = totalPrice.toFixed(2) + ' €';
+  if(cartCount) cartCount.textContent = totalItems;
+  if(cartTotal) cartTotal.textContent = totalPrice.toFixed(2) + ' €';
     
-    cartItems.innerHTML = '';
-    this.cart.forEach(item => {
-      const cartItem = document.createElement('div');
-      cartItem.className = 'cart-item';
-      cartItem.innerHTML = `
-        <img src="${item.image}" alt="${item.name}" class="cart-item-image">
-        <div class="cart-item-details">
-          <div class="cart-item-name">${item.name}</div>
-          <div class="cart-item-price">${item.price.toFixed(2)} €</div>
-          <div class="cart-item-quantity">
-            <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
-            <span>${item.quantity}</span>
-            <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+    if(cartItems){
+      cartItems.innerHTML = '';
+      this.cart.forEach(item => {
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+          <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+          <div class="cart-item-details">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">${item.price.toFixed(2)} €</div>
+            <div class="cart-item-quantity">
+              <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+              <span>${item.quantity}</span>
+              <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+            </div>
           </div>
+          <button onclick="shopApp.removeFromCart(${item.id})" class="cart-item-remove" aria-label="Poista">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        cartItems.appendChild(cartItem);
+      });
+    }
+
+    // Sidebar quick view (minimal if element present)
+    if(cartSidebar){
+      cartSidebar.innerHTML = `
+        <div class="cart-sidebar-header">
+          <h3>Ostoskori (${totalItems})</h3>
+          <button class="close-btn" onclick="toggleCart()" aria-label="Sulje">&times;</button>
         </div>
-        <button onclick="shopApp.removeFromCart(${item.id})" class="cart-item-remove">
-          <i class="fas fa-times"></i>
-        </button>
+        <div class="cart-sidebar-items">${ this.cart.map(item => `
+          <div class='mini-item'>
+            <div class='mini-thumb'><img src='${item.image}' alt='${item.name}' /></div>
+            <div class='mini-info'>
+              <div class='mini-name'>${item.name}</div>
+              <div class='mini-meta'>${item.quantity} × ${item.price.toFixed(2)}€</div>
+            </div>
+            <button class='mini-remove' onclick='shopApp.removeFromCart(${item.id})' aria-label='Poista'>×</button>
+          </div>`).join('') }
+          ${ this.cart.length === 0 ? `<div class='mini-empty'>Ostoskori on tyhjä</div>` : ''}
+        </div>
+        <div class="cart-sidebar-footer">
+          <div class='mini-total-line'>Yhteensä: <strong>${totalPrice.toFixed(2)} €</strong></div>
+          <button class='btn btn-primary btn-block' onclick='shopApp.checkout()' ${this.cart.length===0?'disabled':''}>Siirry kassalle</button>
+        </div>
       `;
-      cartItems.appendChild(cartItem);
-    });
+    }
   }
   
   showCartNotification(message) {
@@ -467,11 +440,14 @@ class ShopApp {
     
     // Siirrytään kassasivulle
     console.log('� Siirrytään kassalle, ostoskorissa', this.cart.length, 'tuotetta');
-    window.location.href = 'checkout.html';
+    window.location.href = 'checkout/';
   }
 
   showCheckoutModal() {
     const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2);
+    
+    // Get user info if logged in
+    const userInfo = this.currentUser || {};
     
     const modal = document.createElement('div');
     modal.className = 'checkout-modal';
@@ -479,74 +455,221 @@ class ShopApp {
       <div class="checkout-overlay" onclick="closeCheckoutModal()"></div>
       <div class="checkout-content">
         <div class="checkout-header">
-          <h2>🛒 Maksa tilaus</h2>
+          <h2>🛒 Viimeistele tilaus</h2>
           <button onclick="closeCheckoutModal()" class="close-btn">&times;</button>
         </div>
         
-        <div class="checkout-summary">
+        <div class="checkout-steps">
+          <div class="step active" data-step="1">
+            <i class="fas fa-user"></i>
+            <span>Tiedot</span>
+          </div>
+          <div class="step" data-step="2">
+            <i class="fas fa-credit-card"></i>
+            <span>Maksu</span>
+          </div>
+          <div class="step" data-step="3">
+            <i class="fas fa-check"></i>
+            <span>Vahvistus</span>
+          </div>
+        </div>
+
+        <div class="checkout-step-content" id="step1">
           <h3>📦 Tilausyhteenveto</h3>
           <div class="order-items">
             ${this.cart.map(item => `
               <div class="checkout-item">
-                <span>${item.name}</span>
-                <span>${item.quantity} × ${item.price.toFixed(2)}€</span>
+                <img src="${item.image}" alt="${item.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                <div class="item-details">
+                  <div class="item-name">${item.name}</div>
+                  <div class="item-price">${item.quantity} × ${item.price.toFixed(2)}€ = ${(item.quantity * item.price).toFixed(2)}€</div>
+                </div>
               </div>
             `).join('')}
           </div>
           <div class="checkout-total">
-            <strong>Yhteensä: ${total}€</strong>
+            <div class="total-breakdown">
+              <div class="subtotal">Tuotteet: ${total}€</div>
+              <div class="shipping">Toimitus: ILMAINEN</div>
+              <div class="total">Yhteensä: <strong>${total}€</strong></div>
+            </div>
+          </div>
+
+          <h3>👤 Toimitusosoite</h3>
+          <div class="customer-form">
+            <div class="form-row">
+              <input type="text" id="customerName" placeholder="Koko nimi *" value="${userInfo.name || ''}" required>
+              <input type="email" id="customerEmail" placeholder="Sähköposti *" value="${userInfo.email || ''}" required>
+            </div>
+            <div class="form-row">
+              <input type="tel" id="customerPhone" placeholder="Puhelinnumero *" value="${userInfo.phone || ''}" required>
+              <input type="text" id="customerAddress" placeholder="Katuosoite *" value="${userInfo.address || ''}" required>
+            </div>
+            <div class="form-row">
+              <input type="text" id="customerPostal" placeholder="Postinumero *" value="${userInfo.postal || ''}" required>
+              <input type="text" id="customerCity" placeholder="Kaupunki *" value="${userInfo.city || ''}" required>
+            </div>
+            <div class="form-row">
+              <select id="customerCountry">
+                <option value="FI" ${(userInfo.country || 'FI') === 'FI' ? 'selected' : ''}>🇫🇮 Suomi</option>
+                <option value="SE" ${userInfo.country === 'SE' ? 'selected' : ''}>🇸🇪 Ruotsi</option>
+                <option value="NO" ${userInfo.country === 'NO' ? 'selected' : ''}>🇳🇴 Norja</option>
+                <option value="DK" ${userInfo.country === 'DK' ? 'selected' : ''}>🇩🇰 Tanska</option>
+              </select>
+            </div>
+            ${!this.currentUser ? `
+              <div class="form-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="saveCustomerInfo">
+                  <span class="checkbox-custom"></span>
+                  Tallenna tiedot seuraavaa tilausta varten
+                </label>
+              </div>
+            ` : ''}
           </div>
         </div>
 
-        <div class="payment-methods">
+        <div class="checkout-step-content" id="step2" style="display: none;">
           <h3>💳 Valitse maksutapa</h3>
           <div class="payment-options">
             <label class="payment-option">
               <input type="radio" name="payment" value="paypal" checked>
               <div class="payment-card">
                 <i class="fab fa-paypal"></i>
-                <span>PayPal</span>
-                <small>Turvallinen PayPal-maksu</small>
+                <div class="payment-info">
+                  <span>PayPal</span>
+                  <small>Turvallinen PayPal-maksu</small>
+                </div>
+                <div class="payment-badge">Suosittu</div>
               </div>
             </label>
             <label class="payment-option">
               <input type="radio" name="payment" value="sandbox">
               <div class="payment-card">
+                <i class="fas fa-vial"></i>
+                <div class="payment-info">
+                  <span>Sandbox (Testaus)</span>
+                  <small>Turvallinen testiympäristön maksu</small>
+                </div>
+                <div class="payment-badge test">Testi</div>
+              </div>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment" value="card">
+              <div class="payment-card">
                 <i class="fas fa-credit-card"></i>
-                <span>Sandbox Maksu (Testi)</span>
-                <small>Turvallinen testausmaksu</small>
+                <div class="payment-info">
+                  <span>Luottokortti</span>
+                  <small>Visa, Mastercard, American Express</small>
+                </div>
               </div>
             </label>
             <label class="payment-option">
               <input type="radio" name="payment" value="bank">
               <div class="payment-card">
                 <i class="fas fa-university"></i>
-                <span>Verkkopankki</span>
-                <small>Turvallinen pankkisiirto</small>
+                <div class="payment-info">
+                  <span>Verkkopankki</span>
+                  <small>Nordea, OP, Danske Bank, Handelsbanken</small>
+                </div>
               </div>
             </label>
             <label class="payment-option">
               <input type="radio" name="payment" value="cash">
               <div class="payment-card">
-                <i class="fas fa-money-bill"></i>
-                <span>Postiennakko</span>
-                <small>Maksa paketintuonnin yhteydessä</small>
+                <i class="fas fa-truck"></i>
+                <div class="payment-info">
+                  <span>Postiennakko</span>
+                  <small>Maksa toimituksen yhteydessä (+3€)</small>
+                </div>
               </div>
             </label>
-            <div id="paypal-button-container" style="margin-top: 1rem; display: none;"></div>
+          </div>
+          <div id="paypal-button-container" style="margin-top: 1rem; display: none;"></div>
+          <div id="payment-instructions" style="margin-top: 1rem; display: none;"></div>
+        </div>
+
+        <div class="checkout-step-content" id="step3" style="display: none;">
+          <div class="order-confirmation">
+            <div class="success-icon">✅</div>
+            <h3>Tilaus vahvistettu!</h3>
+            <p>Tilausnumero: <strong id="orderNumber"></strong></p>
+            <p>Saat tilausvahvistuksen sähköpostiin.</p>
           </div>
         </div>
 
         <div class="checkout-actions">
           <button onclick="closeCheckoutModal()" class="btn btn-secondary">Peruuta</button>
-          <button onclick="processPayment()" class="btn btn-primary">
-            <i class="fas fa-lock"></i> Maksa turvallisesti
+          <button onclick="nextCheckoutStep()" class="btn btn-primary" id="checkoutNextBtn">
+            Jatka maksamiseen <i class="fas fa-arrow-right"></i>
           </button>
         </div>
       </div>
     `;
     
     document.body.appendChild(modal);
+    
+    // Add event listeners for payment method selection
+    document.querySelectorAll('input[name="payment"]').forEach(radio => {
+      radio.addEventListener('change', this.handlePaymentMethodChange.bind(this));
+    });
+  }
+  
+  handlePaymentMethodChange(event) {
+    const paymentMethod = event.target.value;
+    const instructionsDiv = document.getElementById('payment-instructions');
+    const paypalContainer = document.getElementById('paypal-button-container');
+    
+    // Hide all payment-specific elements
+    if (paypalContainer) paypalContainer.style.display = 'none';
+    if (instructionsDiv) instructionsDiv.style.display = 'none';
+    
+    // Show payment-specific instructions
+    if (instructionsDiv) {
+      let instructions = '';
+      switch (paymentMethod) {
+        case 'sandbox':
+          instructions = `
+            <div class="payment-info-box">
+              <i class="fas fa-info-circle"></i>
+              <strong>Testiympäristön maksu</strong><br>
+              Tämä on turvallinen testiympäristö. Ei oikeaa rahaa veloiteta.
+            </div>
+          `;
+          break;
+        case 'card':
+          instructions = `
+            <div class="payment-info-box">
+              <i class="fas fa-shield-alt"></i>
+              <strong>Turvallinen luottokorttimaksu</strong><br>
+              Tiedot salataan SSL-suojauksella. Hyväksymme Visa, Mastercard ja American Express.
+            </div>
+          `;
+          break;
+        case 'bank':
+          instructions = `
+            <div class="payment-info-box">
+              <i class="fas fa-university"></i>
+              <strong>Verkkopankkimaksu</strong><br>
+              Ohjaamme sinut valitsemaasi verkkopankkiin turvallista maksua varten.
+            </div>
+          `;
+          break;
+        case 'cash':
+          instructions = `
+            <div class="payment-info-box">
+              <i class="fas fa-info-circle"></i>
+              <strong>Postiennakko (+3€ käsittelymaksu)</strong><br>
+              Maksat tilauksen kun paketti toimitetaan. Kokonaissumma: ${(parseFloat(this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)) + 3).toFixed(2)}€
+            </div>
+          `;
+          break;
+      }
+      if (instructions) {
+        instructionsDiv.innerHTML = instructions;
+        instructionsDiv.style.display = 'block';
+      }
+    }
   }
 
   async sendOrderToFormspree(order) {
@@ -589,9 +712,9 @@ class ShopApp {
 
 // GLOBAALIT FUNKTIOT
 function handleUserClick() {
-  if (!shopApp.currentUser) {
+  if (!window.shopApp?.currentUser) {
     // Jos ei ole kirjautunut, vie login-sivulle
-    window.location.href = 'login.html';
+    window.location.href = 'login/';
   } else {
     // Jos on kirjautunut, näytä valikko
     toggleUserMenu();
@@ -611,10 +734,22 @@ function closeAll() {
 
 function toggleCart() {
   const cartSidebar = document.getElementById('cartSidebar');
-  const overlay = document.getElementById('overlay');
+  const overlay = document.getElementById('cartOverlay') || document.getElementById('overlay');
   
-  cartSidebar.classList.toggle('open');
-  overlay.classList.toggle('active');
+  if (cartSidebar) cartSidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('active');
+}
+
+function closeCart() {
+  const cartSidebar = document.getElementById('cartSidebar');
+  const overlay = document.getElementById('cartOverlay') || document.getElementById('overlay');
+  
+  if (cartSidebar) cartSidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function goToCheckout() {
+  window.location.href = 'checkout/';
 }
 
 // HAKUTOIMINTO
@@ -685,7 +820,7 @@ function logout() {
 async function showOrders() {
   if (!shopApp.currentUser) {
     alert('Kirjaudu sisään nähdäksesi tilaukset!');
-    window.location.href = 'login.html';
+    window.location.href = 'login/';
     return;
   }
   
@@ -775,7 +910,7 @@ async function processTestPayment(orderId) {
     shopApp.updateCartUI();
     
     // Ohjaa tilausten näkymään
-    window.location.href = 'profile.html';
+    window.location.href = 'profile/';
     
   } catch (error) {
     console.error('❌ Testmaksun käsittely epäonnistui:', error);
@@ -819,56 +954,56 @@ async function processPayPalPayment(total, orderId) {
 async function processPayment() {
   const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
   
-  if (!shopApp.currentUser) {
-    alert('🔒 Kirjaudu sisään ennen ostamista!');
-    return;
-  }
-
   if (shopApp.cart.length === 0) {
     alert('🛒 Ostoskori on tyhjä!');
     return;
   }
 
-  // Laske kokonaishinta
-  const total = shopApp.cart.reduce((sum, item) => {
-    const product = shopApp.products.find(p => p.id == item.productId);
-    return sum + (product ? product.price * item.quantity : 0);
-  }, 0);
+  // Get customer information from form
+  const customerInfo = {
+    name: document.getElementById('customerName').value,
+    email: document.getElementById('customerEmail').value,
+    phone: document.getElementById('customerPhone').value,
+    address: document.getElementById('customerAddress').value,
+    postal: document.getElementById('customerPostal').value,
+    city: document.getElementById('customerCity').value,
+    country: document.getElementById('customerCountry').value
+  };
+
+  // Calculate total with shipping
+  const subtotal = shopApp.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const shipping = selectedPayment === 'cash' ? 3 : 0;
+  const total = subtotal + shipping;
 
   try {
-    // Luo tilaus Firebase Firestore:en
+    // Create order data
     const orderData = {
-      userId: shopApp.currentUser.uid || shopApp.currentUser.id, // Firebase UID tai localStorage ID
-      customerInfo: {
-        name: shopApp.currentUser.name,
-        email: shopApp.currentUser.email,
-        phone: shopApp.currentUser.phone,
-        address: shopApp.currentUser.address
-      },
-      products: shopApp.cart.map(item => {
-        const product = shopApp.products.find(p => p.id == item.productId);
-        return {
-          id: item.productId,
-          name: product ? product.name : 'Tuntematon tuote',
-          price: product ? product.price : 0,
-          quantity: item.quantity,
-          total: product ? product.price * item.quantity : 0
-        };
-      }),
+      userId: shopApp.currentUser?.uid || 'guest_' + Date.now(),
+      customerInfo: customerInfo,
+      products: shopApp.cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image
+      })),
+      subtotal: subtotal,
+      shipping: shipping,
       total: total,
-      currency: 'EUR',
-      paymentMethod: selectedPayment
+      paymentMethod: selectedPayment,
+      status: 'pending',
+      createdAt: new Date().toISOString()
     };
 
     console.log('📦 Luodaan tilaus:', orderData);
 
     let orderResult;
     
-    // Käytä modernia Firebase:a jos saatavilla
+    // Save order to storage
     if (window.modernFirebaseDB && window.modernFirebaseDB.db) {
       orderResult = await window.modernFirebaseDB.createOrder(orderData);
     } else {
-      // Fallback: tallenna localStorage:iin
+      // Fallback: save to localStorage
       orderResult = createLocalOrder(orderData);
     }
 
@@ -878,19 +1013,150 @@ async function processPayment() {
 
     const orderId = orderResult.orderId;
 
-    if (selectedPayment === 'paypal') {
-      // PayPal-maksu
-      await processPayPalPayment(total, orderId);
-    } else if (selectedPayment === 'sandbox') {
-      // Sandbox-maksu (testi)
-      await processTestPayment(orderId);
-    } else {
-      alert('💳 Maksuvaihtoehto "' + selectedPayment + '" ei ole vielä käytössä. Käytä PayPal:ia.');
+    // Process payment based on selected method
+    switch (selectedPayment) {
+      case 'paypal':
+        await processPayPalPayment(total, orderId, customerInfo);
+        break;
+      case 'sandbox':
+        await processSandboxPayment(orderId, customerInfo, total);
+        break;
+      case 'card':
+        await processCardPayment(orderId, customerInfo, total);
+        break;
+      case 'bank':
+        await processBankPayment(orderId, customerInfo, total);
+        break;
+      case 'cash':
+        await processCashPayment(orderId, customerInfo, total);
+        break;
+      default:
+        throw new Error('Tuntematon maksutapa: ' + selectedPayment);
     }
 
   } catch (error) {
     console.error('❌ Maksun käsittely epäonnistui:', error);
-    alert('❌ Maksun käsittelyssä tapahtui virhe: ' + error.message);
+    showCheckoutError('Maksun käsittelyssä tapahtui virhe: ' + error.message);
+  }
+}
+
+// Payment processing functions
+async function processSandboxPayment(orderId, customerInfo, total) {
+  // Simulate sandbox payment processing
+  showCheckoutStep(3);
+  document.getElementById('orderNumber').textContent = '#' + orderId.toString().slice(-6);
+  
+  // Show loading simulation
+  const loadingDiv = document.createElement('div');
+  loadingDiv.innerHTML = `
+    <div style="text-align: center; padding: 2rem;">
+      <i class="fas fa-vial" style="font-size: 2rem; color: var(--primary); animation: pulse 2s infinite;"></i>
+      <p style="margin-top: 1rem;">Käsitellään testiympäristön maksua...</p>
+      <small style="color: #666;">Tämä on turvallinen testiympäristö</small>
+    </div>
+  `;
+  
+  document.getElementById('step3').innerHTML = loadingDiv.innerHTML;
+  
+  setTimeout(async () => {
+    // Complete the order
+    await completeOrder(orderId, customerInfo, total, 'Sandbox (Testi)');
+  }, 2000);
+}
+
+async function processCardPayment(orderId, customerInfo, total) {
+  alert('💳 Luottokorttimaksu tulossa pian! Käytä toistaiseksi PayPal:ia tai sandbox-testiä.');
+}
+
+async function processBankPayment(orderId, customerInfo, total) {
+  alert('🏦 Verkkopankkimaksu tulossa pian! Käytä toistaiseksi PayPal:ia tai sandbox-testiä.');
+}
+
+async function processCashPayment(orderId, customerInfo, total) {
+  // Process cash on delivery
+  showCheckoutStep(3);
+  document.getElementById('orderNumber').textContent = '#' + orderId.toString().slice(-6);
+  
+  const successDiv = document.createElement('div');
+  successDiv.innerHTML = `
+    <div style="text-align: center; padding: 2rem;">
+      <div style="font-size: 4rem; color: #10b981; margin-bottom: 1rem;">📦</div>
+      <h3 style="color: #10b981; margin-bottom: 1rem;">Tilaus vahvistettu!</h3>
+      <p>Tilausnumero: <strong>#${orderId.toString().slice(-6)}</strong></p>
+      <p>Maksutapa: <strong>Postiennakko</strong></p>
+      <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+        <p><strong>Kokonaissumma: ${total.toFixed(2)}€</strong></p>
+        <small>Maksat tilauksen kun paketti toimitetaan. Käsittelymaksu (3€) sisältyy hintaan.</small>
+      </div>
+      <p style="margin-top: 1rem;">Saat tilausvahvistuksen sähköpostiin.</p>
+    </div>
+  `;
+  
+  document.getElementById('step3').innerHTML = successDiv.innerHTML;
+  
+  // Complete the order
+  await completeOrder(orderId, customerInfo, total, 'Postiennakko');
+}
+
+async function completeOrder(orderId, customerInfo, total, paymentMethod) {
+  // Clear cart
+  shopApp.cart = [];
+  shopApp.saveCart();
+  shopApp.updateCartUI();
+  
+  // Send order confirmation email via Formspree
+  try {
+    const orderData = {
+      orderId: orderId,
+      customerInfo: customerInfo,
+      total: total,
+      paymentMethod: paymentMethod,
+      products: shopApp.cart,
+      timestamp: new Date().toLocaleString('fi-FI')
+    };
+    
+    await shopApp.sendOrderToFormspree(orderData);
+  } catch (error) {
+    console.error('Email sending failed:', error);
+  }
+  
+  // Update checkout buttons
+  const actionsDiv = document.querySelector('.checkout-actions');
+  if (actionsDiv) {
+    actionsDiv.innerHTML = `
+      <button onclick="closeCheckoutModal()" class="btn btn-primary">
+        <i class="fas fa-check"></i> Sulje
+      </button>
+    `;
+  }
+}
+
+// Helper function to create order in localStorage
+function createLocalOrder(orderData) {
+  try {
+    const orderId = 'ORDER_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const order = {
+      ...orderData,
+      id: orderId,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    
+    // Save to localStorage
+    const orders = JSON.parse(localStorage.getItem('orders')) || [];
+    orders.push(order);
+    localStorage.setItem('orders', JSON.stringify(orders));
+    
+    return {
+      success: true,
+      orderId: orderId,
+      order: order
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }
 
@@ -1039,6 +1305,10 @@ window.enableDemoAdmin = function() {
 const shopApp = new ShopApp();
 window.shopApp = shopApp;
 
+// Expose UI toggles globally for inline handlers
+window.toggleCategoryMenu = toggleCategoryMenu;
+window.toggleMobileSearch = toggleMobileSearch;
+
 // Globaali funktio käyttäjän UI:n päivittämiseen (kutsutaan login.js:stä)
 window.updateUserUI = function() {
   console.log('🔄 updateUserUI kutsuttu');
@@ -1072,3 +1342,109 @@ window.checkout = function() {
     alert('❌ Sovellus ei ole valmis. Lataa sivu uudelleen.');
   }
 };
+
+// Checkout step management functions
+let currentCheckoutStep = 1;
+
+function nextCheckoutStep() {
+  if (currentCheckoutStep === 1) {
+    // Validate customer information
+    if (!validateCustomerInfo()) {
+      return;
+    }
+    showCheckoutStep(2);
+    currentCheckoutStep = 2;
+    document.getElementById('checkoutNextBtn').innerHTML = 'Maksa turvallisesti <i class="fas fa-lock"></i>';
+  } else if (currentCheckoutStep === 2) {
+    // Process payment
+    processPayment();
+  }
+}
+
+function showCheckoutStep(step) {
+  // Hide all steps
+  document.querySelectorAll('.checkout-step-content').forEach(content => {
+    content.style.display = 'none';
+  });
+  
+  // Update step indicators
+  document.querySelectorAll('.step').forEach(stepEl => {
+    stepEl.classList.remove('active', 'completed');
+    const stepNumber = parseInt(stepEl.dataset.step);
+    if (stepNumber < step) {
+      stepEl.classList.add('completed');
+    } else if (stepNumber === step) {
+      stepEl.classList.add('active');
+    }
+  });
+  
+  // Show current step
+  document.getElementById(`step${step}`).style.display = 'block';
+}
+
+function validateCustomerInfo() {
+  const requiredFields = [
+    { id: 'customerName', name: 'Nimi' },
+    { id: 'customerEmail', name: 'Sähköposti' },
+    { id: 'customerPhone', name: 'Puhelinnumero' },
+    { id: 'customerAddress', name: 'Osoite' },
+    { id: 'customerPostal', name: 'Postinumero' },
+    { id: 'customerCity', name: 'Kaupunki' }
+  ];
+  
+  for (const field of requiredFields) {
+    const element = document.getElementById(field.id);
+    if (!element || !element.value.trim()) {
+      element.focus();
+      showCheckoutError(`Kenttä "${field.name}" on pakollinen`);
+      return false;
+    }
+  }
+  
+  // Validate email
+  const email = document.getElementById('customerEmail').value;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    document.getElementById('customerEmail').focus();
+    showCheckoutError('Sähköpostiosoite ei ole kelvollinen');
+    return false;
+  }
+  
+  // Save customer info if requested
+  const saveInfo = document.getElementById('saveCustomerInfo');
+  if (saveInfo && saveInfo.checked && !window.shopApp.currentUser) {
+    const customerData = {
+      name: document.getElementById('customerName').value,
+      email: document.getElementById('customerEmail').value,
+      phone: document.getElementById('customerPhone').value,
+      address: document.getElementById('customerAddress').value,
+      postal: document.getElementById('customerPostal').value,
+      city: document.getElementById('customerCity').value,
+      country: document.getElementById('customerCountry').value
+    };
+    localStorage.setItem('customerInfo', JSON.stringify(customerData));
+  }
+  
+  return true;
+}
+
+function showCheckoutError(message) {
+  const errorEl = document.createElement('div');
+  errorEl.className = 'checkout-error';
+  errorEl.innerHTML = `
+    <i class="fas fa-exclamation-triangle"></i>
+    ${message}
+  `;
+  errorEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 1rem 1.5rem; border-radius: 8px; z-index: 10002; font-weight: 500;';
+  
+  document.body.appendChild(errorEl);
+  setTimeout(() => errorEl.remove(), 4000);
+}
+
+function closeCheckoutModal() {
+  const modal = document.querySelector('.checkout-modal');
+  if (modal) {
+    modal.remove();
+  }
+  currentCheckoutStep = 1;
+}

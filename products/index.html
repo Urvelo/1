@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tuote - Löytökauppa</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <nav class="navbar">
+      <a href="../" class="logo">🛍️ Löytökauppa</a>
+      <div class="nav-links">
+        <a href="../" class="nav-link">
+          <i class="fas fa-arrow-left"></i>
+          Takaisin kauppaan
+        </a>
+        <div class="cart-icon" onclick="toggleCart()">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Product Details -->
+      <div class="product-details" id="productDetails">
+        <!-- Product will be loaded here -->
+      </div>
+      
+      <!-- Product not found message -->
+      <div id="productNotFound" class="text-center text-muted" style="display: none;">
+        <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h2>Tuotetta ei löytynyt</h2>
+        <p>Valitettavasti etsimääsi tuotetta ei löytynyt.</p>
+        <a href="../" class="btn btn-primary mt-lg">
+          <i class="fas fa-arrow-left"></i>
+          Takaisin kauppaan
+        </a>
+      </div>
+
+      <!-- Related Products -->
+      <section class="related-products mt-2xl">
+        <h2 class="section-title">Suosittelemme myös</h2>
+        <div class="products-grid" id="relatedProducts">
+          <!-- Related products will be loaded here -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- STATUS MESSAGE -->
+  <div id="statusMessage" class="status-message"></div>
+
+  <!-- JavaScript -->
+  <script src="../products-data.js"></script>
+  <script src="product.js"></script>
+</body>
+</html>
