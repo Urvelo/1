@@ -11,12 +11,25 @@
   <div class="container">
     <!-- Header -->
     <header class="admin-header text-center mb-xl">
-      <h1 class="text-primary mb-sm">🔧 Admin Paneeli</h1>
-      <p class="text-muted">Keskitetty tuotehallinta - Kaikki data yhdessä paikassa</p>
-      <a href="../" class="btn btn-secondary mt-md">
-        <i class="fas fa-arrow-left"></i>
-        Takaisin kauppaan
-      </a>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h1 class="text-primary mb-sm" style="margin: 0;">🔧 Järjestelmänvalvoja</h1>
+          <p class="text-muted" style="margin: 0;">Löytökauppa - Tuotehallinta</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <span id="adminUserInfo" class="text-muted" style="font-size: 0.9rem;"></span>
+          <button onclick="logoutAdmin()" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+            <i class="fas fa-sign-out-alt"></i>
+            Kirjaudu ulos
+          </button>
+        </div>
+      </div>
+      <div style="text-align: center;">
+        <a href="../" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i>
+          Takaisin kauppaan
+        </a>
+      </div>
     </header>
     
     <!-- Navigation -->

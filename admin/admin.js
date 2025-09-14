@@ -38,32 +38,57 @@ class AdminPanel {
   }
 
   checkPasswordAccess() {
-    const hasAccess = sessionStorage.getItem('admin_access') === 'granted';
-    if (!hasAccess) {
+    if (!validateAdminSession()) {
       this.showPasswordOverlay();
+    } else {
+      // Show current admin info
+      const adminEmail = sessionStorage.getItem('admin_email');
+      const loginTime = new Date(parseInt(sessionStorage.getItem('admin_login_time')));
+      console.log(`✅ Admin session active: ${adminEmail} (since ${loginTime.toLocaleTimeString()})`);
     }
   }
 
   showPasswordOverlay() {
     const overlay = document.createElement('div');
     overlay.id = 'passwordOverlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center;';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px);';
     overlay.innerHTML = `
-      <div style="background: #1f2937; padding: 2rem; border-radius: 10px; text-align: center;">
-        <h2 style="color: #f59e0b;">🔒 Admin Panel</h2>
-        <p style="color: #d1d5db;">Enter password</p>
-        <input type="password" id="adminPassword" placeholder="Password" style="width: 250px; padding: 0.75rem; border: none; border-radius: 5px; background: #374151; color: white; margin-bottom: 1rem;">
-        <br>
-        <button onclick="checkAdminPassword()" style="background: #f59e0b; color: black; padding: 0.75rem 1.5rem; border: none; border-radius: 5px; cursor: pointer;">🔓 Login</button>
-        <p style="color: #9ca3af; font-size: 0.8rem; margin-top: 1rem;">💡 Password: admin123</p>
+      <div style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); padding: 2.5rem; border-radius: 15px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #374151;">
+        <div style="margin-bottom: 2rem;">
+          <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🔒</div>
+          <h2 style="color: #f59e0b; margin: 0; font-size: 1.5rem;">Järjestelmänvalvojat</h2>
+          <p style="color: #9ca3af; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Tämä alue on vain valtuutetuille käyttäjille</p>
+        </div>
+        <div style="margin-bottom: 2rem;">
+          <input type="email" id="adminEmail" placeholder="admin@loytokauppa.fi" style="width: 100%; max-width: 300px; padding: 1rem; border: 2px solid #374151; border-radius: 8px; background: #111827; color: white; margin-bottom: 1rem; font-size: 1rem;">
+          <input type="password" id="adminPassword" placeholder="Salasana" style="width: 100%; max-width: 300px; padding: 1rem; border: 2px solid #374151; border-radius: 8px; background: #111827; color: white; font-size: 1rem;">
+        </div>
+        <button onclick="checkAdminPassword()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #111827; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; width: 100%; max-width: 300px; transition: all 0.3s ease;">
+          <i class="fas fa-sign-in-alt" style="margin-right: 0.5rem;"></i>
+          Kirjaudu sisään
+        </button>
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #374151;">
+          <p style="color: #6b7280; font-size: 0.8rem; margin: 0;">
+            <i class="fas fa-shield-alt" style="margin-right: 0.5rem;"></i>
+            Suojattu järjestelmänvalvojien alue
+          </p>
+        </div>
       </div>
     `;
     document.body.appendChild(overlay);
     setTimeout(() => {
-      const input = document.getElementById('adminPassword');
-      if (input) {
-        input.focus();
-        input.addEventListener('keypress', (e) => {
+      const emailInput = document.getElementById('adminEmail');
+      if (emailInput) {
+        emailInput.focus();
+        emailInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            document.getElementById('adminPassword').focus();
+          }
+        });
+      }
+      const passwordInput = document.getElementById('adminPassword');
+      if (passwordInput) {
+        passwordInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') checkAdminPassword();
         });
       }
@@ -71,23 +96,92 @@ class AdminPanel {
   }
 
   checkPassword() {
+    const email = document.getElementById('adminEmail').value.trim();
     const password = document.getElementById('adminPassword').value;
-    if (password === 'admin123') {
+    
+    // Secure admin credentials (in production, use proper server-side authentication)
+    const validCredentials = {
+      'admin@loytokauppa.fi': this.hashPassword('L0yt0K4upp4_4dm1n_2024!'),
+      'admin@löytökauppa.fi': this.hashPassword('L0yt0K4upp4_4dm1n_2024!')
+    };
+    
+    const hashedPassword = this.hashPassword(password);
+    
+    if (validCredentials[email] && validCredentials[email] === hashedPassword) {
+      // Generate session token
+      const sessionToken = this.generateSessionToken();
       sessionStorage.setItem('admin_access', 'granted');
+      sessionStorage.setItem('admin_session', sessionToken);
+      sessionStorage.setItem('admin_email', email);
+      sessionStorage.setItem('admin_login_time', Date.now().toString());
+      
       const overlay = document.getElementById('passwordOverlay');
       if (overlay) overlay.remove();
+      
+      // Show success message
+      this.showSuccessMessage('✅ Kirjautuminen onnistui!');
     } else {
-      alert('❌ Wrong password!');
+      this.showErrorMessage('❌ Virheelliset tunnukset! Tarkista sähköposti ja salasana.');
       document.getElementById('adminPassword').value = '';
-      document.getElementById('adminPassword').focus();
+      document.getElementById('adminEmail').focus();
     }
+  }
+  
+  // Simple hash function for client-side password checking
+  hashPassword(password) {
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+      const char = password.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString();
+  }
+  
+  // Generate session token
+  generateSessionToken() {
+    return 'admin_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+  
+  // Show success message
+  showSuccessMessage(message) {
+    const messageEl = document.createElement('div');
+    messageEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 1rem 1.5rem; border-radius: 8px; z-index: 10001; font-weight: 500;';
+    messageEl.textContent = message;
+    document.body.appendChild(messageEl);
+    setTimeout(() => messageEl.remove(), 3000);
+  }
+  
+  // Show error message
+  showErrorMessage(message) {
+    const messageEl = document.createElement('div');
+    messageEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 1rem 1.5rem; border-radius: 8px; z-index: 10001; font-weight: 500;';
+    messageEl.textContent = message;
+    document.body.appendChild(messageEl);
+    setTimeout(() => messageEl.remove(), 4000);
   }
 
   init() {
+    this.updateAdminUserInfo();
     this.displayProducts();
     this.loadCategories();
     this.loadOrders();
     this.updateStats();
+  }
+  
+  updateAdminUserInfo() {
+    const adminEmail = sessionStorage.getItem('admin_email');
+    const loginTime = sessionStorage.getItem('admin_login_time');
+    const userInfoEl = document.getElementById('adminUserInfo');
+    
+    if (userInfoEl && adminEmail && loginTime) {
+      const loginDate = new Date(parseInt(loginTime));
+      userInfoEl.innerHTML = `
+        <i class="fas fa-user-shield"></i>
+        ${adminEmail.split('@')[0]} 
+        <small style="opacity: 0.7;">(${loginDate.toLocaleTimeString()})</small>
+      `;
+    }
   }
 
   displayProducts() {
@@ -660,15 +754,56 @@ class AdminPanel {
 
 // Global functions
 function checkAdminPassword() {
-  const password = document.getElementById('adminPassword').value;
-  if (password === 'admin123') {
-    sessionStorage.setItem('admin_access', 'granted');
-    const overlay = document.getElementById('passwordOverlay');
-    if (overlay) overlay.remove();
-  } else {
-    alert('❌ Wrong password!');
-    document.getElementById('adminPassword').value = '';
-    document.getElementById('adminPassword').focus();
+  if (adminPanel) {
+    adminPanel.checkPassword();
+  }
+}
+
+// Session validation
+function validateAdminSession() {
+  const hasAccess = sessionStorage.getItem('admin_access') === 'granted';
+  const sessionToken = sessionStorage.getItem('admin_session');
+  const loginTime = sessionStorage.getItem('admin_login_time');
+  
+  if (!hasAccess || !sessionToken || !loginTime) {
+    return false;
+  }
+  
+  // Check if session is older than 2 hours (7200000 ms)
+  const currentTime = Date.now();
+  const loginTimeMs = parseInt(loginTime);
+  const sessionAge = currentTime - loginTimeMs;
+  
+  if (sessionAge > 7200000) { // 2 hours
+    sessionStorage.removeItem('admin_access');
+    sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem('admin_email');
+    sessionStorage.removeItem('admin_login_time');
+    return false;
+  }
+  
+  return true;
+}
+
+// Logout function
+function logoutAdmin() {
+  const confirmed = confirm('🔐 Haluatko varmasti kirjautua ulos järjestelmänvalvojana?');
+  if (confirmed) {
+    sessionStorage.removeItem('admin_access');
+    sessionStorage.removeItem('admin_session');
+    sessionStorage.removeItem('admin_email');
+    sessionStorage.removeItem('admin_login_time');
+    
+    // Show logout message
+    const messageEl = document.createElement('div');
+    messageEl.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 1rem 1.5rem; border-radius: 8px; z-index: 10001; font-weight: 500;';
+    messageEl.textContent = '👋 Olet kirjautunut ulos onnistuneesti';
+    document.body.appendChild(messageEl);
+    
+    setTimeout(() => {
+      messageEl.remove();
+      window.location.reload(); // Reload to show login screen
+    }, 1500);
   }
 }
 
