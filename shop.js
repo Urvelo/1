@@ -1,4 +1,32 @@
 // Shop JavaScript - Löytökauppa
+// UI helpers for navigation/drawer/search
+function toggleCategoryMenu(force) {
+  const drawer = document.getElementById('categoryDrawer');
+  const overlay = document.getElementById('overlay');
+  if(!drawer || !overlay) return;
+  const willOpen = typeof force === 'boolean' ? force : !drawer.classList.contains('open');
+  if(willOpen){
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    overlay.setAttribute('aria-hidden','false');
+  } else {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    overlay.setAttribute('aria-hidden','true');
+  }
+}
+
+function toggleMobileSearch(){
+  const bar = document.getElementById('mobileSearchBar');
+  if(!bar) return;
+  const visible = bar.style.display !== 'none';
+  bar.style.display = visible ? 'none' : 'block';
+  if(!visible){
+    const input = bar.querySelector('input');
+    if(input) setTimeout(()=> input.focus(), 50);
+  }
+}
+
 class ShopApp {
   constructor() {
     this.products = [];
@@ -17,6 +45,7 @@ class ShopApp {
     
     this.loadUserInfo();
     await this.loadData();
+  this.populateCategories();
     this.renderProducts();
     this.updateCartUI();
     this.checkAuth();
@@ -36,17 +65,35 @@ class ShopApp {
       this.refreshProducts();
     });
   }
+
+  populateCategories(){
+    const list = document.getElementById('categoryList');
+    if(!list) return;
+    list.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'category-link';
+    allBtn.setAttribute('data-category','all');
+    allBtn.innerHTML = '<i class="fas fa-layer-group"></i> <span>Kaikki</span>';
+    allBtn.onclick = () => { this.currentFilter='all'; this.renderProducts(); toggleCategoryMenu(false); };
+    list.appendChild(allBtn);
+    this.categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'category-link';
+      btn.setAttribute('data-category', cat.id);
+      btn.innerHTML = `<i class="${cat.icon || 'fas fa-tag'}"></i> <span>${cat.name}</span>`;
+      btn.onclick = () => { this.currentFilter = cat.id; this.renderProducts(); toggleCategoryMenu(false); };
+      list.appendChild(btn);
+    });
+  }
   
   // DATAN LATAUS - OPTIMOITU FREE TIER:LLE  
   async loadData() {
     try {
-      console.log('📦 Ladataan data optimoidusti...');
-      
-      // ✅ TUOTTEET: Client-side JSON (ei Firestore-kulutusta!)
-      if (window.PRODUCTS_JSON) {
-        const jsonData = window.PRODUCTS_JSON.loadProductsFromJSON();
-        this.products = jsonData.products;
-        this.categories = jsonData.categories;
+      console.log('📦 Ladataan tuotteet products-data.js kautta...');
+      if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+        const jsonData = await window.PRODUCTS_JSON.loadProductsFromJSON();
+        this.products = jsonData.products || [];
+        this.categories = jsonData.categories || [];
         console.log('✅ Tuotteet ladattu JSON:sta:', this.products.length, 'tuotetta');
       } else {
         // Fallback: Firebase (kuluttaa free tier:ia)
@@ -54,19 +101,24 @@ class ShopApp {
         if (window.firebaseDB) {
           this.products = await window.firebaseDB.getProducts();
           this.categories = await window.firebaseDB.getCategories();
+        } else {
+          this.products = this.getDefaultProducts();
+          this.categories = [
+            { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
+            { id: 2, name: "Älylaitteet", icon: "fas fa-robot" },
+            { id: 3, name: "Audio", icon: "fas fa-headphones" },
+            { id: 4, name: "Kodin tavarat", icon: "fas fa-home" }
+          ];
         }
       }
-      
-      // Jos ei saatu tuotteita, näytä tyhjä lista
-      if (this.products.length === 0) {
-        console.log('📦 Ei tuotteita saatavilla - odottaa admin-lisäyksiä');
-        this.products = [];
+      if (!this.products || this.products.length === 0) {
+        console.log('📦 Ei tuotteita JSON:sta – käytetään fallback-etuus tuotteita näkymän elävöittämiseksi');
+        this.products = this.getDefaultProducts();
       }
-
       console.log('✅ Data ladattu:', this.products.length, 'tuotetta,', this.categories.length, 'kategoriaa');
     } catch (error) {
       console.error('❌ Datan lataus epäonnistui:', error);
-      this.products = [];
+      this.products = this.getDefaultProducts();
       this.categories = [
         { id: 1, name: "Elektroniikka", icon: "fas fa-microchip" },
         { id: 2, name: "Älylaitteet", icon: "fas fa-robot" },
@@ -80,11 +132,11 @@ class ShopApp {
   async refreshProducts() {
     console.log('🔄 Päivitetään tuotedata...');
     try {
-      if (window.PRODUCTS_JSON) {
-        const jsonData = window.PRODUCTS_JSON.loadProductsFromJSON();
-        this.products = jsonData.products;
-        this.categories = jsonData.categories;
-        this.renderProducts();
+      if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+        const jsonData = await window.PRODUCTS_JSON.loadProductsFromJSON();
+        this.products = jsonData.products || [];
+        this.categories = jsonData.categories || [];
+        await this.renderProducts();
         console.log('✅ Tuotteet päivitetty! Tuotteita nyt:', this.products.length);
       }
     } catch (error) {
@@ -173,17 +225,22 @@ class ShopApp {
   }
   
   // TUOTTEIDEN NÄYTTÄMINEN
-  renderProducts() {
+  async renderProducts() {
+    // Ensure products are loaded (async)
+    if (window.PRODUCTS_JSON && window.PRODUCTS_JSON.loadProductsFromJSON) {
+      const jsonData = await window.PRODUCTS_JSON.loadProductsFromJSON();
+      this.products = jsonData.products || [];
+      this.categories = jsonData.categories || [];
+    }
     const container = document.getElementById('productsGrid');
+    if (!container) return;
     container.innerHTML = '';
-    
     let filteredProducts = this.products;
-    
+    console.log('🧪 renderProducts: total loaded products =', this.products.length);
     // Suodata kategorian mukaan
     if (this.currentFilter !== 'all') {
       filteredProducts = filteredProducts.filter(p => p.category == this.currentFilter);
     }
-    
     // Suodata haun mukaan
     if (this.searchFilter) {
       filteredProducts = filteredProducts.filter(p => 
@@ -191,28 +248,27 @@ class ShopApp {
         (p.description && p.description.toLowerCase().includes(this.searchFilter))
       );
     }
-    
+    console.log('🧪 renderProducts: after filters =', filteredProducts.length, 'filter=', this.currentFilter, 'search=', this.searchFilter);
     if (filteredProducts.length === 0) {
+      const suggestions = this.products.slice(0,6).map(p => `<div class="suggestion-chip" onclick="shopApp.viewProduct(${p.id})">${p.name.split(' ').slice(0,2).join(' ')}</div>`).join('');
       container.innerHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-          <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state-icon"><i class="fas fa-search"></i></div>
           <h3>Ei tuloksia haulle "${this.searchFilter || 'hakusana'}"</h3>
-          <p style="color: var(--text-muted);">Kokeile eri hakusanoja tai selaa kategorioita.</p>
-          <button class="btn btn-primary" onclick="shopApp.clearSearch()" style="margin-top: 1rem;">
-            Tyhjennä haku
-          </button>
-        </div>
-      `;
+          <p>Kokeile eri hakusanoja tai selaa kategorioita vasemmasta valikosta.</p>
+          <div class="empty-state-actions">
+            <button class="btn btn-secondary" onclick="shopApp.clearSearch()">Tyhjennä haku</button>
+            <button class="btn btn-primary" onclick="toggleCategoryMenu(true)">Avaa kategoriat</button>
+          </div>
+          ${suggestions ? `<div class="empty-suggestions">${suggestions}</div>` : ''}
+        </div>`;
       return;
     }
-    
     filteredProducts.forEach(product => {
       const productCard = document.createElement('div');
       productCard.className = 'product-card';
       productCard.style.cursor = 'pointer';
-      
       const isNew = Date.now() - (product.created ? new Date(product.created).getTime() : 0) < 7 * 24 * 60 * 60 * 1000;
-      
       productCard.innerHTML = `
         <div class="product-image-container">
           <img src="${product.image}" alt="${product.name}" class="product-image">
@@ -223,12 +279,10 @@ class ShopApp {
           <div class="product-price">${product.price.toFixed(2)} €</div>
         </div>
       `;
-      
       // Lisää klikkaustapahtuma koko kortille
       productCard.addEventListener('click', () => {
         this.viewProduct(product.id);
       });
-      
       container.appendChild(productCard);
     });
   }
@@ -241,20 +295,21 @@ class ShopApp {
     sessionStorage.setItem('viewingProductId', productId);
     
     // Siirry tuotesivulle
-    window.location.href = `products/?id=${productId}`;
+    window.location.href = `products/index.html?id=${productId}`;
   }
   
   // OSTOSKORIN HALLINTA
   addToCart(productId) {
-    const product = this.products.find(p => p.id === productId);
+    const product = this.products.find(p => p.id === productId || p.productId === productId);
     if (!product) return;
     
-    const existingItem = this.cart.find(item => item.id === productId);
+    const pid = product.id || product.productId;
+    const existingItem = this.cart.find(item => item.id === pid);
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
       this.cart.push({
-        id: product.id,
+        id: pid,
         name: product.name,
         price: product.price,
         image: product.image,
@@ -266,7 +321,7 @@ class ShopApp {
     this.updateCartUI();
     
     // Näytä onnistumisviesti
-    this.showCartNotification(`${product.name} lisätty koriin!`);
+    try { this.showCartNotification(`${product.name} lisätty koriin!`); } catch(_) {}
   }
   
   removeFromCart(productId) {
@@ -292,34 +347,62 @@ class ShopApp {
     const cartCount = document.getElementById('cartCount');
     const cartItems = document.getElementById('cartItems');
     const cartTotal = document.getElementById('cartTotal');
+    const cartSidebar = document.getElementById('cartSidebar');
     
     const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
     const totalPrice = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    cartCount.textContent = totalItems;
-    cartTotal.textContent = totalPrice.toFixed(2) + ' €';
+  if(cartCount) cartCount.textContent = totalItems;
+  if(cartTotal) cartTotal.textContent = totalPrice.toFixed(2) + ' €';
     
-    cartItems.innerHTML = '';
-    this.cart.forEach(item => {
-      const cartItem = document.createElement('div');
-      cartItem.className = 'cart-item';
-      cartItem.innerHTML = `
-        <img src="${item.image}" alt="${item.name}" class="cart-item-image">
-        <div class="cart-item-details">
-          <div class="cart-item-name">${item.name}</div>
-          <div class="cart-item-price">${item.price.toFixed(2)} €</div>
-          <div class="cart-item-quantity">
-            <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
-            <span>${item.quantity}</span>
-            <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+    if(cartItems){
+      cartItems.innerHTML = '';
+      this.cart.forEach(item => {
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+          <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+          <div class="cart-item-details">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">${item.price.toFixed(2)} €</div>
+            <div class="cart-item-quantity">
+              <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity - 1})">-</button>
+              <span>${item.quantity}</span>
+              <button onclick="shopApp.updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
+            </div>
           </div>
+          <button onclick="shopApp.removeFromCart(${item.id})" class="cart-item-remove" aria-label="Poista">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+        cartItems.appendChild(cartItem);
+      });
+    }
+
+    // Sidebar quick view (minimal if element present)
+    if(cartSidebar){
+      cartSidebar.innerHTML = `
+        <div class="cart-sidebar-header">
+          <h3>Ostoskori (${totalItems})</h3>
+          <button class="close-btn" onclick="toggleCart()" aria-label="Sulje">&times;</button>
         </div>
-        <button onclick="shopApp.removeFromCart(${item.id})" class="cart-item-remove">
-          <i class="fas fa-times"></i>
-        </button>
+        <div class="cart-sidebar-items">${ this.cart.map(item => `
+          <div class='mini-item'>
+            <div class='mini-thumb'><img src='${item.image}' alt='${item.name}' /></div>
+            <div class='mini-info'>
+              <div class='mini-name'>${item.name}</div>
+              <div class='mini-meta'>${item.quantity} × ${item.price.toFixed(2)}€</div>
+            </div>
+            <button class='mini-remove' onclick='shopApp.removeFromCart(${item.id})' aria-label='Poista'>×</button>
+          </div>`).join('') }
+          ${ this.cart.length === 0 ? `<div class='mini-empty'>Ostoskori on tyhjä</div>` : ''}
+        </div>
+        <div class="cart-sidebar-footer">
+          <div class='mini-total-line'>Yhteensä: <strong>${totalPrice.toFixed(2)} €</strong></div>
+          <button class='btn btn-primary btn-block' onclick='shopApp.checkout()' ${this.cart.length===0?'disabled':''}>Siirry kassalle</button>
+        </div>
       `;
-      cartItems.appendChild(cartItem);
-    });
+    }
   }
   
   showCartNotification(message) {
@@ -501,10 +584,22 @@ function closeAll() {
 
 function toggleCart() {
   const cartSidebar = document.getElementById('cartSidebar');
-  const overlay = document.getElementById('overlay');
+  const overlay = document.getElementById('cartOverlay') || document.getElementById('overlay');
   
-  cartSidebar.classList.toggle('open');
-  overlay.classList.toggle('active');
+  if (cartSidebar) cartSidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('active');
+}
+
+function closeCart() {
+  const cartSidebar = document.getElementById('cartSidebar');
+  const overlay = document.getElementById('cartOverlay') || document.getElementById('overlay');
+  
+  if (cartSidebar) cartSidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function goToCheckout() {
+  window.location.href = 'checkout/';
 }
 
 // HAKUTOIMINTO
@@ -928,6 +1023,10 @@ window.enableDemoAdmin = function() {
 // Käynnistä sovellus
 const shopApp = new ShopApp();
 window.shopApp = shopApp;
+
+// Expose UI toggles globally for inline handlers
+window.toggleCategoryMenu = toggleCategoryMenu;
+window.toggleMobileSearch = toggleMobileSearch;
 
 // Globaali funktio käyttäjän UI:n päivittämiseen (kutsutaan login.js:stä)
 window.updateUserUI = function() {

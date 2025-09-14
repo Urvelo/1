@@ -53,7 +53,7 @@
               Lisää uusi tuote
             </h3>
             
-            <form id="addProductForm" class="grid-cols-2">
+            <form id="productForm" class="grid-cols-2" autocomplete="off">
               <div class="form-group">
                 <label for="productName">Tuotteen nimi</label>
                 <input type="text" id="productName" class="form-input" placeholder="Esim. Älypuhelin">
@@ -67,11 +67,11 @@
               <div class="form-group">
                 <label for="productCategory">Kategoria</label>
                 <select id="productCategory" class="form-input">
-                  <option value="elektroniikka">Elektroniikka</option>
-                  <option value="vaatteet">Vaatteet</option>
-                  <option value="koti">Koti</option>
-                  <option value="urheilu">Urheilu</option>
-                  <option value="kauneus">Kauneus</option>
+                  <option value="" disabled>Valitse kategoria</option>
+                  <option value="1" selected>Elektroniikka</option>
+                  <option value="2">Älylaitteet</option>
+                  <option value="3">Audio</option>
+                  <option value="4">Älykodit</option>
                 </select>
               </div>
               
@@ -80,9 +80,34 @@
                 <input type="url" id="productImage" class="form-input" placeholder="https://example.com/image.jpg">
               </div>
               
+              <div class="form-group">
+                <label for="productStock">Varastosaldo</label>
+                <input type="number" id="productStock" class="form-input" placeholder="100" min="0">
+              </div>
+              
               <div class="form-group" style="grid-column: 1 / -1;">
-                <label for="productDescription">Kuvaus</label>
-                <textarea id="productDescription" class="form-input" rows="3" placeholder="Tuotteen kuvaus..."></textarea>
+                <label for="productDescription">Lyhyt kuvaus</label>
+                <textarea id="productDescription" class="form-input" rows="3" placeholder="Lyhyt tuotteen kuvaus..."></textarea>
+              </div>
+              
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="productDetailedDescription">Yksityiskohtainen kuvaus</label>
+                <textarea id="productDetailedDescription" class="form-input" rows="5" placeholder="Yksityiskohtainen tuotteen kuvaus..."></textarea>
+              </div>
+              
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="productFeatures">Ominaisuudet (yksi per rivi)</label>
+                <textarea id="productFeatures" class="form-input" rows="4" placeholder="Ominaisuus 1&#10;Ominaisuus 2&#10;Ominaisuus 3"></textarea>
+              </div>
+              
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="productSpecs">Tekniset tiedot (JSON-muoto)</label>
+                <textarea id="productSpecs" class="form-input" rows="5" placeholder='{"Paino": "500g", "Mitat": "10x5x2 cm", "Materiaali": "Alumiini"}'></textarea>
+              </div>
+              
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="productAdditionalImages">Lisäkuvat (yksi URL per rivi)</label>
+                <textarea id="productAdditionalImages" class="form-input" rows="3" placeholder="https://example.com/image2.jpg&#10;https://example.com/image3.jpg"></textarea>
               </div>
               
               <div class="form-group" style="grid-column: 1 / -1;">
@@ -120,7 +145,7 @@
               <i class="fas fa-list"></i>
               Nykyiset tuotteet
             </h3>
-            <div id="adminProductsList" class="products-grid">
+            <div id="productsList" class="products-grid">
               <!-- Products will be loaded here -->
             </div>
           </div>
@@ -180,33 +205,41 @@
   <script src="admin.js"></script>
   <script>
     function showSection(sectionName) {
-      // Hide all sections
-      document.querySelectorAll('.admin-section').forEach(section => {
-        section.classList.add('hidden');
+      console.log('🔄 showSection kutsuttu:', sectionName);
+      
+      // Hide all sections safely
+      const sections = document.querySelectorAll('.admin-section');
+      sections.forEach(section => {
+        if (section && section.classList) {
+          section.classList.add('hidden');
+        }
       });
       
-      // Remove active class from all nav buttons
-      document.querySelectorAll('.admin-nav .btn').forEach(btn => {
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn-secondary');
+      // Remove active class from all nav buttons safely
+      const navButtons = document.querySelectorAll('.admin-nav .btn');
+      navButtons.forEach(btn => {
+        if (btn && btn.classList) {
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-secondary');
+        }
       });
       
-      // Show selected section
-      document.getElementById(sectionName).classList.remove('hidden');
+      // Show selected section safely
+      const targetSection = document.getElementById(sectionName);
+      if (targetSection && targetSection.classList) {
+        targetSection.classList.remove('hidden');
+      }
       
-      // Add active class to clicked button
-      event.target.classList.remove('btn-secondary');
-      event.target.classList.add('btn-primary');
+      // Add active class to clicked button (safe check)
+      if (window.event && window.event.target && window.event.target.classList) {
+        window.event.target.classList.remove('btn-secondary');
+        window.event.target.classList.add('btn-primary');
+      }
       
       // Update stats if stats section is shown
-      if (sectionName === 'stats') {
-        updateStats();
+      if (sectionName === 'stats' && window.adminPanel && typeof window.adminPanel.updateStats === 'function') {
+        window.adminPanel.updateStats();
       }
-    }
-    
-    function updateStats() {
-      const products = loadProductsFromJSON();
-      document.getElementById('totalProducts').textContent = products.length;
     }
   </script>
 </body>

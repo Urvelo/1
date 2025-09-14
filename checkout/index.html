@@ -8,16 +8,24 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <!-- HEADER -->
+  <!-- HEADER (aligned with global minimal navigation) -->
   <header class="header">
     <nav class="navbar">
-      <a href="../" class="logo">🛍️ Löytökauppa</a>
-      <div class="nav-links">
-        <a href="../" class="nav-link">
-          <i class="fas fa-arrow-left"></i>
-          Takaisin kauppaan
-        </a>
-      </div>
+      <button class="icon-btn" id="menuToggle" aria-label="Valikko" title="Valikko">
+        <i class="fas fa-bars"></i>
+      </button>
+      <a href="../" class="logo" aria-label="Etusivu">🛍️ Löytökauppa</a>
+      <div class="nav-spacer"></div>
+      <a href="../" class="icon-btn" aria-label="Takaisin kauppaan" title="Takaisin kauppaan">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <button class="icon-btn" id="userMenuBtn" aria-label="Profiili" title="Profiili">
+        <i class="fas fa-user"></i>
+      </button>
+      <a href="../cart/" class="icon-btn" aria-label="Ostoskori" title="Ostoskori">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount" aria-live="polite">0</span>
+      </a>
     </nav>
   </header>
 
@@ -25,32 +33,20 @@
   <main class="main-content">
     <div class="container">
       <!-- Checkout Header -->
-      <div class="text-center mb-xl">
-        <h1 class="text-primary mb-sm">
-          <i class="fas fa-shopping-cart"></i>
+      <div class="mb-lg">
+        <h1 class="text-primary" style="font-size:1.5rem; display:flex; align-items:center; gap:.5rem;">
+          <i class="fas fa-lock"></i>
           Kassalle
         </h1>
-        <p class="text-muted">Viimeistele tilauksesi</p>
+        <p class="text-muted" style="margin-top:.25rem;">Viimeistele tilauksesi turvallisesti</p>
       </div>
 
-      <!-- Checkout Steps -->
-      <div class="checkout-steps mb-xl">
-        <div class="step active">
-          <i class="fas fa-shopping-cart"></i>
-          <span>Ostoskori</span>
-        </div>
-        <div class="step">
-          <i class="fas fa-user"></i>
-          <span>Tiedot</span>
-        </div>
-        <div class="step">
-          <i class="fas fa-credit-card"></i>
-          <span>Maksu</span>
-        </div>
-        <div class="step">
-          <i class="fas fa-check"></i>
-          <span>Valmis</span>
-        </div>
+      <!-- Simplified Inline Step Indicator -->
+      <div class="checkout-steps mb-lg" aria-label="Vaiheistus">
+        <div class="step active" data-step="cart">Ostoskori</div>
+        <div class="step" data-step="info">Tiedot</div>
+        <div class="step" data-step="pay">Maksu</div>
+        <div class="step" data-step="done">Valmis</div>
       </div>
 
       <!-- Cart Contents -->
@@ -116,8 +112,8 @@
         </div>
       </div>
 
-      <!-- Customer Information -->
-      <div class="card mb-xl">
+  <!-- Customer Information -->
+  <div class="card mb-xl" id="customerInfoSection">
         <div class="card-header">
           <h2 class="text-primary">
             <i class="fas fa-user"></i>
@@ -158,8 +154,8 @@
         </div>
       </div>
 
-      <!-- Payment Method -->
-      <div class="card mb-xl">
+  <!-- Payment Method -->
+  <div class="card mb-xl" id="paymentSection">
         <div class="card-header">
           <h2 class="text-primary">
             <i class="fas fa-credit-card"></i>
@@ -194,13 +190,13 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="checkout-actions text-center">
-        <button class="btn btn-success btn-lg" onclick="processCheckout()" id="checkoutBtn">
+      <div class="checkout-actions text-center" id="actionsSection">
+        <button class="btn btn-success btn-lg" id="checkoutBtn" aria-label="Vahvista ja maksa">
           <i class="fas fa-lock"></i>
           Vahvista ja maksa
         </button>
         <div class="mt-md">
-          <a href="../" class="btn btn-secondary">
+          <a href="../" class="btn btn-secondary" aria-label="Jatka ostoksia">
             <i class="fas fa-arrow-left"></i>
             Jatka ostoksia
           </a>
@@ -221,112 +217,6 @@
   </div>
 
   <!-- JavaScript -->
-  <script>
-    // Load cart from localStorage
-    function loadCart() {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const cartItemsContainer = document.getElementById('cartItems');
-      const emptyCartMessage = document.getElementById('emptyCart');
-      
-      if (cart.length === 0) {
-        cartItemsContainer.style.display = 'none';
-        emptyCartMessage.style.display = 'block';
-        return;
-      }
-      
-      cartItemsContainer.style.display = 'block';
-      emptyCartMessage.style.display = 'none';
-      
-      cartItemsContainer.innerHTML = cart.map(item => `
-        <div class="cart-item">
-          <div class="item-info">
-            <h4>${item.name}</h4>
-            <p class="text-muted">${item.category}</p>
-          </div>
-          <div class="item-quantity">
-            <span>Määrä: ${item.quantity}</span>
-          </div>
-          <div class="item-price">
-            <strong>${(item.price * item.quantity).toFixed(2)} €</strong>
-          </div>
-        </div>
-      `).join('');
-      
-      updateOrderSummary(cart);
-    }
-
-    function updateOrderSummary(cart) {
-      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      const tax = subtotal * 0.24;
-      const total = subtotal + tax;
-      
-      document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' €';
-      document.getElementById('tax').textContent = tax.toFixed(2) + ' €';
-      document.getElementById('total').textContent = total.toFixed(2) + ' €';
-    }
-
-    function processCheckout() {
-      // Validate form
-      const requiredFields = ['firstName', 'lastName', 'email', 'address', 'city', 'postalCode'];
-      const missing = requiredFields.filter(field => !document.getElementById(field).value.trim());
-      
-      if (missing.length > 0) {
-        showStatus('Täytä kaikki pakolliset kentät', 'error');
-        return;
-      }
-      
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      if (cart.length === 0) {
-        showStatus('Ostoskorisi on tyhjä', 'error');
-        return;
-      }
-      
-      // Show loading
-      document.getElementById('loadingOverlay').style.display = 'flex';
-      
-      // Simulate payment processing
-      setTimeout(() => {
-        // Clear cart
-        localStorage.removeItem('cart');
-        
-        // Hide loading
-        document.getElementById('loadingOverlay').style.display = 'none';
-        
-        // Show success message
-        showStatus('Tilaus vahvistettu! Kiitos ostoksestasi.', 'success');
-        
-        // Redirect to home page after 3 seconds
-        setTimeout(() => {
-          window.location.href = '../';
-        }, 3000);
-      }, 2000);
-    }
-
-    function showStatus(message, type) {
-      const statusEl = document.getElementById('statusMessage');
-      statusEl.textContent = message;
-      statusEl.className = `status-message ${type} show`;
-      
-      setTimeout(() => {
-        statusEl.classList.remove('show');
-      }, 3000);
-    }
-
-    // Load user data if logged in
-    function loadUserData() {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      if (currentUser) {
-        document.getElementById('firstName').value = currentUser.name?.split(' ')[0] || '';
-        document.getElementById('lastName').value = currentUser.name?.split(' ')[1] || '';
-        document.getElementById('email').value = currentUser.email || '';
-        document.getElementById('phone').value = currentUser.phone || '';
-        document.getElementById('address').value = currentUser.address || '';
-      }
-    }
-
-    // Initialize page
-    loadCart();
-    loadUserData();
-  </script>
+  <script src="./checkout.js"></script>
 </body>
 </html>

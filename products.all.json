@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Langaton Latausasema",
+    "price": 19.99,
+    "originalPrice": 24.99,
+    "image": "https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400",
+    "category": 1,
+    "description": "Nopea langaton lataus kaikille laitteille",
+    "features": ["Qi-yhteensopiva", "USB-C"],
+    "stock": 10,
+    "rating": 4.5,
+    "reviews": 12,
+    "featured": false
+  },
+  {
+    "id": 2,
+    "name": "Premium Älykello",
+    "price": 89.99,
+    "originalPrice": 109.99,
+    "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+    "category": 2,
+    "description": "Täydellinen kumppani aktiiviseen elämään",
+    "features": ["Vedenkestävä", "GPS"],
+    "stock": 5,
+    "rating": 4.7,
+    "reviews": 8,
+    "featured": true
+  },
+  {
+    "id": 3,
+    "name": "Bluetooth Kuulokkeet Pro",
+    "price": 59.99,
+    "originalPrice": 79.99,
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+    "category": 3,
+    "description": "Kristallinkirkas ääni ja aktiivinen melunvaimennus",
+    "features": ["ANC", "Bluetooth 5.0"],
+    "stock": 15,
+    "rating": 4.6,
+    "reviews": 20,
+    "featured": false
+  }
+]

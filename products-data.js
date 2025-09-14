@@ -1,9 +1,10 @@
 // 🛒 Tuotteet - Keskitetty tuotehallinta
 // Kaikki tuotteet hallitaan admin-paneelista, ei esimerkkituotteita
 
-const PRODUCTS_DATA = [
-  // Tuotteet lisätään admin-paneelista dynaamisesti
-];
+
+// 🛒 Tuotteet - Keskitetty tuotehallinta (JSON tiedostosta)
+let PRODUCTS_DATA = [];
+let PRODUCTS_DATA_LOADED = false;
 
 const CATEGORIES_DATA = [
   { id: 1, name: 'Elektroniikka', description: 'Sähkölaitteet ja tarvikkeet' },
@@ -13,57 +14,73 @@ const CATEGORIES_DATA = [
 ];
 
 // 🎯 Optimoitu latausfunktio - ei API-kutsuja!
-function loadProductsFromJSON() {
-  console.log('📦 Ladataan tuotteet client-side JSON:sta (ei Firestore kulutusta)');
-  
-  // Check if admin has added/modified products
-  let products = [...PRODUCTS_DATA];
-  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
-  
-  if (adminProducts.length > 0) {
-    console.log('🔄 Löydettiin admin-tuotteita:', adminProducts.length);
-    
-    // Convert admin products to the format expected by the main site
-    const convertedAdminProducts = adminProducts.map(adminProduct => ({
-      id: adminProduct.id,
-      name: adminProduct.name,
-      price: adminProduct.price,
-      originalPrice: adminProduct.price * 1.2, // Add 20% as original price for discount display
-      image: adminProduct.image || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-      category: getCategoryIdByName(adminProduct.category),
-      description: adminProduct.description || 'Lisätty admin-paneelista',
-      features: ['Admin-tuote'],
-      stock: adminProduct.stock || 0,
-      rating: 4.5,
-      reviews: 12,
-      featured: adminProduct.featured || false
-    }));
-    
-    // Replace existing products with admin versions or add new ones
-    const adminProductIds = adminProducts.map(p => p.id);
-    products = products.filter(p => !adminProductIds.includes(p.id));
-    products = [...products, ...convertedAdminProducts];
-    
-    console.log('✅ Synkattu admin-tuotteet pääsivulle:', products.length, 'tuotetta yhteensä');
+// Lataa tuotteet products.all.json tiedostosta (vain kerran per sessio)
+async function loadProductsFromJSON() {
+  if (PRODUCTS_DATA_LOADED) {
+    return {
+      products: PRODUCTS_DATA,
+      categories: CATEGORIES_DATA,
+      source: 'memory',
+      timestamp: new Date().toISOString()
+    };
   }
   
-  return {
-    products: products,
-    categories: CATEGORIES_DATA,
-    source: 'client-json-with-admin',
-    timestamp: new Date().toISOString()
-  };
+  try {
+    // 1. Yritä ensin localStorage (välittömät muutokset)
+    const localData = localStorage.getItem('products.all.json');
+    if (localData) {
+      PRODUCTS_DATA = JSON.parse(localData);
+      PRODUCTS_DATA_LOADED = true;
+      console.log('📦 Tuotteet ladattu localStorage:sta:', PRODUCTS_DATA.length);
+      return {
+        products: PRODUCTS_DATA,
+        categories: CATEGORIES_DATA,
+        source: 'localStorage',
+        timestamp: new Date().toISOString()
+      };
+    }
+    
+    // 2. Jos ei localStorage, lataa tiedostosta
+    const resp = await fetch('/products.all.json');
+    PRODUCTS_DATA = await resp.json();
+    PRODUCTS_DATA_LOADED = true;
+    console.log('📦 Tuotteet ladattu products.all.json:', PRODUCTS_DATA.length);
+    return {
+      products: PRODUCTS_DATA,
+      categories: CATEGORIES_DATA,
+      source: 'products.all.json',
+      timestamp: new Date().toISOString()
+    };
+  } catch (e) {
+    console.error('❌ Tuotteiden lataus epäonnistui:', e);
+    PRODUCTS_DATA = [];
+    return {
+      products: [],
+      categories: CATEGORIES_DATA,
+      source: 'fallback',
+      timestamp: new Date().toISOString()
+    };
+  }
 }
 
 // Helper function to convert category name to ID
 function getCategoryIdByName(categoryName) {
+  if(!categoryName) return 1;
+  const key = categoryName.toString().trim().toLowerCase();
   const categoryMap = {
-    'Elektroniikka': 1,
-    'Älylaitteet': 2, 
-    'Audio': 3,
-    'Älykodit': 4
+    'elektroniikka': 1,
+    'elektroniikka.': 1,
+    'vaatteet': 2, // map "vaatteet" to second slot (reuse Älylaitteet id)
+    'älylaitteet': 2,
+    'älykkäät laitteet': 2,
+    'audio': 3,
+    'kuulokkeet & audio': 3,
+    'kuulokkeet': 3,
+    'koti': 4,
+    'kodin tavarat': 4,
+    'älykodit': 4
   };
-  return categoryMap[categoryName] || 1;
+  return categoryMap[key] || 1;
 }
 
 // 🔍 Hakutoiminnot (client-side, nopea)
@@ -120,7 +137,8 @@ function getSaleProducts(limit = 4) {
 }
 
 // 🛠️ ADMIN CRUD FUNKTIOT - KESKITETTY TUOTEHALLINTA
-function addProduct(productData) {
+async function addProduct(productData) {
+  await ensureProductsLoaded();
   const newProduct = {
     id: Date.now(),
     name: productData.name,
@@ -135,89 +153,103 @@ function addProduct(productData) {
     reviews: 12,
     featured: productData.featured || false
   };
-  
   PRODUCTS_DATA.push(newProduct);
-  
-  // Tallenna myös localStorage:iin että etusivu näkee
-  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
-  adminProducts.push(newProduct);
-  localStorage.setItem('admin_products', JSON.stringify(adminProducts));
-  
-  console.log('✅ Tuote lisätty:', newProduct.name);
-  console.log('💾 Tallennettu localStorage:iin');
+  await saveProductsToJSON();
   notifyDataChange();
   return newProduct;
 }
 
-function updateProduct(id, productData) {
+async function updateProduct(id, productData) {
+  await ensureProductsLoaded();
   const index = PRODUCTS_DATA.findIndex(p => p.id == id);
   if (index === -1) return null;
-  
   const updatedProduct = {
     ...PRODUCTS_DATA[index],
     name: productData.name,
     price: parseFloat(productData.price),
     originalPrice: parseFloat(productData.price) * 1.2,
     image: productData.image,
-    category: getCategoryIdByName(productData.category),
+    category: parseInt(productData.category) || productData.category, // Käytä suoraan kategoria-ID:tä
     description: productData.description,
     stock: parseInt(productData.stock) || 0,
     featured: productData.featured || false
   };
-  
   PRODUCTS_DATA[index] = updatedProduct;
-  
-  // Päivitä myös localStorage
-  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
-  const adminIndex = adminProducts.findIndex(p => p.id == id);
-  if (adminIndex !== -1) {
-    adminProducts[adminIndex] = updatedProduct;
-    localStorage.setItem('admin_products', JSON.stringify(adminProducts));
-  }
-  
-  console.log('✅ Tuote päivitetty:', updatedProduct.name);
-  console.log('💾 Päivitetty localStorage:iin');
+  await saveProductsToJSON();
   notifyDataChange();
   return updatedProduct;
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
+  await ensureProductsLoaded();
   const index = PRODUCTS_DATA.findIndex(p => p.id == id);
   if (index === -1) return false;
-  
   const deletedProduct = PRODUCTS_DATA[index];
   PRODUCTS_DATA.splice(index, 1);
-  
-  // Poista myös localStorage:sta
-  const adminProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
-  const adminIndex = adminProducts.findIndex(p => p.id == id);
-  if (adminIndex !== -1) {
-    adminProducts.splice(adminIndex, 1);
-    localStorage.setItem('admin_products', JSON.stringify(adminProducts));
-  }
-  
-  console.log('✅ Tuote poistettu:', deletedProduct.name);
-  console.log('💾 Poistettu localStorage:sta');
+  await saveProductsToJSON();
   notifyDataChange();
   return true;
 }
-
-function getCategoryIdByName(categoryName) {
-  const categoryMap = {
-    'Elektroniikka': 1,
-    'Älylaitteet': 2, 
-    'Audio': 3,
-    'Älykodit': 4
-  };
-  return categoryMap[categoryName] || 1;
+// Tallenna tuotteet products.all.json tiedostoon
+async function saveProductsToJSON() {
+  try {
+    // 1. Tallenna localStorage:iin välittömästi (näkyy heti)
+    localStorage.setItem('products.all.json', JSON.stringify(PRODUCTS_DATA));
+    console.log('💾 Tuotteet tallennettu localStorage:iin');
+    
+    // 2. Yritä tallentaa oikeaan tiedostoon (dev-ympäristössä)
+    try {
+      const response = await fetch('/api/save-products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(PRODUCTS_DATA)
+      });
+      if (response.ok) {
+        console.log('💾 Tuotteet tallennettu tiedostoon!');
+      } else {
+        console.log('⚠️ Tiedostotallennus epäonnistui, käytetään localStorage');
+      }
+    } catch (fileError) {
+      console.log('⚠️ Ei API-yhteyttä, käytetään localStorage');
+    }
+    
+    // 3. Pakota uudelleenlataus seuraavalla kerralla
+    PRODUCTS_DATA_LOADED = false;
+  } catch (e) {
+    console.error('❌ Tuotteiden tallennus epäonnistui:', e);
+  }
 }
+
+async function ensureProductsLoaded() {
+  if (!PRODUCTS_DATA_LOADED) {
+    await loadProductsFromJSON();
+  }
+}
+
+// (Duplicate removed; unified implementation above)
 
 // 📢 Ilmoita muutoksista muille komponenteille
 function notifyDataChange() {
+  // Pakota datan uudelleenlataus
+  PRODUCTS_DATA_LOADED = false;
+  
+  console.log('🔄 notifyDataChange: Päivitetään kaikki näkymät');
+  
   // Päivitä etusivu jos se on auki
-  if (window.shopApp && typeof window.shopApp.renderProducts === 'function') {
-    window.shopApp.renderProducts();
+  if (window.shopApp && typeof window.shopApp.refreshProducts === 'function') {
+    console.log('🔄 Päivitetään etusivu');
+    window.shopApp.refreshProducts();
   }
+  
+  // Päivitä admin-paneeli jos se on auki - viive varmistaa että localStorage on päivitetty
+  setTimeout(() => {
+    if (window.adminPanel && typeof window.adminPanel.displayProducts === 'function') {
+      console.log('🔄 Päivitetään admin-paneeli');
+      window.adminPanel.loadProducts().then(() => {
+        window.adminPanel.displayProducts();
+      });
+    }
+  }, 100);
   
   // Lähetä custom event
   window.dispatchEvent(new CustomEvent('productsUpdated', {

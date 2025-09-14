@@ -9,83 +9,58 @@
 </head>
 <body>
   <!-- HEADER -->
-  <header class="header">
+  <header class="header minimal-header">
     <nav class="navbar">
-      <div class="logo">🛍️ Löytökauppa</div>
-      
-      <div class="nav-links">
-        <a href="#" class="nav-link active">Etusivu</a>
-        <a href="#categories" class="nav-link">Kategoriat</a>
-        <a href="#products" class="nav-link">Tuotteet</a>
-        <a href="#" class="nav-link">Tarjoukset</a>
-        
-        <div class="user-menu">
-          <button class="user-menu-toggle" onclick="handleUserClick()" id="userMenuButton">
-            <i class="fas fa-user"></i>
-            <span id="userName">Kirjaudu</span>
-          </button>
-          <div class="user-menu-dropdown" id="userMenu">
-            <!-- Menuitems täytetään JavaScriptillä -->
-          </div>
-        </div>
-        
-        <div class="cart-icon" onclick="toggleCart()">
-          <i class="fas fa-shopping-cart"></i>
-          <span class="cart-count" id="cartCount">0</span>
-        </div>
+      <button class="nav-icon-btn" id="menuToggle" aria-label="Avaa valikko" onclick="toggleCategoryMenu()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="logo" aria-label="Etusivu" onclick="location.href='.'">🛍️ Löytökauppa</div>
+      <div class="nav-spacer"></div>
+      <div class="nav-inline-search">
+        <input type="text" id="searchInput" class="search-input" placeholder="Haku" oninput="searchProducts()" aria-label="Hae tuotteita">
+        <i class="fas fa-search"></i>
       </div>
+      <!-- Piilotetaan mobiilihaku yksinkertaisuuden vuoksi -->
+      <a href="products/all.html" class="nav-icon-btn" aria-label="Kaikki tuotteet" title="Kaikki tuotteet">
+        <i class="fas fa-th-large"></i>
+      </a>
+      <button class="nav-icon-btn cart-btn" aria-label="Ostoskori" onclick="toggleCart()" title="Ostoskori">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <div class="user-menu compact">
+        <button class="user-menu-toggle" onclick="handleUserClick()" id="userMenuButton" aria-haspopup="true" aria-expanded="false">
+          <i class="fas fa-user"></i>
+          <span id="userName" class="username-short">Kirjaudu</span>
+        </button>
+        <div class="user-menu-dropdown" id="userMenu" role="menu"></div>
+      </div>
+      <button class="nav-icon-btn" aria-label="Ostoskori" onclick="toggleCart()">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
     </nav>
+    <div id="mobileSearchBar" class="mobile-search-bar" style="display:none;">
+      <input type="text" class="search-input" placeholder="Hae tuotteita..." oninput="searchProducts()">
+    </div>
   </header>
 
   <!-- MAIN CONTENT -->
   <main class="main-content">
-    <!-- HERO SECTION -->
-    <section class="hero">
-      <h1>🔍 Löydä unelmiesi tuotteet</h1>
-      <p>Tutustu ainutlaatuiseen valikoimaamme ja löydä juuri sinulle sopivat tuotteet. Laadukas palvelu ja nopea toimitus taattu!</p>
-    </section>
-
-    <!-- SEARCH SECTION -->
-    <section class="search-section">
-      <div class="search-container">
-        <input 
-          type="text" 
-          class="search-input" 
-          placeholder="Etsi tuotteita..." 
-          id="searchInput"
-          oninput="searchProducts()"
-        >
-        <i class="fas fa-search search-icon"></i>
+    <div id="overlay" class="overlay" onclick="toggleCategoryMenu(false)" aria-hidden="true"></div>
+    <!-- CATEGORY OVERLAY (HIDDEN INITIALLY) -->
+    <aside id="categoryDrawer" class="category-drawer" aria-label="Kategoriat" style="display:none;">
+      <div class="drawer-header">
+        <h2>Kategoriat</h2>
+        <button onclick="toggleCategoryMenu()" aria-label="Sulje" class="close-btn">&times;</button>
       </div>
-    </section>
-
-    <!-- FILTERS -->
-    <section class="filters" id="categoryFilters">
-      <button class="filter-btn active" onclick="filterProducts('all')">
-        <i class="fas fa-th"></i>
-        Kaikki
-      </button>
-      <button class="filter-btn" onclick="filterProducts('elektroniikka')">
-        <i class="fas fa-laptop"></i>
-        Elektroniikka
-      </button>
-      <button class="filter-btn" onclick="filterProducts('vaatteet')">
-        <i class="fas fa-tshirt"></i>
-        Vaatteet
-      </button>
-      <button class="filter-btn" onclick="filterProducts('koti')">
-        <i class="fas fa-home"></i>
-        Koti
-      </button>
-      <button class="filter-btn" onclick="filterProducts('urheilu')">
-        <i class="fas fa-dumbbell"></i>
-        Urheilu
-      </button>
-    </section>
+      <nav class="drawer-content" id="categoryList">
+        <!-- Täytetään dynaamisesti kategorioilla -->
+      </nav>
+    </aside>
 
     <!-- PRODUCTS SECTION -->
-    <section class="products-section" id="products">
-      <h2 class="section-title">🛍️ Tuotteet</h2>
+    <section class="products-section" id="products" aria-label="Tuotteet">
       <div class="products-grid" id="productsGrid">
         <!-- Tuotteet täytetään JavaScriptillä -->
       </div>
@@ -112,9 +87,25 @@
   <!-- STATUS MESSAGE -->
   <div id="statusMessage" class="status-message"></div>
 
-  <!-- CART SIDEBAR (if needed) -->
-  <div id="cartSidebar" class="cart-sidebar" style="display: none;">
-    <!-- Cart content will be added via JavaScript -->
+  <!-- CART SIDEBAR -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>🛒 Ostoskori</h3>
+      <button class="close-cart" onclick="closeCart()">&times;</button>
+    </div>
+    <div class="cart-content" id="cartContent">
+      <!-- Cart items will appear here -->
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total" id="cartTotal">Yhteensä: 0.00 €</div>
+      <button class="btn btn-primary btn-block" onclick="goToCheckout()" id="checkoutBtn" style="display: none;">
+        Siirry kassalle
+      </button>
+      <div class="empty-cart-message" id="emptyCartMessage">
+        Ostoskorisi on tyhjä
+      </div>
+    </div>
   </div>
 
   <!-- JavaScript -->
